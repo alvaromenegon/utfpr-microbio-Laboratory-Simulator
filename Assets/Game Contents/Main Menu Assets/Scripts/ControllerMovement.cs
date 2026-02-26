@@ -1,34 +1,28 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class ControllerMovement : MonoBehaviour {
 	
 	public float MovementSpeed;	 
-	public GameObject player;	
-		// public float RotationSpeed = 100.0f;
+	public GameObject player;
+
+	private GameControls _controls;
+	private bool _isMoving;
+
+	void Awake()
+	{
+		_controls = new GameControls();
+		_controls.Player.Attack.performed += _ => _isMoving = true;
+		_controls.Player.Attack.canceled += _ => _isMoving = false;
+	}
+
+	void OnEnable() => _controls.Player.Enable();
+	void OnDisable() => _controls.Player.Disable();
 		
 	void Update () {
 
-
-		if(Input.GetMouseButton(0))
+		if(_isMoving)
 		{
-
 			player.transform.position += transform.forward * Time.deltaTime * MovementSpeed;
-			
 		}
-
-		 // 	float translation = Input.GetAxis("Vertical") * MovementSpeed * Time.deltaTime;
-
-		 // 	transform.Translate(0,0,translation);
-		 
-		 // float translation = Input.GetAxis("Vertical") * MovementSpeed * Time.deltaTime;
-		 // // float rotation = Input.GetAxis("Horizontal") * RotationSpeed * Time.deltaTime;;
-		 
-
-		 // transform.Translate(0,0, translation);
-		 // // transform.Rotate(rotation, 0, 0);
-
-		
 	}
 }
