@@ -93,7 +93,7 @@ LightmapSettings:
     m_ExportTrainingData: 0
     m_TrainingDataDestination: TrainingData
     m_LightProbeSampleCountMultiplier: 4
-  m_LightingDataAsset: {fileID: 112000180, guid: f19f0b6fcfd42d142910b046fa413f09,
+  m_LightingDataAsset: {fileID: 112000000, guid: f19f0b6fcfd42d142910b046fa413f09,
     type: 2}
   m_LightingSettings: {fileID: 1783204658}
 --- !u!196 &4
@@ -2485,7 +2485,7 @@ MonoBehaviour:
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
   m_DynamicPixelsPerUnit: 10
-  m_PresetInfoIsWorld: 0
+  m_PresetInfoIsWorld: 1
 --- !u!223 &489351577
 Canvas:
   m_ObjectHideFlags: 0
@@ -4542,93 +4542,6 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 938730441}
   m_PrefabAsset: {fileID: 0}
---- !u!1001 &952750029
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 4372775959146726, guid: 4ae8852eab05be14eaa99443196508d3, type: 3}
-      propertyPath: m_RootOrder
-      value: 3
-      objectReference: {fileID: 0}
-    - target: {fileID: 4372775959146726, guid: 4ae8852eab05be14eaa99443196508d3, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 0.78621715
-      objectReference: {fileID: 0}
-    - target: {fileID: 4372775959146726, guid: 4ae8852eab05be14eaa99443196508d3, type: 3}
-      propertyPath: m_LocalScale.y
-      value: 0.6835315
-      objectReference: {fileID: 0}
-    - target: {fileID: 4372775959146726, guid: 4ae8852eab05be14eaa99443196508d3, type: 3}
-      propertyPath: m_LocalScale.z
-      value: 0.7377009
-      objectReference: {fileID: 0}
-    - target: {fileID: 4372775959146726, guid: 4ae8852eab05be14eaa99443196508d3, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 3.509
-      objectReference: {fileID: 0}
-    - target: {fileID: 4372775959146726, guid: 4ae8852eab05be14eaa99443196508d3, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0.386
-      objectReference: {fileID: 0}
-    - target: {fileID: 4372775959146726, guid: 4ae8852eab05be14eaa99443196508d3, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 2.489
-      objectReference: {fileID: 0}
-    - target: {fileID: 4372775959146726, guid: 4ae8852eab05be14eaa99443196508d3, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4372775959146726, guid: 4ae8852eab05be14eaa99443196508d3, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4372775959146726, guid: 4ae8852eab05be14eaa99443196508d3, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4372775959146726, guid: 4ae8852eab05be14eaa99443196508d3, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 114117675067353450, guid: 4ae8852eab05be14eaa99443196508d3,
-        type: 3}
-      propertyPath: sceneIndex
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 114261275081776588, guid: 4ae8852eab05be14eaa99443196508d3,
-        type: 3}
-      propertyPath: m_Text
-      value: Back to Selection
-      objectReference: {fileID: 0}
-    - target: {fileID: 114261275081776588, guid: 4ae8852eab05be14eaa99443196508d3,
-        type: 3}
-      propertyPath: m_Color.b
-      value: 0.46206903
-      objectReference: {fileID: 0}
-    - target: {fileID: 114261275081776588, guid: 4ae8852eab05be14eaa99443196508d3,
-        type: 3}
-      propertyPath: m_Color.g
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 114261275081776588, guid: 4ae8852eab05be14eaa99443196508d3,
-        type: 3}
-      propertyPath: m_Color.r
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents:
-    - {fileID: 114550571755684228, guid: 4ae8852eab05be14eaa99443196508d3, type: 3}
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 1537408190153432, guid: 4ae8852eab05be14eaa99443196508d3,
-        type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1444438140}
-  m_SourcePrefab: {fileID: 100100000, guid: 4ae8852eab05be14eaa99443196508d3, type: 3}
 --- !u!4 &970588404 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4127749328234788, guid: bd84c8fa3ab48bf4c98d359271bd0f28,
@@ -5398,6 +5311,12 @@ Transform:
   - {fileID: 855262505}
   m_Father: {fileID: 427590570}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!224 &1145846866 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 224546710225088528, guid: bcb6684d471b3a345a3be779e91f2a93,
+    type: 3}
+  m_PrefabInstance: {fileID: 1206930793}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1157067616
 GameObject:
   m_ObjectHideFlags: 0
@@ -5816,6 +5735,11 @@ PrefabInstance:
       propertyPath: maxLookAngle
       value: 60
       objectReference: {fileID: 0}
+    - target: {fileID: 114965747005239700, guid: bcb6684d471b3a345a3be779e91f2a93,
+        type: 3}
+      propertyPath: playerCamera
+      value: 
+      objectReference: {fileID: 1145846866}
     - target: {fileID: 114965747005239700, guid: bcb6684d471b3a345a3be779e91f2a93,
         type: 3}
       propertyPath: mouseSensitivity
@@ -6865,24 +6789,6 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 1431636256}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &1444438138 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1537408190153432, guid: 4ae8852eab05be14eaa99443196508d3,
-    type: 3}
-  m_PrefabInstance: {fileID: 952750029}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &1444438140
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1444438138}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 24f70ba74e847b441aafc3c14b08bfb4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1469963336
 GameObject:
   m_ObjectHideFlags: 0
@@ -9863,7 +9769,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Biology class is now in session
+  m_Text: "Microbiologia I\nAula 01 - Introdu\xE7\xE3o ao Laborat\xF3rio Virtual"
 --- !u!222 &2010800178
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -10458,7 +10364,6 @@ SceneRoots:
   - {fileID: 1630605515}
   - {fileID: 1270675060}
   - {fileID: 1259177573}
-  - {fileID: 952750029}
   - {fileID: 2084004033}
   - {fileID: 1206930793}
   - {fileID: 427590570}

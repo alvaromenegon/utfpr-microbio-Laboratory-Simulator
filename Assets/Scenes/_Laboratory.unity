@@ -4804,6 +4804,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 114117675067353450, guid: 4ae8852eab05be14eaa99443196508d3,
         type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 114117675067353450, guid: 4ae8852eab05be14eaa99443196508d3,
+        type: 3}
       propertyPath: sceneIndex
       value: 1
       objectReference: {fileID: 0}
@@ -10155,7 +10160,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.0014684947, g: 0.004979692, b: 0.028301895, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -10163,7 +10168,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 12800000, guid: 83d8ec69bf8d5074b9e77ffc5dfdf6c6, type: 3}
+    m_Font: {fileID: 12800000, guid: fa1e1a3fc7a37e24e8399c8eb529eee1, type: 3}
     m_FontSize: 1
     m_FontStyle: 0
     m_BestFit: 1
@@ -10175,7 +10180,9 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Class is now in session
+  m_Text: 'Aula Iniciada
+
+    UTF MicroBio Lab'
 --- !u!222 &2010800178
 CanvasRenderer:
   m_ObjectHideFlags: 0
