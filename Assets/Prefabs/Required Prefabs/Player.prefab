@@ -43,6 +43,7 @@ GameObject:
   - component: {fileID: 4514230527593050}
   - component: {fileID: 143431543924655556}
   - component: {fileID: 114965747005239700}
+  - component: {fileID: 114222333444555666}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -107,6 +108,22 @@ MonoBehaviour:
   moveSpeed: 30
   mouseSensitivity: 0.3
   maxLookAngle: 60
+--- !u!114 &114222333444555666
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1177839074555146}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c59b17f0a9a4ac6bf7a357aa6f7d322, type: 3}
+  m_Name: ""
+  m_EditorClassIdentifier: ""
+  playerInteraction: {fileID: 114788324419139884}
+  defaultReticleIcon: {fileID: 0}
+  focusedReticleIcon: {fileID: 0}
+  lockSystemCursorOnWeb: 1
 --- !u!1 &1437551132123908
 GameObject:
   m_ObjectHideFlags: 0
@@ -419,7 +436,7 @@ GameObject:
   - component: {fileID: 114788324419139884}
   - component: {fileID: 23661545531560690}
   m_Layer: 2
-  m_Name: GvrReticlePointer
+  m_Name: WebReticlePointer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -448,7 +465,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1721830348396558}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 01699208c2290b24caca0e1217a6622a, type: 3}
   m_Name: 
