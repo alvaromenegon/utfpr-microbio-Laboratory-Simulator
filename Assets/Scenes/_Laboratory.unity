@@ -2024,11 +2024,31 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 01699208c2290b24caca0e1217a6622a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerInteraction
-  playerCamera: {fileID: 0}
+  playerCamera: {fileID: 656704826}
   interactionRange: 3
   interactableLayer:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 256
+--- !u!114 &424564801
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 424564796}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 57c86e33d2134f859ec8d7d37af6ec1e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ExperimentRunner
+  playerInteraction: {fileID: 424564800}
+  orderedSteps: []
+  onStepCompleted:
+    m_PersistentCalls:
+      m_Calls: []
+  onExperimentCompleted:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &426849570
 GameObject:
   m_ObjectHideFlags: 0
@@ -8160,6 +8180,10 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 424564800}
+    - targetCorrespondingSourceObject: {fileID: 1177839074555146, guid: bcb6684d471b3a345a3be779e91f2a93,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 424564801}
   m_SourcePrefab: {fileID: 100100000, guid: bcb6684d471b3a345a3be779e91f2a93, type: 3}
 --- !u!1 &1630605513
 GameObject:

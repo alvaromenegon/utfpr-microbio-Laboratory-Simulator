@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class PlayerInteraction : MonoBehaviour
@@ -9,41 +10,52 @@ public class PlayerInteraction : MonoBehaviour
     public float interactionRange = 3.0f;
     public LayerMask interactableLayer;
 
+    public event Action<IInteractable> InteractionPerformed;
+
     private GameControls _controls;
 
-    void Awake()
+    private void Awake()
     {
         _controls = new GameControls();
-        _controls.Player.Interact.performed += ctx => TryInteract();
+        _controls.Player.Interact.performed += _ => TryInteract();
     }
 
-    void OnEnable() => _controls.Player.Enable();
-    void OnDisable() => _controls.Player.Disable();
+    private void OnEnable() => _controls.Player.Enable();
+    private void OnDisable() => _controls.Player.Disable();
 
-    void TryInteract()
+    private void TryInteract()
     {
+        if (playerCamera == null)
+        {
+            Debug.LogWarning("PlayerInteraction: playerCamera n√£o atribu√≠da.", this);
+            return;
+        }
+
         Ray ray = new Ray(playerCamera.position, playerCamera.forward);
-        
-        if (Physics.Raycast(ray, out RaycastHit hit, interactionRange, interactableLayer))
+
+        if (!Physics.Raycast(ray, out RaycastHit hit, interactionRange, interactableLayer))
         {
-            // Procurar componente de interaÁ„o no objeto
-            IInteractable interactable = hit.collider.GetComponent<IInteractable>();
-            interactable?.Interact();
+            return;
         }
+
+        IInteractable interactable = hit.collider.GetComponentInParent<IInteractable>();
+        if (interactable == null)
+        {
+            return;
+        }
+
+        interactable.Interact();
+        InteractionPerformed?.Invoke(interactable);
     }
 
-    void OnDrawGizmos()
+    private void OnDrawGizmos()
     {
-        if (playerCamera != null)
+        if (playerCamera == null)
         {
-            Gizmos.color = Color.yellow;
-            Gizmos.DrawRay(playerCamera.position, playerCamera.forward * interactionRange);
+            return;
         }
-    }
-}
 
-// Interface para objetos interativos
-public interface IInteractable
-{
-    void Interact();
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawRay(playerCamera.position, playerCamera.forward * interactionRange);
+    }
 }
