@@ -198,7 +198,7 @@ public class ExperimentRunner : MonoBehaviour
         }
 
         RenderNextInstruction();
-        onExperimentCompleted.Invoke();
+        onExperimentCompleted?.Invoke();
     }
 
     private static void DisableObjects(GameObject[] objects)
