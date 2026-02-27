@@ -16,8 +16,8 @@ public class MoveObjects : MonoBehaviour {
 	void Awake()
 	{
 		_controls = new GameControls();
-		_controls.Player.Attack.performed += _ => clickObject();
-		_controls.Player.Attack.canceled += _ => letGoObject();
+		_controls.Player.Interact.performed += _ => clickObject();
+		_controls.Player.Interact.canceled += _ => letGoObject();
 	}
 
 	void OnEnable() => _controls.Player.Enable();
