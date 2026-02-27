@@ -6,10 +6,10 @@ public class PlayerMovement : MonoBehaviour {
     [Header("References")]
 	public Transform playerCamera;
     [Header("Movement Settings")]
-    public float moveSpeed = 5.0f;
+    public float moveSpeed = .0f;
 
     [Header("Camera Settings")]
-    public float mouseSensitivity = 0.5f;
+    public float mouseSensitivity = 0.3f;
     public float maxLookAngle = 60.0f;
 
     private GameControls _controls;
@@ -33,7 +33,7 @@ public class PlayerMovement : MonoBehaviour {
 
         // Travar cursor no centro da tela
         Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        Cursor.visible = true;
     }
 
     void OnEnable() => _controls.Player.Enable();
@@ -57,8 +57,7 @@ public class PlayerMovement : MonoBehaviour {
         float yaw = _lookInput.x * mouseSensitivity;
 
         transform.Rotate(0f, yaw, 0f);
-        Debug.Log("look input x: " + _lookInput.x);
-        Debug.Log("Look input y: " + _lookInput.y);
+
         // Rotação vertical (Pitch) - Rotaciona apenas a câmera
         _cameraPitch -= _lookInput.y * mouseSensitivity;
         _cameraPitch = Mathf.Clamp(_cameraPitch, -maxLookAngle, maxLookAngle);

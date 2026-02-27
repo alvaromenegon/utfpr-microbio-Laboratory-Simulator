@@ -11,8 +11,8 @@ public class ControllerMovement : MonoBehaviour {
 	void Awake()
 	{
 		_controls = new GameControls();
-		_controls.Player.Attack.performed += _ => _isMoving = true;
-		_controls.Player.Attack.canceled += _ => _isMoving = false;
+		_controls.Player.Interact.performed += _ => _isMoving = true;
+		_controls.Player.Interact.canceled += _ => _isMoving = false;
 	}
 
 	void OnEnable() => _controls.Player.Enable();
