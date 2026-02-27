@@ -1,177 +1,69 @@
-﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.SceneManagement;
 
-
-public class BiologyExperimentOne : MonoBehaviour
+public class BiologyExperimentOne : ExperimentRunner
 {
-
-    public GameObject playerTooltip;
-    public GameObject finalObject;
-    public GameObject congrats;
-    public GameObject nextStep;
-    public GameObject process;
-
-    public Text nextStepCanvas;
-    public Text[] progress;
-
-    public GameObject[] blackboardTexts;
-    public GameObject[] experimentMaterials;
-
-    public AudioSource right;
-    public AudioSource wrong;
-    public AudioSource explain;
-
+    [Header("Pilot migration data")]
+    public string experimentId = "bio-exp-001";
     public string[] instructions;
+    public string[] stepTargetIds;
+    public string[] stepIds;
+    public GameObject process;
+    public GameObject finalObject;
 
-    private int numberOfSteps = 0;
-
-    //private float secondsToDecay = 7.0f;
-
-    private bool stepOne = false;
-    private bool stepTwo = false;
-    private bool stepThree = false;
-    private bool stepFour = false;
-    private bool stepFive = false;
-    private bool stepSix = false;
-
-    private void Start()
+    private void Awake()
     {
-        nextStepCanvas.text = "" + instructions[0];
+        if (definition != null && definition.steps != null && definition.steps.Count > 0)
+        {
+            return;
+        }
+
+        List<ExperimentStep> steps = new List<ExperimentStep>();
+        int count = Mathf.Min(instructions == null ? 0 : instructions.Length, stepTargetIds == null ? 0 : stepTargetIds.Length);
+
+        for (int i = 0; i < count; i++)
+        {
+            steps.Add(new ExperimentStep
+            {
+                stepId = stepIds != null && i < stepIds.Length && !string.IsNullOrEmpty(stepIds[i])
+                    ? stepIds[i]
+                    : string.Format("{0}-step-{1}", experimentId, i + 1),
+                instruction = instructions[i],
+                expectedTargetId = stepTargetIds[i],
+                validationType = StepValidationType.Collision,
+                successFeedback = "Done",
+                failureFeedback = "Try the expected object"
+            });
+        }
+
+        definition = new ExperimentDefinition
+        {
+            experimentId = experimentId,
+            title = "Biology Experiment One",
+            steps = steps,
+            completionText = "Done"
+        };
+
+        objectsToEnableOnFinish = Merge(objectsToEnableOnFinish, process, finalObject);
     }
 
-    private void OnCollisionEnter(Collision collision)
+    private static GameObject[] Merge(GameObject[] current, params GameObject[] toAppend)
     {
+        List<GameObject> result = new List<GameObject>();
 
-
-        if (stepOne == false)
+        if (current != null)
         {
-            if (collision.gameObject.name == experimentMaterials[numberOfSteps].name)
+            result.AddRange(current);
+        }
+
+        for (int i = 0; i < toAppend.Length; i++)
+        {
+            if (toAppend[i] != null && !result.Contains(toAppend[i]))
             {
-                stepOne = true;
-               // Collider m_Collider = experimentMaterials[numberOfSteps].GetComponent<Collider>();
-               
-                numberOfSteps++;
-                progress[0].text = "Done";
-                nextStepCanvas.text = "" + instructions[numberOfSteps];
-                
-                right.Play();
+                result.Add(toAppend[i]);
             }
         }
 
-        if (stepOne == true && stepTwo == false)
-        {
-
-            if (collision.gameObject.name == experimentMaterials[numberOfSteps].name)
-            {
-                stepTwo = true; 
-                numberOfSteps++;
-                nextStepCanvas.text = "" + instructions[numberOfSteps];
-                progress[1].text = "Done";
-                right.Play();
-            }
-        }
-
-        if (stepTwo == true && stepThree == false)
-        {
-            if (collision.gameObject.name == experimentMaterials[numberOfSteps].name)
-            {
-                stepThree = true;
-                numberOfSteps++;
-                nextStepCanvas.text = "" + instructions[numberOfSteps];
-                progress[2].text = "Done";
-                right.Play();
-            }
-        }
-
-        if (stepThree == true && stepFour == false)
-        {
-            if (collision.gameObject.name == experimentMaterials[numberOfSteps].name)
-            {
-                stepFour = true;
-                numberOfSteps++;
-                nextStepCanvas.text = "" + instructions[numberOfSteps];
-                progress[3].text = "Done";
-                right.Play();
-            }
-        }
-
-        if (stepFour == true && stepFive == false)
-        {
-            if (collision.gameObject.name == experimentMaterials[numberOfSteps].name)
-            {
-                stepFive = true;
-                numberOfSteps++;
-                nextStepCanvas.text = "" + instructions[numberOfSteps];
-                progress[4].text = "Done";
-                right.Play();
-            }
-        }
-
-        if (stepFive == true && stepSix == false)
-        {
-            if (collision.gameObject.CompareTag("Step 6"))
-            {
-                stepSix = true;
-                numberOfSteps++;
-                nextStepCanvas.text = "" + instructions[numberOfSteps-1];
-                progress[5].text = "Done";
-                right.Play();
-
-            }
-        }
-
-        else
-        {
-            playerTooltip.SetActive(true);
-        }
+        return result.ToArray();
     }
-
-    void Update()
-    {
-        if (stepSix == true)
-        {
-            process.SetActive(true);
-            finishExperiment();
-        }
-    }
-
-    void finishExperiment()
-    {
-        for (int x = 1; x <= 6; x++)
-        {
-            blackboardTexts[x-1].SetActive(false);
-        }
-
-        congrats.SetActive(true);
-
-        Destroy(GameObject.FindWithTag("Step 1"));
-        Destroy(GameObject.FindWithTag("Step 2"));
-        Destroy(GameObject.FindWithTag("Step 3"));
-        Destroy(GameObject.FindWithTag("Step 4"));
-        Destroy(GameObject.FindWithTag("Step 5"));
-        Destroy(GameObject.FindWithTag("Step 6"));
-
-        explain.Play();
-        nextStepCanvas.text = "Done";
-        nextStep.SetActive(true);
-        Invoke("SpawnProcess", 1);
-        Destroy(process, 10);
-        Invoke("SpawnFinale", 11);
-        Destroy(finalObject, 22);
-
-    }
-
-    void SpawnProcess()
-    {
-        process.SetActive(true);
-    }
-
-    void SpawnFinale()
-    {
-        finalObject.SetActive(true);
-    }
-    
 }
