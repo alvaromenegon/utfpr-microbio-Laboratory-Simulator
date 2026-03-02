@@ -63,6 +63,7 @@ public class PlayerInteraction : MonoBehaviour
         }
 
         interactable = stepInteractable;
+        Debug.Log("PlayerInteraction: Interactable encontrado - " + interactable.GetType().Name, hit.collider.gameObject);
         return true;
     }
 

@@ -11,6 +11,7 @@ public class StepInteractable : MonoBehaviour, IInteractable
 
     public void Interact()
     {
+        Debug.Log($"Interacted with StepInteractable: {stepId}");
         // Hook para feedback visual/sonoro local do item, se necessário.
     }
 
