@@ -11,8 +11,11 @@ public class PlayerInteraction : MonoBehaviour
     public LayerMask interactableLayer;
 
     public event Action<IInteractable> InteractionPerformed;
+    public event Action<IInteractable> HoverEntered;
+    public event Action<IInteractable> HoverExited;
 
     private GameControls _controls;
+    private IInteractable _currentHoveredInteractable;
 
     private void Awake()
     {
@@ -21,7 +24,48 @@ public class PlayerInteraction : MonoBehaviour
     }
 
     private void OnEnable() => _controls.Player.Enable();
-    private void OnDisable() => _controls.Player.Disable();
+    private void OnDisable()
+    {
+        _controls.Player.Disable();
+        ClearHoverState();
+    }
+
+    private void Update()
+    {
+        UpdateHoverState();
+    }
+
+    public bool TryGetInteractableInSight(out IInteractable interactable)
+    {
+        interactable = null;
+
+        if (playerCamera == null)
+        {
+            return false;
+        }
+
+        Ray ray = new Ray(playerCamera.position, playerCamera.forward);
+        if (!Physics.Raycast(ray, out RaycastHit hit, interactionRange, interactableLayer))
+        {
+            return false;
+        }
+
+        interactable = hit.collider.GetComponentInParent<IInteractable>();
+        if (interactable != null)
+        {
+            return true;
+        }
+
+        StepInteractable stepInteractable = hit.collider.GetComponentInParent<StepInteractable>();
+        if (stepInteractable == null)
+        {
+            return false;
+        }
+
+        interactable = stepInteractable;
+        Debug.Log("PlayerInteraction: Interactable encontrado - " + interactable.GetType().Name, hit.collider.gameObject);
+        return true;
+    }
 
     private void TryInteract()
     {
@@ -31,21 +75,50 @@ public class PlayerInteraction : MonoBehaviour
             return;
         }
 
-        Ray ray = new Ray(playerCamera.position, playerCamera.forward);
-
-        if (!Physics.Raycast(ray, out RaycastHit hit, interactionRange, interactableLayer))
-        {
-            return;
-        }
-
-        IInteractable interactable = hit.collider.GetComponentInParent<IInteractable>();
-        if (interactable == null)
+        if (!TryGetInteractableInSight(out IInteractable interactable))
         {
             return;
         }
 
         interactable.Interact();
         InteractionPerformed?.Invoke(interactable);
+    }
+
+    private void UpdateHoverState()
+    {
+        IInteractable nextHover = null;
+        if (TryGetInteractableInSight(out IInteractable interactable))
+        {
+            nextHover = interactable;
+        }
+
+        if (ReferenceEquals(_currentHoveredInteractable, nextHover))
+        {
+            return;
+        }
+
+        if (_currentHoveredInteractable != null)
+        {
+            HoverExited?.Invoke(_currentHoveredInteractable);
+        }
+
+        _currentHoveredInteractable = nextHover;
+
+        if (_currentHoveredInteractable != null)
+        {
+            HoverEntered?.Invoke(_currentHoveredInteractable);
+        }
+    }
+
+    private void ClearHoverState()
+    {
+        if (_currentHoveredInteractable == null)
+        {
+            return;
+        }
+
+        HoverExited?.Invoke(_currentHoveredInteractable);
+        _currentHoveredInteractable = null;
     }
 
     private void OnDrawGizmos()
