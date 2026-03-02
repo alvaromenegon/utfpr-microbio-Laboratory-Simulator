@@ -5607,6 +5607,11 @@ PrefabInstance:
       propertyPath: m_PresetInfoIsWorld
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 114222333444555666, guid: bcb6684d471b3a345a3be779e91f2a93,
+        type: 3}
+      propertyPath: defaultReticleIcon
+      value: 
+      objectReference: {fileID: 1257796419}
     - target: {fileID: 114788324419139884, guid: bcb6684d471b3a345a3be779e91f2a93,
         type: 3}
       propertyPath: playerCamera
@@ -5729,6 +5734,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1255337228}
   m_CullTransparentMesh: 1
+--- !u!114 &1257796419 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 114402869114003764, guid: aff0ca0ac1ce3c545b409ab896e89d5b,
+    type: 3}
+  m_PrefabInstance: {fileID: 841252291}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &1259177573
 PrefabInstance:
   m_ObjectHideFlags: 0

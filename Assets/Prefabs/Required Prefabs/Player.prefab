@@ -118,8 +118,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7c59b17f0a9a4ac6bf7a357aa6f7d322, type: 3}
-  m_Name: ""
-  m_EditorClassIdentifier: ""
+  m_Name: 
+  m_EditorClassIdentifier: 
   playerInteraction: {fileID: 114788324419139884}
   defaultReticleIcon: {fileID: 0}
   focusedReticleIcon: {fileID: 0}
@@ -288,7 +288,7 @@ MonoBehaviour:
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
   m_DynamicPixelsPerUnit: 10
-  m_PresetInfoIsWorld: 0
+  m_PresetInfoIsWorld: 1
 --- !u!114 &114342125852210100
 MonoBehaviour:
   m_ObjectHideFlags: 0
