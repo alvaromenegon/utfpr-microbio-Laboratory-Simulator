@@ -50,7 +50,6 @@ public class WebReticleController : MonoBehaviour
 
     private void OnHoverEnter(IInteractable interactable)
     {
-        Debug.Log($"Hover entered on interactable: {interactable}");
         SetFocusedState(interactable != null);
     }
 
@@ -63,13 +62,11 @@ public class WebReticleController : MonoBehaviour
     {
         if (defaultReticleIcon != null)
         {
-            Debug.Log($"Setting default reticle icon enabled: {!focused}");
             defaultReticleIcon.enabled = !focused;
         }
 
         if (focusedReticleIcon != null)
         {
-            Debug.Log($"Setting focused reticle icon enabled: {focused}");
             focusedReticleIcon.enabled = focused;
         }
     }

@@ -6,7 +6,7 @@ public class PlayerMovement : MonoBehaviour {
     [Header("References")]
 	public Transform playerCamera;
     [Header("Movement Settings")]
-    public float moveSpeed = .0f;
+    public float moveSpeed = 3.0f;
 
     [Header("Camera Settings")]
     public float mouseSensitivity = 0.3f;
@@ -33,7 +33,7 @@ public class PlayerMovement : MonoBehaviour {
 
         // Travar cursor no centro da tela
         Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = true;
+        Cursor.visible = false;
     }
 
     void OnEnable() => _controls.Player.Enable();

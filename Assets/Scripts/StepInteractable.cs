@@ -3,16 +3,20 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public class StepInteractable : MonoBehaviour, IInteractable
 {
+
+    public enum StepType
+    {
+        Interact,
+        MoveTo,
+    }
     [SerializeField] private string stepId;
     [SerializeField] private bool disableAfterInteraction = true;
     [SerializeField] private bool applyInteractableLayer = true;
+    [SerializeField] private StepType stepType = StepType.Interact;
 
     public string StepId => stepId;
 
-    public void Interact()
-    {
-        Debug.Log($"Interacted with StepInteractable: {stepId}");
-        // Hook para feedback visual/sonoro local do item, se necessário.
+    public void Interact(){       
     }
 
     public void MarkCompleted()

@@ -25,16 +25,16 @@ public class MoveObjects : MonoBehaviour {
 
 	public void clickObject()
 	{
-		items.GetComponent<Rigidbody> ().useGravity = false;
+        items.GetComponent<Rigidbody> ().useGravity = false;
 		items.GetComponent<Rigidbody> ().isKinematic = true;
 		items.transform.position = guide.transform.position;
-		//items.transform.rotation = guide.transform.rotation;
+		items.transform.rotation = guide.transform.rotation;
 		items.transform.parent = tempParent.transform;
 	}
 
 	public void letGoObject()
 	{
-		items.GetComponent<Rigidbody> ().useGravity = true;
+        items.GetComponent<Rigidbody> ().useGravity = true;
 		items.GetComponent<Rigidbody> ().isKinematic = false;
 		items.transform.parent = null;
 		items.transform.position = guide.transform.position;
