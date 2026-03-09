@@ -7,7 +7,7 @@ public class PlayerInteraction : MonoBehaviour
     public Transform playerCamera;
 
     [Header("Interaction Settings")]
-    public float interactionRange = 3.0f;
+    public float interactionRange = 1.3f;
     public LayerMask interactableLayer;
 
     public event Action<IInteractable> InteractionPerformed;

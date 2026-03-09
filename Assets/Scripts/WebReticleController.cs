@@ -6,8 +6,7 @@ public class WebReticleController : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private PlayerInteraction playerInteraction;
-    [SerializeField] private Image defaultReticleIcon;
-    [SerializeField] private Image focusedReticleIcon;
+    
 
     [Header("Cursor")]
     [SerializeField] private bool lockSystemCursorOnWeb = true;
@@ -50,6 +49,7 @@ public class WebReticleController : MonoBehaviour
 
     private void OnHoverEnter(IInteractable interactable)
     {
+
         SetFocusedState(interactable != null);
     }
 
@@ -60,15 +60,6 @@ public class WebReticleController : MonoBehaviour
 
     private void SetFocusedState(bool focused)
     {
-        if (defaultReticleIcon != null)
-        {
-            defaultReticleIcon.enabled = !focused;
-        }
-
-        if (focusedReticleIcon != null)
-        {
-            focusedReticleIcon.enabled = focused;
-        }
     }
 
     private void ApplyCursorState()

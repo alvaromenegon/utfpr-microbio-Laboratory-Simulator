@@ -4,19 +4,19 @@ using UnityEngine;
 public class StepInteractable : MonoBehaviour, IInteractable
 {
 
-    public enum StepType
-    {
+    public enum InteractionType {
         Interact,
         MoveTo,
     }
     [SerializeField] private string stepId;
     [SerializeField] private bool disableAfterInteraction = true;
     [SerializeField] private bool applyInteractableLayer = true;
-    [SerializeField] private StepType stepType = StepType.Interact;
+    [SerializeField] private InteractionType stepType = InteractionType.Interact;
 
     public string StepId => stepId;
 
-    public void Interact(){       
+    public void Interact(){
+        
     }
 
     public void MarkCompleted()

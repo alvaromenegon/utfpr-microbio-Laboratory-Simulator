@@ -49,7 +49,6 @@ public class ExperimentRunner : MonoBehaviour
         {
             return;
         }
-
         stepInteractable.MarkCompleted();
 
         onStepCompleted?.Invoke(stepInteractable.StepId, CurrentStepIndex);

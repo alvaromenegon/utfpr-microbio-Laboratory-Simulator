@@ -7,7 +7,6 @@ public class ExperimentManager : MonoBehaviour {
 
     public GameObject[] requirements;
     public int numberOfRequirements;
-    bool done;
 
 	// Use this for initialization
 	void Start ()
