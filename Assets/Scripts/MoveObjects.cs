@@ -53,7 +53,6 @@ public class MoveObjects : MonoBehaviour {
 		GetComponent<Rigidbody> ().isKinematic = true;
 		transform.position = _tempParent.transform.position;
         transform.parent = _tempParent.transform;
-		Debug.Log(transform.position);
 		_isMoving = true;
 	}
 
