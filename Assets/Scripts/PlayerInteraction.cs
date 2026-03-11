@@ -14,21 +14,7 @@ public class PlayerInteraction : MonoBehaviour
     public event Action<IInteractable> HoverEntered;
     public event Action<IInteractable> HoverExited;
 
-    private GameControls _controls;
     private IInteractable _currentHoveredInteractable;
-
-    private void Awake()
-    {
-        _controls = new GameControls();
-        _controls.Player.Interact.performed += _ => TryInteract();
-    }
-
-    private void OnEnable() => _controls.Player.Enable();
-    private void OnDisable()
-    {
-        _controls.Player.Disable();
-        ClearHoverState();
-    }
 
     private void Update()
     {
@@ -66,7 +52,7 @@ public class PlayerInteraction : MonoBehaviour
         return true;
     }
 
-    private void TryInteract()
+    public void TryInteract()
     {
         if (playerCamera == null)
         {
@@ -109,25 +95,4 @@ public class PlayerInteraction : MonoBehaviour
         }
     }
 
-    private void ClearHoverState()
-    {
-        if (_currentHoveredInteractable == null)
-        {
-            return;
-        }
-
-        HoverExited?.Invoke(_currentHoveredInteractable);
-        _currentHoveredInteractable = null;
-    }
-
-    private void OnDrawGizmos()
-    {
-        if (playerCamera == null)
-        {
-            return;
-        }
-
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawRay(playerCamera.position, playerCamera.forward * interactionRange);
-    }
 }

@@ -1,4 +1,4 @@
-using UnityEngine;
+ using UnityEngine;
 
 [DisallowMultipleComponent]
 public class StepInteractable : MonoBehaviour, IInteractable
@@ -16,7 +16,7 @@ public class StepInteractable : MonoBehaviour, IInteractable
     public string StepId => stepId;
 
     public void Interact(){
-        
+        Debug.Log("Do something...");
     }
 
     public void MarkCompleted()

@@ -12,7 +12,7 @@ public class PlayerMovement : MonoBehaviour {
     public float mouseSensitivity = 0.3f;
     public float maxLookAngle = 60.0f;
 
-    private GameControls _controls;
+    private InputFacade inputFacade;
     private CharacterController _characterController;
     private Vector2 _moveInput;
     private Vector2 _lookInput;
@@ -20,27 +20,17 @@ public class PlayerMovement : MonoBehaviour {
 
     void Awake()
     {
+        inputFacade = GetComponent<InputFacade>();
         _characterController = GetComponent<CharacterController>();
-        _controls = new GameControls();
-
-        // Movimentação WASD
-        _controls.Player.Move.performed += ctx => _moveInput = ctx.ReadValue<Vector2>();
-        _controls.Player.Move.canceled += ctx => _moveInput = Vector2.zero;
-
-        // Mouse Look
-        _controls.Player.Look.performed += ctx => _lookInput = ctx.ReadValue<Vector2>();
-        _controls.Player.Look.canceled += ctx => _lookInput = Vector2.zero;
 
         // Travar cursor no centro da tela
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
 
-    void OnEnable() => _controls.Player.Enable();
-    void OnDisable() => _controls.Player.Disable();
 
     void HandleMovement() {
-        _moveInput = _controls.Player.Move.ReadValue<Vector2>();
+        _moveInput = inputFacade.GetMoveInput();
 
         // Movimento relativo à direção da câmera
         Vector3 forward = transform.forward * _moveInput.y;
@@ -51,7 +41,7 @@ public class PlayerMovement : MonoBehaviour {
     }
 
     void HandleMouseLook() {
-        _lookInput = _controls.Player.Look.ReadValue<Vector2>();
+        _lookInput = inputFacade.GetLookInput();
 
         // Rotação horizontal (Yaw) - Rotaciona o corpo do player
         float yaw = _lookInput.x * mouseSensitivity;

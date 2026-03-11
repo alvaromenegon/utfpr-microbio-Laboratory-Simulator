@@ -43,8 +43,8 @@ GameObject:
   - component: {fileID: 4514230527593050}
   - component: {fileID: 143431543924655556}
   - component: {fileID: 114965747005239700}
-  - component: {fileID: 114222333444555666}
   - component: {fileID: 6044486125020467781}
+  - component: {fileID: 8423605814229551366}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -113,20 +113,6 @@ MonoBehaviour:
   moveSpeed: 1.5
   mouseSensitivity: 0.3
   maxLookAngle: 60
---- !u!114 &114222333444555666
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1177839074555146}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7c59b17f0a9a4ac6bf7a357aa6f7d322, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  playerInteraction: {fileID: 0}
-  lockSystemCursorOnWeb: 1
 --- !u!222 &6044486125020467781
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -135,6 +121,24 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1177839074555146}
   m_CullTransparentMesh: 1
+--- !u!114 &8423605814229551366
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1177839074555146}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d28ac8a7d3ccfa438df033aae349a02, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InputFacade
+  playerCamera: {fileID: 224546710225088528}
+  cursorChanger: {fileID: 0}
+  interactionRange: 0.5
+  interactableLayer:
+    serializedVersion: 2
+    m_Bits: 256
 --- !u!1 &1437551132123908
 GameObject:
   m_ObjectHideFlags: 0

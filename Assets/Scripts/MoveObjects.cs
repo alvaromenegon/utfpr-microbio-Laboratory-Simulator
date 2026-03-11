@@ -1,71 +1,72 @@
 ﻿using UnityEngine;
 
-public class MoveObjects : MonoBehaviour {
-	GameObject _tempParent;
+public class MoveObjects : MonoBehaviour, IMovable {
+	[Header("References")]
+	[SerializeField] private Transform guide;
 
-	private GameControls _controls;
-	private bool _isHovering;
-	private bool _isMoving;
+	[Header("Settings")]
+    [SerializeField] private bool applyMovableLayer = true;
+    GameObject _tempParent;
+	Rigidbody _rigidbody;
+    private bool _isMoving;
 
-	// Use this for initialization
+	public bool IsMoving => _isMoving;
+
 	void Start () {		
-		gameObject.GetComponent<Rigidbody> ().useGravity = true;
-	}
-
-	void Awake()
-	{
-		_controls = new GameControls();
-		_controls.Player.Click.performed += _ => PickObject();
-		_controls.Player.Click.canceled += _ => DropObject();
+		_rigidbody = gameObject.GetComponent<Rigidbody>();
+		_rigidbody.useGravity = true;
 		_isMoving = false;
-		_isHovering = false;
 	}
 
-	void OnEnable() => _controls.Player.Enable();
-
-	void OnDisable() => _controls.Player.Disable();
-
-    void OnMouseEnter() {
-		_isHovering = true;
-	}
-	void OnMouseExit() {
-		_isHovering = false;
-	}
-
-	private void SetTempParent(string parentName= null) {
-		if (parentName == null) {
-			_tempParent = null;
-			return;
+	private void SetTempParent() {
+		if (guide == null) {
+			Debug.LogWarning("Guide is not assigned, trying to find it in the scene...");
+			Debug.LogWarning("This is for compatibility and will be removed in the future. Please assign the guide reference in the inspector.");
+			_tempParent = GameObject.Find("guide");
+			if (_tempParent == null) {
+				Debug.LogError("temp parent is null!");
+			}
 		}
-        _tempParent = GameObject.Find(parentName);
-        if (_tempParent == null) {
-            Debug.LogError("temp parent is null!");
-        }
+		else {
+			_tempParent = guide.gameObject;
+		}
+	}
+
+	private void ResetTempParent() {
+		_tempParent = null;
     }
 
-	public void PickObject()
+	public void PickUp()
 	{
-        if (!_isHovering) {
-			return;
-        }
-        SetTempParent("guide");
-        GetComponent<Rigidbody> ().useGravity = false;
-		GetComponent<Rigidbody> ().isKinematic = true;
+        SetTempParent();
+        _rigidbody.useGravity = false;
+		_rigidbody.isKinematic = true;
 		transform.position = _tempParent.transform.position;
         transform.parent = _tempParent.transform;
 		_isMoving = true;
 	}
 
-	public void DropObject(){
+	public void Drop(){
         if (!_isMoving) {
 			return;
 		}
-        GetComponent<Rigidbody> ().useGravity = true;
-		GetComponent<Rigidbody> ().isKinematic = false;
+        _rigidbody.useGravity = true;
+		_rigidbody.isKinematic = false;
 		transform.parent = null;
 		transform.position = _tempParent.transform.position;
 
-        SetTempParent();
+        ResetTempParent();
 		_isMoving = false;
+    }
+
+    private void OnValidate() {
+        if (!applyMovableLayer) {
+            return;
+        }
+
+        int movableLayer = LayerMask.NameToLayer("Movable");
+        if (movableLayer >= 0) {
+            gameObject.layer = movableLayer;
+        }
     }
 }
