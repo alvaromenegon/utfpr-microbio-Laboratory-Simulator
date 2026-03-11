@@ -5,16 +5,15 @@ using UnityEngine;
 public class ExperimentManager : MonoBehaviour {
 
 
-    public GameObject[] requirments;
-    public int numberOfRequirments;
-    bool done;
+    public GameObject[] requirements;
+    public int numberOfRequirements;
 
 	// Use this for initialization
 	void Start ()
     {
-        for (int num = 0; num <= numberOfRequirments - 1; num++)
+        for (int num = 0; num <= numberOfRequirements - 1; num++)
         {
-            requirments[num].SetActive(true);
+            requirements[num].SetActive(true);
         }
     }
 	
