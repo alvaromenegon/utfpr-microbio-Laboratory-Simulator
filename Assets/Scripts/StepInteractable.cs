@@ -4,27 +4,18 @@
 public class StepInteractable : MonoBehaviour, IInteractable
 {
 
-    public enum InteractionType {
-        Interact,
-        MoveTo,
-    }
     [SerializeField] private string stepId;
-    [SerializeField] private bool disableAfterInteraction = true;
     [SerializeField] private bool applyInteractableLayer = true;
-    [SerializeField] private InteractionType stepType = InteractionType.Interact;
+    public InteractionType stepType = InteractionType.USE;
 
-    public string StepId => stepId;
+    public string StepId { get; set; }
 
     public void Interact(){
-        Debug.Log("Do something...");
-    }
-
-    public void MarkCompleted()
-    {
-        if (disableAfterInteraction)
-        {
-            gameObject.SetActive(false);
-        }
+        PlayerAction action = new() {
+            InteractionType = stepType,
+            Target = gameObject
+        };
+        ExperimentManager.Instance.ProcessInteraction(action);
     }
 
     private void OnValidate()

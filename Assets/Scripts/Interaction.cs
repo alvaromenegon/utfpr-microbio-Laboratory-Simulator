@@ -4,14 +4,14 @@ using UnityEngine.UI;
 public class Interaction : MonoBehaviour {
     [SerializeField] InteractionType interactionType;
     [SerializeField] GameObject target;
+}
 
-
-
-    enum InteractionType {
-        None,
-        StartAnimation,
-        EndAnimation,
-        SetValue
-    }
-
+public enum InteractionType {
+    PICK_UP, // "PICK_UP"
+    USE, // "USE"
+    EXAMINE, // "EXAMINE"
+    MOVE, // "MOVE"
+    SET_TIMER, // "SET_TIMER"
+    SET_TEMPERATURE, // "SET_TEMPERATURE"
+    SET_QUANTITY, // "SET_QUANTITY"
 }
