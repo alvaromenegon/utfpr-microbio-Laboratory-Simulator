@@ -1,6 +1,7 @@
 using UnityEngine;
 
 public class PlayerAction {
-    public InteractionType InteractionType { get; set; }
+    public Interaction.InteractionType InteractionType { get; set; }
     public GameObject Target { get; set; }
+    public double? Value { get; set; } = default;
 }

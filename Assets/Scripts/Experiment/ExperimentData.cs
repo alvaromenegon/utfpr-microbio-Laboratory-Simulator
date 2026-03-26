@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using static Interaction;
 
 [Serializable]
 public class ExperimentData : ScriptableObject {
@@ -47,8 +48,19 @@ public class Step {
         }
     } //  O tipo de interação com o GameObject
     public string InteractionTarget { get; set; } // O nome do GameObject com o qual o usuário deve interagir, deve implementar Interactable
+    /**
+     * O nome do segundo GameObject com o qual o usuário deve interagir, se aplicável (ex: para interações que envolvem dois objetos, como "USE A ON B")
+     * 
+     * Exemplo: Interaction: "MOVE",
+     * InteractionTarget: "flask",
+     * InteractionTargetSecondary: "cupboard"
+     * O passo será considerado válido se o usuário mover a "flask" para dentro do "cupboard"
+     * Na cena, o secondaryTargetBeam (antigo teleportBeam) será exibido em volta do "cupboard"
+     */
+    public string InteractionTargetSecondary { get; set; }
     public string Instruction { get; set; } // Instrução detalhada para o passo
-    public int Value { get; set; } // Valor associado à interação, se aplicável (ex: temperatura, tempo, quantidade)
+    public double? Value { get; set; } // Valor associado à interação, se aplicável (ex: temperatura, tempo, quantidade)
+    public double? Tolerance { get; set; } // Tolerância para validação do valor 
     public string OnSuccessMessage { get; set; } // Mensagem ou ação a ser executada em caso de sucesso
     public string OnFailureMessage { get; set; } // Mensagem ou ação a ser executada em caso de falha
     public OnStepFinished ActionOnFailure { get; set; } // Ação a ser executada em caso de falha

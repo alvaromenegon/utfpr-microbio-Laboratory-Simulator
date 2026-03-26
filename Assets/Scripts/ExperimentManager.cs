@@ -1,20 +1,21 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using static Interaction;
 
 
 
 public class ExperimentManager : MonoBehaviour {
     [SerializeField] private GameObject label;
+    [SerializeField] private GameObject secondaryTargetBeam;
+    [SerializeField] private TMP_Text inputLabel;
     public static ExperimentManager Instance { get; private set; }
     public ExperimentDefinition CurrentExperiment { get; private set; }
 	private int currentStepIndex = 0;
     private Step CurrentStep => CurrentExperiment.experimentData.Steps[currentStepIndex];
     private int score = 0;
     private DateTime StartTime { get; set; }
-
 
     public bool IsExperimentRunning { get; private set; } = false;
 
@@ -25,6 +26,29 @@ public class ExperimentManager : MonoBehaviour {
         score = 0;
         SetupExperiment();
         StartTime = DateTime.Now;
+    }
+
+    private void SetupStep() {
+        secondaryTargetBeam.SetActive(false);
+        var step = CurrentStep;
+        var gameObject = GameObject.Find(step.InteractionTarget);
+        if (gameObject == null) {
+            Debug.LogError($"Target '{step.InteractionTarget}' not found in the scene.");
+            return;
+        }
+        gameObject.GetComponent<StepInteractable>().stepType = step.Interaction;
+        if (step.Interaction == InteractionType.MOVE && !string.IsNullOrEmpty(step.InteractionTargetSecondary)) {
+            var gameObjectSecondary = GameObject.Find(step.InteractionTargetSecondary);
+            if (gameObjectSecondary == null) {
+                Debug.LogError($"Secondary target '{step.InteractionTargetSecondary}' not found in the scene.");
+                return;
+            }
+            secondaryTargetBeam.transform.position = gameObjectSecondary.transform.position;
+            secondaryTargetBeam.SetActive(true);
+        }
+        else if (RequireValue(step.Interaction)) {
+            inputLabel.text = $"Enter value for {step.Description}:";
+        }
     }
 
     private void SetupExperiment() {
@@ -57,29 +81,64 @@ public class ExperimentManager : MonoBehaviour {
         }
     }
 
-    private bool ValidateInteraction(PlayerAction interaction) {
+    public void ValidateValue(double? value) {
+        double? expectedValue = CurrentStep.Value;
+        double tolerance = CurrentStep.Tolerance ?? 0.001;
+        if (expectedValue == null) {
+            Debug.LogError($" requires a value, but no expected value is defined for the current step.");
+            InvalidStep();
+            return;
+        }
+        if (Math.Abs(value.Value - expectedValue.Value) > tolerance) {
+            Debug.LogError($"requires a value of {expectedValue}, but received {value}.");
+            InvalidStep();
+            return;
+        }
+        ValidStep();
+    }
+
+    private bool ValidateInteraction(PlayerAction interaction, double? value = null) {
         if (interaction.InteractionType != CurrentStep.Interaction)
             return false;
 
         if (interaction.Target.name != CurrentStep.InteractionTarget)
             return false;
 
+        //if (RequireValue(interaction.InteractionType) && value == null || !ValidateValue( value))
+        //    return false;
+
         return true;
     }
 
-    public void ProcessInteraction(PlayerAction interaction) {
+    private void ValidStep() {
+        if (CurrentStep == null) {
+            Debug.LogError("Current step is null.");
+            return;
+        }
+        ShowFeedback(CurrentStep.OnSuccessMessage);
+        score += CurrentStep.Score;
+        NextStep();
+    }
+
+    private void InvalidStep() {
+        if (CurrentStep == null) {
+            Debug.LogError("Current step is null.");
+            return;
+        }
+        ShowFeedback(CurrentStep.OnFailureMessage);
+        OnFailure();
+    }
+
+    public void ProcessInteraction(PlayerAction interaction, double? value = null) {
 		if (!IsExperimentRunning) return;
-		var currentStep = CurrentStep;
-        bool valid = ValidateInteraction(interaction);
+        bool valid = ValidateInteraction(interaction, value);
 
         if (valid) {
-            ShowFeedback(currentStep.OnSuccessMessage);
-            score += currentStep.Score;
-            NextStep();
+            ValidStep();
         }else {
-            ShowFeedback(currentStep.OnFailureMessage);
-            OnFailure();
+            InvalidStep();
         }
+        secondaryTargetBeam.SetActive(false);
 
     }
 
@@ -93,7 +152,8 @@ public class ExperimentManager : MonoBehaviour {
             FinishExperiment();
 			return;
         }
-			ShowStepInstruction();
+        SetupStep();
+		ShowStepInstruction();
     }
 
     public void ReturnToStep(int stepIndex) {
@@ -145,7 +205,7 @@ public class ExperimentManager : MonoBehaviour {
             score = finishScore.Value;
         }
 
-        Debug.Log("Experiment completed!");
+        End();
         // TODO: exibir resultados, enviar dados para servidor, etc.
     }
 
@@ -166,7 +226,8 @@ public class ExperimentManager : MonoBehaviour {
     private void OnGUI() {
         GUI.Label(new Rect(10, 50, 200, 20), $"Time: {(DateTime.Now - StartTime).TotalSeconds:F0}/{CurrentExperiment.experimentData.Time} seconds");
         GUI.Label(new Rect(10, 70, 400, 20), $"Current Step: {(IsExperimentRunning ? CurrentStep.Description : "None")}");
-        GUI.Label(new Rect(10, 90, 400, 20), $"Score: {score}/100");
+        GUI.Label(new Rect(10, 90, 400, 20), $"Instructions: {(IsExperimentRunning ? CurrentStep.Instruction : "No experiment running")}");
+        GUI.Label(new Rect(10, 110, 400, 20), $"Score: {score}/100");
     }
 
     private void Start() {
@@ -179,5 +240,11 @@ public class ExperimentManager : MonoBehaviour {
         testExperiment.experimentData = data;
         Debug.Log($"Loaded experiment: {testExperiment}");
         StartExperiment(testExperiment);
+    }
+
+    private void End() {
+        // encerrar o experimento, enviar dados para servidor, etc.
+        // apenas mostrar uma mensagem por enquanto
+        Debug.Log("Experiment ended. Final score: " + score);
     }
 }
