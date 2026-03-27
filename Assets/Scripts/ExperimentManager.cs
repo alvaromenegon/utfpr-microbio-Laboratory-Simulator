@@ -29,7 +29,6 @@ public class ExperimentManager : MonoBehaviour {
     }
 
     private void SetupStep() {
-        secondaryTargetBeam.SetActive(false);
         var step = CurrentStep;
         var gameObject = GameObject.Find(step.InteractionTarget);
         if (gameObject == null) {
@@ -43,6 +42,7 @@ public class ExperimentManager : MonoBehaviour {
                 Debug.LogError($"Secondary target '{step.InteractionTargetSecondary}' not found in the scene.");
                 return;
             }
+            Debug.Log($"Setting up secondary target beam for '{gameObjectSecondary.name}'");
             secondaryTargetBeam.transform.position = gameObjectSecondary.transform.position;
             secondaryTargetBeam.SetActive(true);
         }
@@ -138,12 +138,12 @@ public class ExperimentManager : MonoBehaviour {
         }else {
             InvalidStep();
         }
-        secondaryTargetBeam.SetActive(false);
-
     }
 
 	public void NextStep() {
-		if (CurrentStep.ActionOnSuccess == OnStepFinished.COMPLETE_EXPERIMENT_SUCCESS) {
+        secondaryTargetBeam.SetActive(false);
+        inputLabel.text = "";
+        if (CurrentStep.ActionOnSuccess == OnStepFinished.COMPLETE_EXPERIMENT_SUCCESS) {
             FinishExperiment();
 			return;
         }
@@ -235,7 +235,8 @@ public class ExperimentManager : MonoBehaviour {
         
         
         ExperimentLoader loader = new ();
-        var data = loader.Load("Assets/ExperimentData/test_experiment-2.json");
+        //var data = loader.Load("Assets/ExperimentData/test_experiment-2.json");
+        var data = loader.Load("Assets/ExperimentData/experiment_definition-2.json");
         ExperimentDefinition testExperiment = ScriptableObject.CreateInstance<ExperimentDefinition>();
         testExperiment.experimentData = data;
         Debug.Log($"Loaded experiment: {testExperiment}");

@@ -11,7 +11,7 @@ public class StepInteractable : MonoBehaviour, IInteractable
 
     public string StepId { get; set; }
 
-    public void Interact(){
+    public virtual void Interact(){
         if (RequireValue(stepType)) {
             // tipo de interação que requer um valor obtido
             // por entrada do usuário, como uma temperatura ou tempo.

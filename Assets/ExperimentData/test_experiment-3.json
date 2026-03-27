@@ -1,0 +1,26 @@
+{
+  "time": 6000,
+  "steps": [
+    {
+      "score": 60,
+      "interaction": "USE",
+      "onFailureMessage": "Tente Novamente!",
+      "onSuccessMessage": "Parabéns, interagiu com o objeto!",
+      "description": "Use o Microscópio Eletrônico",
+      "interactionTarget": "microscope",
+    },
+    {
+      "score": 40,
+      "interaction": "MOVE",
+      "onFailureMessage": "Tente Novamente!",
+      "onSuccessMessage": "Parabéns, interagiu com o objeto!",
+      "description": "Ajuse a temperatura da estufa",
+      "interactionTarget": "Glass",
+      "interactionTargetSecondary": "stove"
+    }
+  ],
+  "description": "Aprender a Interagir com Objetos em 3D",
+  "objects": [
+    "microscope","Glass","stove"
+  ]
+}
