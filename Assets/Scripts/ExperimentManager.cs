@@ -42,7 +42,6 @@ public class ExperimentManager : MonoBehaviour {
                 Debug.LogError($"Secondary target '{step.InteractionTargetSecondary}' not found in the scene.");
                 return;
             }
-            Debug.Log($"Setting up secondary target beam for '{gameObjectSecondary.name}'");
             secondaryTargetBeam.transform.position = gameObjectSecondary.transform.position;
             secondaryTargetBeam.SetActive(true);
         }
@@ -71,7 +70,6 @@ public class ExperimentManager : MonoBehaviour {
                 Debug.LogError($"Object '{objName}' not found in the scene.");
                 continue;
             }
-            Debug.Log($"Found object '{objName}' for the experiment. Checking Interactable script");
             var interactable = obj.GetComponent<StepInteractable>();
             if (interactable == null) {
                 Debug.LogWarning($"Object '{objName}' does not have a StepInteractable component. Adding one.");
@@ -103,9 +101,6 @@ public class ExperimentManager : MonoBehaviour {
 
         if (interaction.Target.name != CurrentStep.InteractionTarget)
             return false;
-
-        //if (RequireValue(interaction.InteractionType) && value == null || !ValidateValue( value))
-        //    return false;
 
         return true;
     }

@@ -19,7 +19,6 @@ public class InputPanelController : MonoBehaviour {
 
     // Chamado pelo botão Confirmar (via OnClick no Inspector)
     public void OnConfirm() {
-        Debug.Log($"Valor digitado: {inputField.text}");
         if (double.TryParse(inputField.text,
                 System.Globalization.NumberStyles.Any,
                 System.Globalization.CultureInfo.InvariantCulture, // evita bug de vírgula/ponto
