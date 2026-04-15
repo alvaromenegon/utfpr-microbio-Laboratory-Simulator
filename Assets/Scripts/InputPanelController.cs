@@ -1,3 +1,4 @@
+using System.Collections;
 using TMPro;
 using UnityEngine;
 
@@ -10,15 +11,24 @@ public class InputPanelController : MonoBehaviour {
     void Awake() => Instance = this;
 
     public void Show() {
-        inputField.text = "";
         panel.SetActive(true);
-        inputField.ActivateInputField(); // foca automaticamente
+        inputField.text = string.Empty;
+        StartCoroutine(ActivateInputNextFrame());
+    }
+
+    private IEnumerator ActivateInputNextFrame() {
+        // Aguarda o fim do frame para garantir que o panel esteja ativo e renderizado
+        yield return new WaitForEndOfFrame();
+
+        inputField.Select();
+        inputField.ActivateInputField();
     }
 
     public void Hide() => panel.SetActive(false);
 
     // Chamado pelo botão Confirmar (via OnClick no Inspector)
     public void OnConfirm() {
+        Debug.Log($"Input value: {inputField.text}");
         if (double.TryParse(inputField.text,
                 System.Globalization.NumberStyles.Any,
                 System.Globalization.CultureInfo.InvariantCulture, // evita bug de vírgula/ponto

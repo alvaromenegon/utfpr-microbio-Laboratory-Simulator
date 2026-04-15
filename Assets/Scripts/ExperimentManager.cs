@@ -17,6 +17,13 @@ public class ExperimentManager : MonoBehaviour {
     private int score = 0;
     private DateTime StartTime { get; set; }
 
+    private BackgroundWork[] backgroundWorks = new BackgroundWork[0];
+
+    public void AddBackgroundWork(BackgroundWork work) {
+        Array.Resize(ref backgroundWorks, backgroundWorks.Length + 1);
+        backgroundWorks[^1] = work;
+    }
+
     public bool IsExperimentRunning { get; private set; } = false;
 
     public void StartExperiment(ExperimentDefinition experimentDefinition) {
@@ -35,7 +42,8 @@ public class ExperimentManager : MonoBehaviour {
             Debug.LogError($"Target '{step.InteractionTarget}' not found in the scene.");
             return;
         }
-        gameObject.GetComponent<StepInteractable>().stepType = step.Interaction;
+        var interactable = gameObject.GetComponent<StepInteractable>();
+        interactable.stepType = step.Interaction;
         if (step.Interaction == InteractionType.MOVE && !string.IsNullOrEmpty(step.InteractionTargetSecondary)) {
             var gameObjectSecondary = GameObject.Find(step.InteractionTargetSecondary);
             if (gameObjectSecondary == null) {
@@ -45,9 +53,18 @@ public class ExperimentManager : MonoBehaviour {
             secondaryTargetBeam.transform.position = gameObjectSecondary.transform.position;
             secondaryTargetBeam.SetActive(true);
         }
-        else if (RequireValue(step.Interaction)) {
-            inputLabel.text = $"Enter value for {step.Description}:";
+        if (step.Interaction == InteractionType.USE && !string.IsNullOrEmpty(step.OnSuccessStartBackgroundWorkId)) {
+
+            // verifica se é um EquipmentInteractable
+            var equipment = interactable as EquipmentInteractable;
+            if (equipment != null) {
+                var _bgWork = Array.Find(CurrentExperiment.experimentData.BackgroundWorks, w => w.Id == step.OnSuccessStartBackgroundWorkId);
+                AddBackgroundWork(_bgWork);
+                equipment.backgroundWork = _bgWork;
+                Debug.Log($"Background work '{_bgWork.Description}' will be started when using '{gameObject.name}'.");
+            }
         }
+        HUDController.Instance.UpdateStepInformation($"Step {currentStepIndex + 1}/{CurrentExperiment.experimentData.Steps.Length}: {step.Description} - {step.Instruction}");
     }
 
     private void SetupExperiment() {
@@ -75,8 +92,8 @@ public class ExperimentManager : MonoBehaviour {
                 Debug.LogWarning($"Object '{objName}' does not have a StepInteractable component. Adding one.");
                 obj.AddComponent<StepInteractable>();
             }
-            interactable.stepType = CurrentExperiment.experimentData.Steps[0].Interaction; // definir o tipo de interação esperado para o primeiro passo
         }
+        SetupStep();
     }
 
     public void ValidateValue(double? value) {
@@ -112,9 +129,83 @@ public class ExperimentManager : MonoBehaviour {
         }
         ShowFeedback(CurrentStep.OnSuccessMessage);
         score += CurrentStep.Score;
+        if (!string.IsNullOrEmpty(CurrentStep.OnSuccessStartBackgroundWorkId)) {
+            var work = Array.Find(CurrentExperiment.experimentData.BackgroundWorks, w => w.Id == CurrentStep.OnSuccessStartBackgroundWorkId);
+            if (work == null) {
+                Debug.LogError($"Background work with ID '{CurrentStep.OnSuccessStartBackgroundWorkId}' not found in the experiment definition.");
+            } else {
+                AddBackgroundWork(work);
+                work.Start();
+            }
+        }
         NextStep();
     }
 
+    public void OnSecondaryTargetInteraction(GameObject gameObjectPrimary) {
+        if (CurrentStep == null) {
+            Debug.LogError("Current step is null.");
+            return;
+        }
+        var gameObjectSecondary = GameObject.Find(CurrentStep.InteractionTargetSecondary);
+        if (gameObjectSecondary == null) {
+            Debug.LogError($"Secondary target '{CurrentStep.InteractionTargetSecondary}' not found in the scene.");
+            return;
+        }
+        var equipment = gameObjectSecondary.GetComponent<EquipmentInteractable>();
+        if (equipment == null) {
+            // não é um equipamento, então não precisa mover para "dentro" dele, deixa o usuário soltar e processa a operação normalmente
+            return;
+        }
+        if (CurrentStep.Interaction != InteractionType.MOVE) {
+            Debug.LogError($"Secondary target interaction is only valid for MOVE interactions. Current step interaction: {CurrentStep.Interaction}");
+            return;
+        }
+        equipment.MoveObjectToEquipment(gameObjectPrimary);
+    }
+
+    private bool HasBackgroundWorkRunning() {
+        foreach (var work in backgroundWorks) {
+            if (work.IsRunning) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void ValidBackgroundWork(string workId) {
+        var work = Array.Find(backgroundWorks, w => w.Id == workId);
+        if (work == null) {
+            Debug.LogError($"Background work with ID '{workId}' not found in the experiment definition.");
+            return;
+        }
+        ShowFeedback(work.OnSuccessMessage);
+        score += work.Score;
+        if (currentStepIndex >= CurrentExperiment.experimentData.Steps.Length) {
+            FinishExperiment();
+        }
+    }
+    private void InvalidBackgroundWork(string workId) { 
+        var work = Array.Find(backgroundWorks, w => w.Id == workId);
+        if (work == null) {
+            Debug.LogError($"Background work with ID '{workId}' not found in the experiment definition.");
+            return;
+        }
+        ShowFeedback(work.OnFailureMessage);
+        switch (work.ActionOnFailure) {
+            case OnStepFinished.BACK_TO_STEP:
+                ReturnToStep(work.OnFailureReturnToStep);
+                break;
+            case OnStepFinished.COMPLETE_EXPERIMENT_FAILURE:
+                FinishExperiment(0);
+                break;
+            case OnStepFinished.COMPLETE_EXPERIMENT_STEP:
+                FinishExperiment();
+                break;
+            default:
+                break;
+        }
+
+    }
     private void InvalidStep() {
         if (CurrentStep == null) {
             Debug.LogError("Current step is null.");
@@ -135,7 +226,26 @@ public class ExperimentManager : MonoBehaviour {
         }
     }
 
-	public void NextStep() {
+    public void ProcessBackgroundWork(BackgroundWork work, float timeUsed) {
+        if (!IsExperimentRunning) return;
+        var expectedTime = work.Duration;
+        var tolerance = work.Tolerance ?? 0.5f;
+        if (Math.Abs(timeUsed - expectedTime) > tolerance) {
+            Debug.LogError($"O Processo deveria ter sido executado por {expectedTime} (+-{tolerance}) segundos, mas foi executado por {timeUsed} segundos.");
+            InvalidBackgroundWork(work.Id);
+            return;
+        }   
+        if (!work.ValidateCompletion(currentStepIndex)) {
+            Debug.LogError($"O Processo não foi completado no momento esperado. Verifique se ele deveria ter sido completado entre os passos {string.Join(", ", work.ShouldCompleteBetweenSteps)}.");
+            InvalidBackgroundWork(work.Id);
+            return;
+        }
+        
+        
+        ValidBackgroundWork(work.Id);
+    }
+
+    public void NextStep() {
         secondaryTargetBeam.SetActive(false);
         inputLabel.text = "";
         if (CurrentStep.ActionOnSuccess == OnStepFinished.COMPLETE_EXPERIMENT_SUCCESS) {
@@ -195,17 +305,28 @@ public class ExperimentManager : MonoBehaviour {
     }
 
     private void FinishExperiment(int? finishScore = null) {
-        IsExperimentRunning = false;
-        if (finishScore != null) {
-            score = finishScore.Value;
-        }
+        if (HasBackgroundWorkRunning()) {
+            Debug.LogWarning("There are still background works running");
 
-        End();
+            // TODO: implementar a lógica para lidar com os processos em segundo plano que ainda estão em execução
+        }
+        else {
+            IsExperimentRunning = false;
+
+            if (finishScore != null) {
+                score = finishScore.Value;
+            }
+
+            End();
+        }
         // TODO: exibir resultados, enviar dados para servidor, etc.
     }
 
     private void Update() {
-        if (IsExperimentRunning && CurrentExperiment.experimentData.HasTimeLimit()) {
+        if (IsExperimentRunning) {
+            HUDController.Instance.UpdateTimer($"Tempo: {(DateTime.Now - StartTime).TotalSeconds:F0}/{CurrentExperiment.experimentData.Time} s");
+        }
+            if (IsExperimentRunning && CurrentExperiment.experimentData.HasTimeLimit()) {
             double elapsedSeconds = (DateTime.Now - StartTime).TotalSeconds;
             if (elapsedSeconds > CurrentExperiment.experimentData.Time) {
                 Debug.Log("Time's up!");
@@ -230,8 +351,8 @@ public class ExperimentManager : MonoBehaviour {
         
         
         ExperimentLoader loader = new ();
-        //var data = loader.Load("Assets/ExperimentData/test_experiment-2.json");
-        var data = loader.Load("Assets/ExperimentData/experiment_definition-2.json");
+        var data = loader.Load("Assets/ExperimentData/test_experiment-4.json");
+        //var data = loader.Load("Assets/ExperimentData/experiment_definition-2.json");
         ExperimentDefinition testExperiment = ScriptableObject.CreateInstance<ExperimentDefinition>();
         testExperiment.experimentData = data;
         Debug.Log($"Loaded experiment: {testExperiment}");

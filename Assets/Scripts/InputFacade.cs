@@ -1,3 +1,4 @@
+using Assets.Scripts;
 using System;
 using UnityEngine;
 
@@ -13,6 +14,7 @@ class InputFacade : MonoBehaviour {
     private GameControls _controls;
     private IMovable _currentMovable;
     private IInteractable _currentHoveredInteractable;
+    private LaboratoryObject _currentLaboratoryObject;
 
     public event Action<IInteractable> InteractionPerformed;
     public event Action<IInteractable> HoverEntered;
@@ -79,25 +81,39 @@ class InputFacade : MonoBehaviour {
     {
         IMovable nextMovable = null;
         IInteractable nextInteractable = null;
+        LaboratoryObject nextLaboratoryObject = null;
         CursorChanger.CursorType cursorType = CursorChanger.CursorType.Pointer;
 
         if (TryGetObjectInSight(out RaycastHit hit))
         {
             nextMovable = hit.collider.GetComponentInParent<IMovable>();
             nextInteractable = hit.collider.GetComponentInParent<IInteractable>();
+            nextLaboratoryObject = hit.collider.GetComponentInParent<LaboratoryObject>();         
 
-            if (nextMovable != null)
-            {
+            if (nextMovable != null) {
                 cursorType = CursorChanger.CursorType.Selector;
             }
-            else if (nextInteractable != null)
-            {
+            else if (nextInteractable != null) {
                 cursorType = CursorChanger.CursorType.Interact;
             }
-        } 
+        }
 
-        if (!ReferenceEquals(_currentMovable, nextMovable))
+        if (!ReferenceEquals(_currentLaboratoryObject, nextLaboratoryObject))
         {
+            if (_currentLaboratoryObject != null)
+            {
+                _currentLaboratoryObject.OnExitHover();
+            }
+            _currentLaboratoryObject = nextLaboratoryObject;
+            if (_currentLaboratoryObject != null)
+            {
+                _currentLaboratoryObject.OnHover();
+            }
+        } else {
+            _currentLaboratoryObject = nextLaboratoryObject;
+        }
+
+        if (!ReferenceEquals(_currentMovable, nextMovable)) {
             _currentMovable = nextMovable;
         }
 

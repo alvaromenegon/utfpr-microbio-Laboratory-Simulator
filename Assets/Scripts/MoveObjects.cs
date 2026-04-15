@@ -9,8 +9,13 @@ public class MoveObjects : MonoBehaviour, IMovable {
     GameObject _tempParent;
 	Rigidbody _rigidbody;
     private bool _isMoving;
+	private bool _canMove = true;
 
-	public bool IsMoving => _isMoving;
+	public void SetCanMove(bool canMove) {
+		_canMove = canMove;
+    }
+
+    public bool IsMoving => _isMoving;
 
 	void Start () {		
 		_rigidbody = gameObject.GetComponent<Rigidbody>();
@@ -38,6 +43,9 @@ public class MoveObjects : MonoBehaviour, IMovable {
 
 	public void PickUp()
 	{
+        if (!_canMove) {
+            return;
+        }
         SetTempParent();
         _rigidbody.useGravity = false;
 		_rigidbody.isKinematic = true;

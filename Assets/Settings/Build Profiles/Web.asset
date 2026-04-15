@@ -35,8 +35,8 @@ MonoBehaviour:
     - line: '|   targetDevice: 2'
     - line: '|   useOnDemandResources: 0'
     - line: '|   accelerometerFrequency: 60'
-    - line: '|   companyName: JohnHaySuper'
-    - line: '|   productName: VRLaboratory'
+    - line: '|   companyName: Alvaro Rosario'
+    - line: '|   productName: MicroBio Lab'
     - line: '|   defaultCursor: {instanceID: 0}'
     - line: '|   cursorHotspot: {x: 0, y: 0}'
     - line: '|   m_SplashScreenBackgroundColor: {r: 0.13725491, g: 0.12156863, b:
@@ -138,6 +138,7 @@ MonoBehaviour:
     - line: '|   xboxEnableGuest: 0'
     - line: '|   xboxEnablePIXSampling: 0'
     - line: '|   metalFramebufferOnly: 0'
+    - line: '|   metalUseMetalDisplayLink: 0'
     - line: '|   xboxOneResolution: 0'
     - line: '|   xboxOneSResolution: 0'
     - line: '|   xboxOneXResolution: 3'
@@ -821,7 +822,7 @@ MonoBehaviour:
     - rid: 4165675166453203000
       type: {class: WebGLPlatformSettings, ns: UnityEditor.WebGL, asm: UnityEditor.WebGL.Extensions}
       data:
-        m_Development: 0
+        m_Development: 1
         m_ConnectProfiler: 0
         m_BuildWithDeepProfilingSupport: 0
         m_AllowDebugging: 0
@@ -837,5 +838,5 @@ MonoBehaviour:
         m_AdaptivePerformanceEnabled: 0
         m_CodeOptimization: 0
         m_WebGLClientBrowserPath: C:/Program Files/Mozilla Firefox/firefox.exe
-        m_WebGLClientBrowserType: 3
+        m_WebGLClientBrowserType: 0
         m_WebGLTextureSubtarget: 0
