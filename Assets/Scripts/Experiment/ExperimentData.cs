@@ -5,7 +5,7 @@ using static Interaction;
 [Serializable]
 public class ExperimentData : ScriptableObject {
     public Step[] Steps { get; set; }
-    public BackgroundWork[] BackgroundWorks { get; set; }
+    public BackgroundProcess[] BackgroundProcesses { get; set; }
     public string[] Objects { get; set; }
     public string Description { get; set; }
     public int Time { get; set; }
@@ -106,7 +106,7 @@ public class Step {
  * Isso permite que o usuário realize outras ações no experimento enquanto o processo em segundo plano ocorre, 
  * sem precisar esperar o processo terminar para avançar para o próximo passo.
  */
-public class BackgroundWork {
+public class BackgroundProcess {
     public string Id { get; set; }
     public string Description { get; set; } // Descrição do processo em segundo plano
     public int Duration { get; set; } // Duração do processo em segundos
@@ -122,22 +122,22 @@ public class BackgroundWork {
 
     public void Start() {
         if (IsRunning) {
-            Debug.LogWarning($"BackgroundWork {Id} is already running.");
+            Debug.LogWarning($"BackgroundProcess {Id} is already running.");
             return;
         }
         IsRunning = true;
         // Lógica para iniciar o processo em segundo plano (ex: ligar um equipamento, iniciar uma contagem de tempo, etc.)
-        Debug.Log($"Started BackgroundWork: {Description}");
+        Debug.Log($"Started BackgroundProcess: {Description}");
     }
 
     public void Stop() {
         if (!IsRunning) {
-            Debug.LogWarning($"BackgroundWork {Id} is not running.");
+            Debug.LogWarning($"BackgroundProcess {Id} is not running.");
             return;
         }
         IsRunning = false;
         // Lógica para parar o processo em segundo plano (ex: desligar um equipamento, parar uma contagem de tempo, etc.)
-        Debug.Log($"Stopped BackgroundWork: {Description}");
+        Debug.Log($"Stopped BackgroundProcess: {Description}");
     }
 
     /// <summary>
@@ -152,10 +152,10 @@ public class BackgroundWork {
     /// <returns>Retorna true se o processo em segundo plano pode ser considerado completo, caso contrário, retorna false.</returns>
     public bool ValidateCompletion(int currentStepIndex) {
         if (IsRunning) {
-            Debug.LogWarning($"BackgroundWork {Id} is still running. Cannot validate completion.");
+            Debug.LogWarning($"BackgroundProcess {Id} is still running. Cannot validate completion.");
             return false;
         }
-        Debug.Log($"Validating completion of BackgroundWork {Id} at step index {currentStepIndex}. ShouldCompleteBetweenSteps: [{(ShouldCompleteBetweenSteps != null && ShouldCompleteBetweenSteps.Length > 0 ? ShouldCompleteBetweenSteps[0]?.ToString() ?? "null" : "null")}, {(ShouldCompleteBetweenSteps != null && ShouldCompleteBetweenSteps.Length > 1 ? ShouldCompleteBetweenSteps[1]?.ToString() ?? "null" : "null")}]");
+        Debug.Log($"Validating completion of BackgroundProcess {Id} at step index {currentStepIndex}. ShouldCompleteBetweenSteps: [{(ShouldCompleteBetweenSteps != null && ShouldCompleteBetweenSteps.Length > 0 ? ShouldCompleteBetweenSteps[0]?.ToString() ?? "null" : "null")}, {(ShouldCompleteBetweenSteps != null && ShouldCompleteBetweenSteps.Length > 1 ? ShouldCompleteBetweenSteps[1]?.ToString() ?? "null" : "null")}]");
 
         if (ShouldCompleteBetweenSteps == null || ShouldCompleteBetweenSteps.Length == 0) {
             // Pode ser completado a qualquer momento
@@ -179,15 +179,15 @@ public class BackgroundWork {
 
     public bool IsValid() {
         if (string.IsNullOrEmpty(Id)) {
-            Debug.LogError("BackgroundWork Id is null or empty.");
+            Debug.LogError("BackgroundProcess Id is null or empty.");
             return false;
         }
         if (string.IsNullOrEmpty(Description)) {
-            Debug.LogError("BackgroundWork description is null or empty.");
+            Debug.LogError("BackgroundProcess description is null or empty.");
             return false;
         }
         if (Duration <= 0) {
-            Debug.LogError("BackgroundWork duration must be greater than zero.");
+            Debug.LogError("BackgroundProcess duration must be greater than zero.");
             return false;
         }
         return true;

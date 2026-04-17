@@ -1,0 +1,17 @@
+{
+  "time": 6000,
+  "steps": [
+    {
+      "score": 100,
+      "interaction": "USE",
+       "onFailureMessage": "Tente Novamente!",
+        "onSuccessMessage": "Parabéns, interagiu com o objeto!",
+      "description": "Use o Microscópio Eletrônico",
+      "interactionTarget": "microscope",
+    }
+  ],
+  "description": "Aprender a Interagir com Objetos em 3D",
+  "objects": [
+    "microscope"
+  ]
+}

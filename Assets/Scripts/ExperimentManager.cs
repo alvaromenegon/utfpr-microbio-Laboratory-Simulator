@@ -17,11 +17,11 @@ public class ExperimentManager : MonoBehaviour {
     private int score = 0;
     private DateTime StartTime { get; set; }
 
-    private BackgroundWork[] backgroundWorks = new BackgroundWork[0];
+    private BackgroundProcess[] backgroundProcesses = new BackgroundProcess[0];
 
-    public void AddBackgroundWork(BackgroundWork work) {
-        Array.Resize(ref backgroundWorks, backgroundWorks.Length + 1);
-        backgroundWorks[^1] = work;
+    public void AddBackgroundWork(BackgroundProcess work) {
+        Array.Resize(ref backgroundProcesses, backgroundProcesses.Length + 1);
+        backgroundProcesses[^1] = work;
     }
 
     public bool IsExperimentRunning { get; private set; } = false;
@@ -58,9 +58,9 @@ public class ExperimentManager : MonoBehaviour {
             // verifica se é um EquipmentInteractable
             var equipment = interactable as EquipmentInteractable;
             if (equipment != null) {
-                var _bgWork = Array.Find(CurrentExperiment.experimentData.BackgroundWorks, w => w.Id == step.OnSuccessStartBackgroundWorkId);
+                var _bgWork = Array.Find(CurrentExperiment.experimentData.BackgroundProcesses, w => w.Id == step.OnSuccessStartBackgroundWorkId);
                 AddBackgroundWork(_bgWork);
-                equipment.backgroundWork = _bgWork;
+                equipment.backgroundProcess = _bgWork;
                 Debug.Log($"Background work '{_bgWork.Description}' will be started when using '{gameObject.name}'.");
             }
         }
@@ -130,7 +130,7 @@ public class ExperimentManager : MonoBehaviour {
         ShowFeedback(CurrentStep.OnSuccessMessage);
         score += CurrentStep.Score;
         if (!string.IsNullOrEmpty(CurrentStep.OnSuccessStartBackgroundWorkId)) {
-            var work = Array.Find(CurrentExperiment.experimentData.BackgroundWorks, w => w.Id == CurrentStep.OnSuccessStartBackgroundWorkId);
+            var work = Array.Find(CurrentExperiment.experimentData.BackgroundProcesses, w => w.Id == CurrentStep.OnSuccessStartBackgroundWorkId);
             if (work == null) {
                 Debug.LogError($"Background work with ID '{CurrentStep.OnSuccessStartBackgroundWorkId}' not found in the experiment definition.");
             } else {
@@ -164,7 +164,7 @@ public class ExperimentManager : MonoBehaviour {
     }
 
     private bool HasBackgroundWorkRunning() {
-        foreach (var work in backgroundWorks) {
+        foreach (var work in backgroundProcesses) {
             if (work.IsRunning) {
                 return true;
             }
@@ -173,7 +173,7 @@ public class ExperimentManager : MonoBehaviour {
     }
 
     private void ValidBackgroundWork(string workId) {
-        var work = Array.Find(backgroundWorks, w => w.Id == workId);
+        var work = Array.Find(backgroundProcesses, w => w.Id == workId);
         if (work == null) {
             Debug.LogError($"Background work with ID '{workId}' not found in the experiment definition.");
             return;
@@ -185,7 +185,7 @@ public class ExperimentManager : MonoBehaviour {
         }
     }
     private void InvalidBackgroundWork(string workId) { 
-        var work = Array.Find(backgroundWorks, w => w.Id == workId);
+        var work = Array.Find(backgroundProcesses, w => w.Id == workId);
         if (work == null) {
             Debug.LogError($"Background work with ID '{workId}' not found in the experiment definition.");
             return;
@@ -226,7 +226,7 @@ public class ExperimentManager : MonoBehaviour {
         }
     }
 
-    public void ProcessBackgroundWork(BackgroundWork work, float timeUsed) {
+    public void ProcessBackgroundWork(BackgroundProcess work, float timeUsed) {
         if (!IsExperimentRunning) return;
         var expectedTime = work.Duration;
         var tolerance = work.Tolerance ?? 0.5f;
