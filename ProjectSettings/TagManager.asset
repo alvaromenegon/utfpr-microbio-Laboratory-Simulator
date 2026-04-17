@@ -17,6 +17,7 @@ TagManager:
   - Ball 2
   - Border
   - Tooltip
+  - SecondaryTarget
   layers:
   - Default
   - TransparentFX

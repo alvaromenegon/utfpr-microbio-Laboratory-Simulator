@@ -19,6 +19,8 @@ public class ExperimentManager : MonoBehaviour {
 
     private BackgroundWork[] backgroundWorks = new BackgroundWork[0];
 
+    private HUDController hud;
+
     public void AddBackgroundWork(BackgroundWork work) {
         Array.Resize(ref backgroundWorks, backgroundWorks.Length + 1);
         backgroundWorks[^1] = work;
@@ -33,6 +35,12 @@ public class ExperimentManager : MonoBehaviour {
         score = 0;
         SetupExperiment();
         StartTime = DateTime.Now;
+    }
+
+    private void SetupStepHUDInformation() {
+        var step = CurrentStep;
+        hud.UpdateStepInstructions(step.Instruction); 
+        hud.UpdateStepInformation($"Step {currentStepIndex + 1}/{CurrentExperiment.experimentData.Steps.Length}: {step.Description}");
     }
 
     private void SetupStep() {
@@ -64,7 +72,7 @@ public class ExperimentManager : MonoBehaviour {
                 Debug.Log($"Background work '{_bgWork.Description}' will be started when using '{gameObject.name}'.");
             }
         }
-        HUDController.Instance.UpdateStepInformation($"Step {currentStepIndex + 1}/{CurrentExperiment.experimentData.Steps.Length}: {step.Description} - {step.Instruction}");
+        SetupStepHUDInformation();
     }
 
     private void SetupExperiment() {
@@ -128,7 +136,7 @@ public class ExperimentManager : MonoBehaviour {
             return;
         }
         ShowFeedback(CurrentStep.OnSuccessMessage);
-        score += CurrentStep.Score;
+        UpdateScore(CurrentStep.Score);
         if (!string.IsNullOrEmpty(CurrentStep.OnSuccessStartBackgroundWorkId)) {
             var work = Array.Find(CurrentExperiment.experimentData.BackgroundWorks, w => w.Id == CurrentStep.OnSuccessStartBackgroundWorkId);
             if (work == null) {
@@ -163,6 +171,11 @@ public class ExperimentManager : MonoBehaviour {
         equipment.MoveObjectToEquipment(gameObjectPrimary);
     }
 
+    private void UpdateScore(int stepScore) {
+        this.score += stepScore;
+        hud.UpdateScore(score.ToString());
+    }
+
     private bool HasBackgroundWorkRunning() {
         foreach (var work in backgroundWorks) {
             if (work.IsRunning) {
@@ -179,7 +192,7 @@ public class ExperimentManager : MonoBehaviour {
             return;
         }
         ShowFeedback(work.OnSuccessMessage);
-        score += work.Score;
+        UpdateScore(work.Score);
         if (currentStepIndex >= CurrentExperiment.experimentData.Steps.Length) {
             FinishExperiment();
         }
@@ -300,8 +313,7 @@ public class ExperimentManager : MonoBehaviour {
     }
 
 	private void ShowFeedback(string message) {
-		Debug.Log(message);
-        // todo: implement UI feedback
+        hud.ShowFeedback(message);
     }
 
     private void FinishExperiment(int? finishScore = null) {
@@ -329,7 +341,7 @@ public class ExperimentManager : MonoBehaviour {
             if (IsExperimentRunning && CurrentExperiment.experimentData.HasTimeLimit()) {
             double elapsedSeconds = (DateTime.Now - StartTime).TotalSeconds;
             if (elapsedSeconds > CurrentExperiment.experimentData.Time) {
-                Debug.Log("Time's up!");
+                hud.UpdateInfo("Tempo encerrado!");
                 FinishExperiment();
             }
         }
@@ -337,19 +349,14 @@ public class ExperimentManager : MonoBehaviour {
 
     private void Awake() {
         Instance = this;
-    }
-
-    private void OnGUI() {
-        GUI.Label(new Rect(10, 50, 200, 20), $"Time: {(DateTime.Now - StartTime).TotalSeconds:F0}/{CurrentExperiment.experimentData.Time} seconds");
-        GUI.Label(new Rect(10, 70, 400, 20), $"Current Step: {(IsExperimentRunning ? CurrentStep.Description : "None")}");
-        GUI.Label(new Rect(10, 90, 400, 20), $"Instructions: {(IsExperimentRunning ? CurrentStep.Instruction : "No experiment running")}");
-        GUI.Label(new Rect(10, 110, 400, 20), $"Score: {score}/100");
+        
     }
 
     private void Start() {
+        hud = HUDController.Instance;
         // iniciar com experimento de teste
-        
-        
+
+
         ExperimentLoader loader = new ();
         var data = loader.Load("Assets/ExperimentData/test_experiment-4.json");
         //var data = loader.Load("Assets/ExperimentData/experiment_definition-2.json");
@@ -363,5 +370,11 @@ public class ExperimentManager : MonoBehaviour {
         // encerrar o experimento, enviar dados para servidor, etc.
         // apenas mostrar uma mensagem por enquanto
         Debug.Log("Experiment ended. Final score: " + score);
+        if (score < 60) {
+            hud.ShowFeedback($"Experimento finalizado. Pontuação: {score}. Tente novamente para melhorar seu resultado!");
+            hud.ShowGameOverPanel();
+        } else {
+            hud.ShowFeedback($"Experimento finalizado. Parabéns! Sua pontuação: {score}");
+        }
     }
 }
