@@ -1,30 +1,29 @@
- using UnityEngine;
+using Assets.Scripts;
+using UnityEngine;
+using static Interaction;
 
 [DisallowMultipleComponent]
-public class StepInteractable : MonoBehaviour, IInteractable
-{
+public class StepInteractable : LaboratoryObject, IInteractable{
 
-    public enum InteractionType {
-        Interact,
-        MoveTo,
-    }
     [SerializeField] private string stepId;
-    [SerializeField] private bool disableAfterInteraction = true;
     [SerializeField] private bool applyInteractableLayer = true;
-    [SerializeField] private InteractionType stepType = InteractionType.Interact;
+    public InteractionType stepType = InteractionType.USE;
 
-    public string StepId => stepId;
+    public string StepId { get; set; }
 
-    public void Interact(){
-        Debug.Log("Do something...");
-    }
+    public virtual void Interact(){
+        if (RequireValue(stepType)) {
+            // tipo de interação que requer um valor obtido
+            // por entrada do usuário, como uma temperatura ou tempo.
+            InputPanelController.Instance.Show();
+            return;
 
-    public void MarkCompleted()
-    {
-        if (disableAfterInteraction)
-        {
-            gameObject.SetActive(false);
         }
+        PlayerAction action = new() {
+            InteractionType = stepType,
+            Target = gameObject
+        };
+        ExperimentManager.Instance.ProcessInteraction(action);
     }
 
     private void OnValidate()
@@ -40,4 +39,30 @@ public class StepInteractable : MonoBehaviour, IInteractable
             gameObject.layer = interactableLayer;
         }
     }
+
+    public virtual void OnTriggerEnter(Collider other) { // todo: validar quando o jogador soltar o objeto (MoveObjects.Drop) e não quando ele entrar em contato com o collider
+        if (other.TryGetComponent<MoveObjects>(out MoveObjects moveObjects)) {
+            if (moveObjects.IsMoving) {
+                return; // o jogador está movendo um objeto, não processa a interação.
+            }
+        }
+        if (stepType == InteractionType.MOVE && other.gameObject.CompareTag("SecondaryTarget")) {
+            PlayerAction action = new() {
+                InteractionType = stepType,
+                Target = gameObject
+            };
+            Debug.Log($"Player moved {gameObject.name} to {other.gameObject.name}");
+            ExperimentManager.Instance.OnSecondaryTargetInteraction(gameObject); // o manager decide se alguma outra ação vai ocorrer antes de processar a interação.
+            ExperimentManager.Instance.ProcessInteraction(action);
+        }
+    }
+
+    public override void OnHover() {
+        HUDController.Instance.UpdateObjectName(GetObjectName());
+    }
+
+    public override void OnExitHover() {
+        HUDController.Instance.UpdateObjectName("");
+    }
+
 }

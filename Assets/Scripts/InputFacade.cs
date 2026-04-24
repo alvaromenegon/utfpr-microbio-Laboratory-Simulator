@@ -1,3 +1,4 @@
+using Assets.Scripts;
 using System;
 using UnityEngine;
 
@@ -13,7 +14,7 @@ class InputFacade : MonoBehaviour {
     private GameControls _controls;
     private IMovable _currentMovable;
     private IInteractable _currentHoveredInteractable;
-    private string _message = "";
+    private LaboratoryObject _currentLaboratoryObject;
 
     public event Action<IInteractable> InteractionPerformed;
     public event Action<IInteractable> HoverEntered;
@@ -46,7 +47,6 @@ class InputFacade : MonoBehaviour {
 
     public Vector2 GetMoveInput() => _controls.Player.Move.ReadValue<Vector2>();
     public Vector2 GetLookInput() => _controls.Player.Look.ReadValue<Vector2>();
-    public bool IsClicking() => _controls.Player.Click.IsPressed();
 
     private void HandleClick()
     {
@@ -58,9 +58,9 @@ class InputFacade : MonoBehaviour {
 
     private void HandleClickRelease()
     {
-        if (_currentMovable != null && _currentMovable.IsMoving)
-        {
+        if (_currentMovable != null && _currentMovable.IsMoving){
             _currentMovable.Drop();
+            
         }
     }
 
@@ -81,28 +81,39 @@ class InputFacade : MonoBehaviour {
     {
         IMovable nextMovable = null;
         IInteractable nextInteractable = null;
+        LaboratoryObject nextLaboratoryObject = null;
         CursorChanger.CursorType cursorType = CursorChanger.CursorType.Pointer;
 
         if (TryGetObjectInSight(out RaycastHit hit))
         {
             nextMovable = hit.collider.GetComponentInParent<IMovable>();
             nextInteractable = hit.collider.GetComponentInParent<IInteractable>();
+            nextLaboratoryObject = hit.collider.GetComponentInParent<LaboratoryObject>();         
 
-            if (nextMovable != null)
-            {
+            if (nextMovable != null) {
                 cursorType = CursorChanger.CursorType.Selector;
             }
-            else if (nextInteractable != null)
-            {
+            else if (nextInteractable != null) {
                 cursorType = CursorChanger.CursorType.Interact;
-                _message = "Hovering over Interactable object";
             }
-        } else {
-            _message = "";
         }
 
-        if (!ReferenceEquals(_currentMovable, nextMovable))
+        if (!ReferenceEquals(_currentLaboratoryObject, nextLaboratoryObject))
         {
+            if (_currentLaboratoryObject != null)
+            {
+                _currentLaboratoryObject.OnExitHover();
+            }
+            _currentLaboratoryObject = nextLaboratoryObject;
+            if (_currentLaboratoryObject != null)
+            {
+                _currentLaboratoryObject.OnHover();
+            }
+        } else {
+            _currentLaboratoryObject = nextLaboratoryObject;
+        }
+
+        if (!ReferenceEquals(_currentMovable, nextMovable)) {
             _currentMovable = nextMovable;
         }
 
@@ -127,9 +138,4 @@ class InputFacade : MonoBehaviour {
         }
     }
 
-    public void OnGUI() {
-        bool isClicking = IsClicking();
-        GUI.Label(new Rect(10, 10, 200, 20), _message);
-        GUI.Label(new Rect(10, 30, 200, 20), $"Is Clicking: {isClicking}");
-    }
 }
