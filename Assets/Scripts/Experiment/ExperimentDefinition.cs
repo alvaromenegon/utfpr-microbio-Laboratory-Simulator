@@ -8,6 +8,7 @@ public class ExperimentDefinition : ScriptableObject {
     public DateTime createdAt;
     public DateTime updatedAt;
     public ExperimentData experimentData;
+    public int userId;
 
     public override string ToString() {
         return $"ExperimentDefinition: {title} (ID: {id}, CreatedAt: {createdAt}, UpdatedAt: {updatedAt})\n{experimentData}";

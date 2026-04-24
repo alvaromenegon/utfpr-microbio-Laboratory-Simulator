@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Networking;
+using Newtonsoft.Json;
 using static Interaction;
 
 
@@ -337,31 +340,91 @@ public class ExperimentManager : MonoBehaviour {
 
     private void Awake() {
         Instance = this;
+        if (!SessionData.Initialize()) {
+            // Exibir tela de erro e interromper o fluxo
+            //HUDController.ErrorScreen.SetActive(true);
+            return;
+        }
+
+        Debug.Log($"Sessão iniciada → Practice: {SessionData.Current.PracticeId} " +
+                  $"| User: {SessionData.Current.UserId} " +
+                  $"| Course: {SessionData.Current.CourseId}");
+
+        StartCoroutine(FetchAndStartExperiment(SessionData.Current.PracticeId.ToString()));
     }
 
-    private void OnGUI() {
-        GUI.Label(new Rect(10, 50, 200, 20), $"Time: {(DateTime.Now - StartTime).TotalSeconds:F0}/{CurrentExperiment.experimentData.Time} seconds");
-        GUI.Label(new Rect(10, 70, 400, 20), $"Current Step: {(IsExperimentRunning ? CurrentStep.Description : "None")}");
-        GUI.Label(new Rect(10, 90, 400, 20), $"Instructions: {(IsExperimentRunning ? CurrentStep.Instruction : "No experiment running")}");
-        GUI.Label(new Rect(10, 110, 400, 20), $"Score: {score}/100");
+    //private void OnGUI() {
+    //    GUI.Label(new Rect(10, 50, 200, 20), $"Time: {(DateTime.Now - StartTime).TotalSeconds:F0}/{CurrentExperiment.experimentData.Time} seconds");
+    //    GUI.Label(new Rect(10, 70, 400, 20), $"Current Step: {(IsExperimentRunning ? CurrentStep.Description : "None")}");
+    //    GUI.Label(new Rect(10, 90, 400, 20), $"Instructions: {(IsExperimentRunning ? CurrentStep.Instruction : "No experiment running")}");
+    //    GUI.Label(new Rect(10, 110, 400, 20), $"Score: {score}/100");
+    //}    
+
+    private IEnumerator FetchAndStartExperiment(string id) {
+        Debug.Log($"Fetching experiment data for practice ID: {id}");
+        string UNITY_AUTH_TOKEN = "your_unity_auth_token"; //todo: pegar do environment ou de um arquivo de configuração seguro
+        string url = $"http://localhost:8000/unity/initialize-session?practiceId={id}&userId={SessionData.Current.UserId}&courseId={SessionData.Current.CourseId}";
+        using UnityWebRequest webRequest = UnityWebRequest.Get(url);
+        webRequest.SetRequestHeader("x-unity-token", UNITY_AUTH_TOKEN);
+        Debug.Log("Sending request to API... (" + url + ")");
+        yield return webRequest.SendWebRequest();
+
+        if (webRequest.result == UnityWebRequest.Result.ConnectionError || webRequest.result == UnityWebRequest.Result.ProtocolError) {
+            Debug.LogError($"Error loading experiment from API: {webRequest.error}");
+        }
+        else {
+            try {
+                string json = webRequest.downloadHandler.text;
+                Debug.Log($"Experiment data received: {json}");
+                var data = JsonConvert.DeserializeObject<APIResult<PracticeDataDTO>>(json);
+                if (data.Ok() && data.Data != null) {
+                    Debug.Log("Experiment data parsed successfully.");
+                } else {
+                    Debug.LogError("API returned an error or empty data.");
+                    yield break;
+                }
+
+                ExperimentDefinition experiment = ScriptableObject.CreateInstance<ExperimentDefinition>();
+                HUDController.Instance.UpdateUserInfo(data.Data.Username, data.Data.UserPhotoURL);
+                SessionData.Current.Username = data.Data.Username;
+                SessionData.Current.UserPhotoURL = data.Data.UserPhotoURL;
+                experiment = data.Data.Practice;
+
+                StartExperiment(experiment);
+            }
+            catch (Exception e) {
+                Debug.LogError($"Failed to parse experiment data: {e.Message}");
+            }
+        }
     }
 
-    private void Start() {
-        // iniciar com experimento de teste
-        
-        
-        ExperimentLoader loader = new ();
-        var data = loader.Load("Assets/ExperimentData/test_experiment-4.json");
-        //var data = loader.Load("Assets/ExperimentData/experiment_definition-2.json");
-        ExperimentDefinition testExperiment = ScriptableObject.CreateInstance<ExperimentDefinition>();
-        testExperiment.experimentData = data;
-        Debug.Log($"Loaded experiment: {testExperiment}");
-        StartExperiment(testExperiment);
+    // Metódo que envia os dados para o servidor
+    private IEnumerator SendDataToServer() {
+        Debug.Log("Sending data to server...");
+        string UNITY_AUTH_TOKEN = "your_unity_auth_token"; //todo: pegar do environment ou de um arquivo de configuração seguro
+        string url = "http://localhost:8000/unity/results";
+        var resultData = new {
+            practiceId = SessionData.Current.PracticeId,
+            userId = SessionData.Current.UserId,
+            courseId = SessionData.Current.CourseId,
+            score,
+            timeTaken = (DateTime.Now - StartTime).TotalSeconds
+        };
+        string jsonData = JsonConvert.SerializeObject(resultData);
+        using UnityWebRequest webRequest = new UnityWebRequest(url, "POST");
+        webRequest.SetRequestHeader("x-unity-token", UNITY_AUTH_TOKEN);
+        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
+        webRequest.uploadHandler = new UploadHandlerRaw(bodyRaw);
+        webRequest.downloadHandler = new DownloadHandlerBuffer();
+        webRequest.SetRequestHeader("Content-Type", "application/json");
+        yield return webRequest.SendWebRequest();
+
     }
 
     private void End() {
-        // encerrar o experimento, enviar dados para servidor, etc.
-        // apenas mostrar uma mensagem por enquanto
+        IsExperimentRunning = false;
+        CurrentExperiment = null;
         Debug.Log("Experiment ended. Final score: " + score);
+        StartCoroutine(SendDataToServer());
     }
 }
