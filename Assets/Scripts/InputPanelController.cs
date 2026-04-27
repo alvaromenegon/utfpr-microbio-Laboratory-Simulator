@@ -7,10 +7,12 @@ public class InputPanelController : MonoBehaviour {
 
     [SerializeField] private GameObject panel;
     [SerializeField] private TMP_InputField inputField;
+    private PlayerAction pendingAction;
 
     void Awake() => Instance = this;
 
-    public void Show() {
+    public void Show(PlayerAction action) {
+        pendingAction = action;
         panel.SetActive(true);
         inputField.text = string.Empty;
         StartCoroutine(ActivateInputNextFrame());
@@ -26,17 +28,29 @@ public class InputPanelController : MonoBehaviour {
 
     public void Hide() => panel.SetActive(false);
 
-    // Chamado pelo bot„o Confirmar (via OnClick no Inspector)
+        if (pendingAction == null || pendingAction.Target == null) {
+            Debug.LogError("No pending action available for input confirmation.");
+            Hide();
+            return;
+        }
+
+            PlayerAction action = new() {
+                InteractionType = pendingAction.InteractionType,
+                Target = pendingAction.Target,
+                Value = value
+            };
+            ExperimentManager.Instance.HandlePlayerAction(action);
+        pendingAction = null;
     public void OnConfirm() {
         Debug.Log($"Input value: {inputField.text}");
         if (double.TryParse(inputField.text,
                 System.Globalization.NumberStyles.Any,
-                System.Globalization.CultureInfo.InvariantCulture, // evita bug de vÌrgula/ponto
+                System.Globalization.CultureInfo.InvariantCulture, // evita bug de v√≠rgula/ponto
                 out double value)) {
             ExperimentManager.Instance.ValidateValue(value);
         }
         else {
-            Debug.Log("Valor inv·lido.");
+            Debug.Log("Valor inv√°lido.");
             // Opcional: mostrar feedback de erro na UI
         }
 

@@ -13,9 +13,12 @@ public class StepInteractable : LaboratoryObject, IInteractable{
 
     public virtual void Interact(){
         if (RequireValue(stepType)) {
-            // tipo de interaÁ„o que requer um valor obtido
-            // por entrada do usu·rio, como uma temperatura ou tempo.
-            InputPanelController.Instance.Show();
+            InputPanelController.Instance.Show(new PlayerAction {
+                InteractionType = stepType,
+                Target = gameObject
+            });
+        ExperimentManager.Instance.HandlePlayerAction(action);
+            ExperimentManager.Instance.HandlePlayerAction(action);
             return;
 
         }
@@ -40,10 +43,10 @@ public class StepInteractable : LaboratoryObject, IInteractable{
         }
     }
 
-    public virtual void OnTriggerEnter(Collider other) { // todo: validar quando o jogador soltar o objeto (MoveObjects.Drop) e n„o quando ele entrar em contato com o collider
+    public virtual void OnTriggerEnter(Collider other) { // todo: validar quando o jogador soltar o objeto (MoveObjects.Drop) e n√£o quando ele entrar em contato com o collider
         if (other.TryGetComponent<MoveObjects>(out MoveObjects moveObjects)) {
             if (moveObjects.IsMoving) {
-                return; // o jogador est· movendo um objeto, n„o processa a interaÁ„o.
+                return; // o jogador est√° movendo um objeto, n√£o processa a intera√ß√£o.
             }
         }
         if (stepType == InteractionType.MOVE && other.gameObject.CompareTag("SecondaryTarget")) {
@@ -52,7 +55,7 @@ public class StepInteractable : LaboratoryObject, IInteractable{
                 Target = gameObject
             };
             Debug.Log($"Player moved {gameObject.name} to {other.gameObject.name}");
-            ExperimentManager.Instance.OnSecondaryTargetInteraction(gameObject); // o manager decide se alguma outra aÁ„o vai ocorrer antes de processar a interaÁ„o.
+            ExperimentManager.Instance.OnSecondaryTargetInteraction(gameObject); // o manager decide se alguma outra a√ß√£o vai ocorrer antes de processar a intera√ß√£o.
             ExperimentManager.Instance.ProcessInteraction(action);
         }
     }
