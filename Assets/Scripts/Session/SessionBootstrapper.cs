@@ -5,6 +5,7 @@ public class SessionBootstrapper : MonoBehaviour {
     public static bool IsSessionReady { get; private set; }
 
     private void Awake() {
+        Debug.Log("[SessionBootstrapper] Iniciando sessão...");
         IsSessionReady = SessionData.Initialize();
         if (!IsSessionReady) {
             Debug.LogError("[SessionBootstrapper] Falha ao iniciar sessão.");

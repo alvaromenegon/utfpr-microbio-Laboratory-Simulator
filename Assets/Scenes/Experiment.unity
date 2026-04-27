@@ -486,6 +486,50 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 29871797}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &32841578
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 32841580}
+  - component: {fileID: 32841579}
+  m_Layer: 0
+  m_Name: SessionBootstrapper
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &32841579
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 32841578}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7cd1c12b52a677245b1f7662b0c708b4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SessionBootstrapper
+--- !u!4 &32841580
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 32841578}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1.57275, y: 0.79262, z: 0.06691}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &82482628
 GameObject:
   m_ObjectHideFlags: 0
@@ -1761,6 +1805,52 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 320395882}
   m_Mesh: {fileID: 4300000, guid: ec71f8b9efa54c742b6369320e16a978, type: 3}
+--- !u!1 &328517638
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 328517640}
+  - component: {fileID: 328517639}
+  m_Layer: 0
+  m_Name: ExperimentAPIClient
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &328517639
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 328517638}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f7760c520ffd77d46a9219b2967a7651, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ExperimentApiClient
+  baseUrl: http://localhost:8000
+  unityAuthToken: your_unity_auth_token
+--- !u!4 &328517640
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 328517638}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1.57275, y: 0.79262, z: 0.06691}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &337343157
 GameObject:
   m_ObjectHideFlags: 0
@@ -2349,6 +2439,7 @@ MonoBehaviour:
   label: {fileID: 2010800175}
   secondaryTargetBeam: {fileID: 896958716}
   inputLabel: {fileID: 887441112}
+  apiClient: {fileID: 328517639}
 --- !u!1001 &513110378
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3070,6 +3161,37 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 678178695}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &702018962
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 702018963}
+  m_Layer: 0
+  m_Name: HUDPresenter
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &702018963
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 702018962}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1.57275, y: 0.79262, z: 0.06691}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &702742823
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6521,7 +6643,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c8ce9a1313eb4d968f1ada2e69ef87ca, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StepInteractable
-  objectName: 
+  objectName: Bancada
   stepId: 
   applyInteractableLayer: 1
   stepType: 1
@@ -14677,3 +14799,6 @@ SceneRoots:
   - {fileID: 835749904}
   - {fileID: 896958715}
   - {fileID: 1919941101}
+  - {fileID: 328517640}
+  - {fileID: 702018963}
+  - {fileID: 32841580}

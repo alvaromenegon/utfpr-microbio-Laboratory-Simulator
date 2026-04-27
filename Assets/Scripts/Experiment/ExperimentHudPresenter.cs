@@ -31,7 +31,7 @@ public class ExperimentHudPresenter {
         }
 
         hud.UpdateStepInformation($"Step {index + 1}/{total}: {step.Description} - {step.Instruction}");
-        hud.UpdateDescription(step.Description);
+        //hud.UpdateDescription(step.Description);
     }
 
     private void HandleFeedback(string message) {

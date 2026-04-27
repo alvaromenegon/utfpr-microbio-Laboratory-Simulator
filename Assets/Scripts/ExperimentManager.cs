@@ -125,7 +125,7 @@ public class ExperimentManager : MonoBehaviour {
                 SessionData.Current.Username = data.Username;
                 SessionData.Current.UserPhotoURL = data.UserPhotoURL;
                 hudPresenter.UpdateUserInfo(data.Username, data.UserPhotoURL);
-                StartExperiment(data.Practice);
+                StartExperiment(ExperimentMapper.ToModel(data.Practice));
             },
             onError: error => Debug.LogError(error)
         ));
