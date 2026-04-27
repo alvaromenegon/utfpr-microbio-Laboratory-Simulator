@@ -1,8 +1,8 @@
 using System;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "ExperimentDef", menuName = "Lab/Experiment Definition")]
-public class ExperimentDefinition : ScriptableObject {
+[Serializable]
+public class ExperimentDefinition {
     public string id;
     public string title;
     public DateTime createdAt;
@@ -39,8 +39,7 @@ public class ExperimentDefinition : ScriptableObject {
                 return false;
             }
         }
-        
+
         return true;
     }
 }
-

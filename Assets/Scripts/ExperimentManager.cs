@@ -384,12 +384,11 @@ public class ExperimentManager : MonoBehaviour {
                     yield break;
                 }
 
-                ExperimentDefinition experiment = ScriptableObject.CreateInstance<ExperimentDefinition>();
                 HUDController.Instance.UpdateUserInfo(data.Data.Username, data.Data.UserPhotoURL);
                 SessionData.Current.Username = data.Data.Username;
                 SessionData.Current.UserPhotoURL = data.Data.UserPhotoURL;
-                experiment = data.Data.Practice;
 
+                ExperimentDefinition experiment = ExperimentMapper.ToModel(data.Data.Practice);
                 StartExperiment(experiment);
             }
             catch (Exception e) {
