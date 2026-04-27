@@ -190,6 +190,7 @@ public class ExperimentManager : MonoBehaviour {
                 equipment.backgroundProcess = bgWork;
             }
         }
+
     }
 
     private void OnRuntimeFinished(int score, double timeTakenSeconds) {
