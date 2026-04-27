@@ -99,27 +99,38 @@ public class ExperimentManager : MonoBehaviour {
         SetupStep();
     }
 
-    public void ValidateValue(double? value) {
+    private bool ValidateValue(double? value) {
+        if (!value.HasValue) {
+            Debug.LogError($"Interaction '{CurrentStep.Interaction}' requires a value, but none was provided.");
+            return false;
+        }
+
         double? expectedValue = CurrentStep.Value;
         double tolerance = CurrentStep.Tolerance ?? 0.001;
-        if (expectedValue == null) {
-            Debug.LogError($" requires a value, but no expected value is defined for the current step.");
-            InvalidStep();
-            return;
+        if (!expectedValue.HasValue) {
+            Debug.LogError($"Interaction '{CurrentStep.Interaction}' requires a value, but no expected value is defined for the current step.");
+            return false;
         }
+
         if (Math.Abs(value.Value - expectedValue.Value) > tolerance) {
             Debug.LogError($"requires a value of {expectedValue}, but received {value}.");
-            InvalidStep();
-            return;
+            return false;
         }
-        ValidStep();
+
+        return true;
     }
 
-    private bool ValidateInteraction(PlayerAction interaction, double? value = null) {
+    private bool ValidateInteraction(PlayerAction interaction) {
+        if (interaction == null || interaction.Target == null)
+            return false;
+
         if (interaction.InteractionType != CurrentStep.Interaction)
             return false;
 
         if (interaction.Target.name != CurrentStep.InteractionTarget)
+            return false;
+
+        if (RequireValue(interaction.InteractionType) && !ValidateValue(interaction.Value))
             return false;
 
         return true;
@@ -218,9 +229,9 @@ public class ExperimentManager : MonoBehaviour {
         OnFailure();
     }
 
-    public void ProcessInteraction(PlayerAction interaction, double? value = null) {
+    public void HandlePlayerAction(PlayerAction interaction) {
 		if (!IsExperimentRunning) return;
-        bool valid = ValidateInteraction(interaction, value);
+        bool valid = ValidateInteraction(interaction);
 
         if (valid) {
             ValidStep();
