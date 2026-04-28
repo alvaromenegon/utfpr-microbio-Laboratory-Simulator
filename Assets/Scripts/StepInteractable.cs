@@ -25,9 +25,7 @@ public class StepInteractable : LaboratoryObject, IInteractable {
             InputPanelController.Instance.Show(new PlayerAction {
                 InteractionType = stepType,
                 Target = gameObject
-            });
-        ExperimentManager.Instance.HandlePlayerAction(action);
-            ExperimentManager.Instance.HandlePlayerAction(action);
+            });        
             return;
 
         }
@@ -35,7 +33,7 @@ public class StepInteractable : LaboratoryObject, IInteractable {
             InteractionType = stepType,
             Target = gameObject
         };
-        ExperimentManager.Instance.ProcessInteraction(action);
+        ExperimentManager.Instance.HandlePlayerAction(action);
     }
 
     private void OnValidate() {

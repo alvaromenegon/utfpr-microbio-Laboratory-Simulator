@@ -38,12 +38,12 @@ public class EquipmentInteractable : StepInteractable{
     }
 
     public override void Interact() {
-        if (workingState == WorkingState.Ended) {
-                ExperimentManager.Instance.HandlePlayerAction(action);
+        if (workingState == WorkingState.Ended) {            
             InputPanelController.Instance.Show(new PlayerAction {
                 InteractionType = stepType,
                 Target = gameObject
             });
+        }
         if (stepType == InteractionType.USE) {
             if (workingState == WorkingState.Idle) {
                 TurnOnEquipment();
@@ -51,7 +51,7 @@ public class EquipmentInteractable : StepInteractable{
                     InteractionType = stepType,
                     Target = gameObject,
                 };
-                ExperimentManager.Instance.ProcessInteraction(action);
+                ExperimentManager.Instance.HandlePlayerAction(action);
             }
             else if (workingState == WorkingState.InUse) {
                 TurnOffEquipment();
@@ -59,7 +59,10 @@ public class EquipmentInteractable : StepInteractable{
         } else if (RequireValue(stepType)) {
             // tipo de interação que requer um valor obtido
             // por entrada do usuário, como uma temperatura ou tempo.
-            InputPanelController.Instance.Show();
+            InputPanelController.Instance.Show(new PlayerAction {
+                InteractionType = stepType,
+                Target = gameObject
+            }  );
             return;
         }
     }

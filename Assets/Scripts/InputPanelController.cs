@@ -28,19 +28,7 @@ public class InputPanelController : MonoBehaviour {
 
     public void Hide() => panel.SetActive(false);
 
-        if (pendingAction == null || pendingAction.Target == null) {
-            Debug.LogError("No pending action available for input confirmation.");
-            Hide();
-            return;
-        }
-
-            PlayerAction action = new() {
-                InteractionType = pendingAction.InteractionType,
-                Target = pendingAction.Target,
-                Value = value
-            };
-            ExperimentManager.Instance.HandlePlayerAction(action);
-        pendingAction = null;
+        
     public void OnConfirm() {
         Debug.Log($"Input value: {inputField.text}");
         if (double.TryParse(inputField.text,
@@ -54,6 +42,18 @@ public class InputPanelController : MonoBehaviour {
             // Opcional: mostrar feedback de erro na UI
         }
 
-        Hide();
+        if (pendingAction == null || pendingAction.Target == null) {
+            Debug.LogError("No pending action available for input confirmation.");
+            Hide();
+            return;
+        }
+
+        PlayerAction action = new() {
+            InteractionType = pendingAction.InteractionType,
+            Target = pendingAction.Target,
+            Value = value
+        };
+        ExperimentManager.Instance.HandlePlayerAction(action);
+        pendingAction = null;
     }
 }
