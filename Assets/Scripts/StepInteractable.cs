@@ -22,7 +22,12 @@ public class StepInteractable : LaboratoryObject, IInteractable {
 
     public virtual void Interact() {
         if (RequireValue(stepType)) {
-            InputPanelController.Instance.Show();
+            InputPanelController.Instance.Show(new PlayerAction {
+                InteractionType = stepType,
+                Target = gameObject
+            });
+        ExperimentManager.Instance.HandlePlayerAction(action);
+            ExperimentManager.Instance.HandlePlayerAction(action);
             return;
 
         }
