@@ -2312,6 +2312,7 @@ GameObject:
   m_Component:
   - component: {fileID: 491854287}
   - component: {fileID: 491854288}
+  - component: {fileID: 491854289}
   m_Layer: 0
   m_Name: Experiment Manager
   m_TagString: Untagged
@@ -2349,6 +2350,19 @@ MonoBehaviour:
   label: {fileID: 2010800175}
   secondaryTargetBeam: {fileID: 896958716}
   inputLabel: {fileID: 887441112}
+  objectRegistry: {fileID: 491854289}
+--- !u!114 &491854289
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 491854286}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b7f0243af8a4fd98e2e4ca3f70fbf67, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ExperimentObjectRegistry
 --- !u!1001 &513110378
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6521,8 +6535,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c8ce9a1313eb4d968f1ada2e69ef87ca, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StepInteractable
-  objectName: 
-  stepId: 
+  objectName: Bancada
+  canonicalIdentifier: lab_table
+  interactionIdentifier: 
   applyInteractableLayer: 1
   stepType: 1
 --- !u!1001 &1319222471
@@ -7258,8 +7273,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c8ce9a1313eb4d968f1ada2e69ef87ca, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StepInteractable
-  objectName: 
-  stepId: 
+  objectName: Bequer
+  canonicalIdentifier: Glass
+  interactionIdentifier: 
   applyInteractableLayer: 1
   stepType: 3
 --- !u!1 &1496862051
@@ -8683,8 +8699,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0932592fb22fd984e84d7148c6ca37e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EquipmentInteractable
-  objectName: 
-  stepId: 1
+  objectName: Estufa
+  canonicalIdentifier: stove
+  interactionIdentifier: 
   applyInteractableLayer: 1
   stepType: 1
   retainedObject: {fileID: 0}
@@ -10644,8 +10661,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c8ce9a1313eb4d968f1ada2e69ef87ca, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StepInteractable
-  objectName: 
-  stepId: 2
+  objectName: "Microsc\xF3pio"
+  canonicalIdentifier: microscope
+  interactionIdentifier: 
   applyInteractableLayer: 1
   stepType: 0
 --- !u!64 &2045339205

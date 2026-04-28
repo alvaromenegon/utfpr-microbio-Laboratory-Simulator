@@ -13,6 +13,7 @@ public class ExperimentManager : MonoBehaviour {
     [SerializeField] private GameObject label;
     [SerializeField] private GameObject secondaryTargetBeam;
     [SerializeField] private TMP_Text inputLabel;
+    [SerializeField] private ExperimentObjectRegistry objectRegistry;
     public static ExperimentManager Instance { get; private set; }
     public ExperimentDefinition CurrentExperiment { get; private set; }
 	private int currentStepIndex = 0;
@@ -40,20 +41,21 @@ public class ExperimentManager : MonoBehaviour {
 
     private void SetupStep() {
         var step = CurrentStep;
-        var gameObject = GameObject.Find(step.InteractionTarget);
-        if (gameObject == null) {
-            Debug.LogError($"Target '{step.InteractionTarget}' not found in the scene.");
+        if (!objectRegistry.TryGetInteractable(step.InteractionTarget, out var interactable)) {
+            Debug.LogError($"Target identifier '{step.InteractionTarget}' was not found in the registry.");
             return;
         }
-        var interactable = gameObject.GetComponent<StepInteractable>();
+
+        var gameObject = interactable.gameObject;
         interactable.stepType = step.Interaction;
+
         if (step.Interaction == InteractionType.MOVE && !string.IsNullOrEmpty(step.InteractionTargetSecondary)) {
-            var gameObjectSecondary = GameObject.Find(step.InteractionTargetSecondary);
-            if (gameObjectSecondary == null) {
-                Debug.LogError($"Secondary target '{step.InteractionTargetSecondary}' not found in the scene.");
+            if (!objectRegistry.TryGetInteractable(step.InteractionTargetSecondary, out var secondaryInteractable)) {
+                Debug.LogError($"Secondary target identifier '{step.InteractionTargetSecondary}' was not found in the registry.");
                 return;
             }
-            secondaryTargetBeam.transform.position = gameObjectSecondary.transform.position;
+
+            secondaryTargetBeam.transform.position = secondaryInteractable.transform.position;
             secondaryTargetBeam.SetActive(true);
         }
         if (step.Interaction == InteractionType.USE && !string.IsNullOrEmpty(step.OnSuccessStartBackgroundWorkId)) {
@@ -81,21 +83,30 @@ public class ExperimentManager : MonoBehaviour {
         }
         label.GetComponent<Text>().text = $"{CurrentExperiment.experimentData.Description}\n{stepsDescription}";
 
-        // verifica se a cena têm os objetos necessários para o experimento
-        // com o componente StepInteractable para processar as interações
-        // se não tiver, adiciona o componente e exibe um aviso
-        foreach (var objName in CurrentExperiment.experimentData.Objects) {
-            GameObject obj = GameObject.Find(objName);
-            if (obj == null) {
-                Debug.LogError($"Object '{objName}' not found in the scene.");
-                continue;
-            }
-            var interactable = obj.GetComponent<StepInteractable>();
-            if (interactable == null) {
-                Debug.LogWarning($"Object '{objName}' does not have a StepInteractable component. Adding one.");
-                obj.AddComponent<StepInteractable>();
+        if (objectRegistry == null) {
+            Debug.LogError("ExperimentObjectRegistry reference is missing in ExperimentManager.");
+            IsExperimentRunning = false;
+            return;
+        }
+
+        objectRegistry.RebuildIndex();
+
+        if (!objectRegistry.ValidateStepTargets(CurrentExperiment, out string validationReport)) {
+            Debug.LogError($"Experiment setup validation failed:\n{validationReport}");
+            IsExperimentRunning = false;
+            return;
+        }
+
+        if (CurrentExperiment.experimentData.Objects != null) {
+            foreach (var objIdentifier in CurrentExperiment.experimentData.Objects) {
+                if (!objectRegistry.TryGetInteractable(objIdentifier, out _)) {
+                    Debug.LogError($"Required object '{objIdentifier}' was not found in ExperimentObjectRegistry.");
+                    IsExperimentRunning = false;
+                    return;
+                }
             }
         }
+
         SetupStep();
     }
 
@@ -127,7 +138,13 @@ public class ExperimentManager : MonoBehaviour {
         if (interaction.InteractionType != CurrentStep.Interaction)
             return false;
 
-        if (interaction.Target.name != CurrentStep.InteractionTarget)
+        var interactable = interaction.Target != null ? interaction.Target.GetComponent<StepInteractable>() : null;
+        if (interactable == null) {
+            Debug.LogError("Interaction target has no StepInteractable component.");
+            return false;
+        }
+
+        if (interactable.GetIdentifier() != CurrentStep.InteractionTarget)
             return false;
 
         if (RequireValue(interaction.InteractionType) && !ValidateValue(interaction.Value))
@@ -160,12 +177,12 @@ public class ExperimentManager : MonoBehaviour {
             Debug.LogError("Current step is null.");
             return;
         }
-        var gameObjectSecondary = GameObject.Find(CurrentStep.InteractionTargetSecondary);
-        if (gameObjectSecondary == null) {
-            Debug.LogError($"Secondary target '{CurrentStep.InteractionTargetSecondary}' not found in the scene.");
+        if (!objectRegistry.TryGetInteractable(CurrentStep.InteractionTargetSecondary, out var secondaryInteractable)) {
+            Debug.LogError($"Secondary target identifier '{CurrentStep.InteractionTargetSecondary}' was not found in the registry.");
             return;
         }
-        var equipment = gameObjectSecondary.GetComponent<EquipmentInteractable>();
+
+        var equipment = secondaryInteractable.GetComponent<EquipmentInteractable>();
         if (equipment == null) {
             // não é um equipamento, então não precisa mover para "dentro" dele, deixa o usuário soltar e processa a operação normalmente
             return;
