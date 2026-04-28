@@ -5,16 +5,16 @@ using UnityEngine;
 public class EquipmentInteractable : StepInteractable{
     private WorkingState workingState = WorkingState.Idle;
     private long timeUsed = 0;
-    private long startTime; // tempo de inÌcio da utilizaÁ„o do equipamento, em milissegundos desde a Època Unix
-    private long endTime; // tempo de tÈrmino da utilizaÁ„o do equipamento, em milissegundos desde a Època Unix
-    private float value; // valor obtido por entrada do usu·rio, como uma temperatura ou tempo.
-    public BackgroundProcess backgroundProcess; // o processo em segundo plano a ser iniciado em caso de sucesso (se aplic·vel)
-    public GameObject retainedObject; // objeto que ser· mantido no equipamento durante a interaÁ„o, se aplic·vel (ex: um item mantido dentro da estufa enquanto ela est· ligada)
+    private long startTime; // tempo de in√≠cio da utiliza√ß√£o do equipamento, em milissegundos desde a √©poca Unix
+    private long endTime; // tempo de t√©rmino da utiliza√ß√£o do equipamento, em milissegundos desde a √©poca Unix
+    private float value; // valor obtido por entrada do usu√°rio, como uma temperatura ou tempo.
+    public BackgroundProcess backgroundProcess; // o processo em segundo plano a ser iniciado em caso de sucesso (se aplic√°vel)
+    public GameObject retainedObject; // objeto que ser√° mantido no equipamento durante a intera√ß√£o, se aplic√°vel (ex: um item mantido dentro da estufa enquanto ela est√° ligada)
 
     public enum WorkingState {
-        Idle, // equipamento est· disponÌvel para uso
-        InUse, // equipamento est· sendo usado
-        Ended // encerrou a utilizaÁ„o
+        Idle, // equipamento est√° dispon√≠vel para uso
+        InUse, // equipamento est√° sendo usado
+        Ended // encerrou a utiliza√ß√£o
     }
 
     public void MoveObjectToEquipment(GameObject obj) {
@@ -39,8 +39,11 @@ public class EquipmentInteractable : StepInteractable{
 
     public override void Interact() {
         if (workingState == WorkingState.Ended) {
-            workingState = WorkingState.Idle; // na primeira interaÁ„o apÛs o uso, o equipamento volta a ficar disponÌvel
-        }
+                ExperimentManager.Instance.HandlePlayerAction(action);
+            InputPanelController.Instance.Show(new PlayerAction {
+                InteractionType = stepType,
+                Target = gameObject
+            });
         if (stepType == InteractionType.USE) {
             if (workingState == WorkingState.Idle) {
                 TurnOnEquipment();
@@ -54,8 +57,8 @@ public class EquipmentInteractable : StepInteractable{
                 TurnOffEquipment();
             }
         } else if (RequireValue(stepType)) {
-            // tipo de interaÁ„o que requer um valor obtido
-            // por entrada do usu·rio, como uma temperatura ou tempo.
+            // tipo de intera√ß√£o que requer um valor obtido
+            // por entrada do usu√°rio, como uma temperatura ou tempo.
             InputPanelController.Instance.Show();
             return;
         }

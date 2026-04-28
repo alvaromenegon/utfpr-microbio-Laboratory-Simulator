@@ -11,6 +11,7 @@ public class ExperimentManager : MonoBehaviour {
     [SerializeField] private TMP_Text inputLabel;
     [SerializeField] private ExperimentApiClient apiClient;
 
+    [SerializeField] private ExperimentObjectRegistry objectRegistry;
     public static ExperimentManager Instance { get; private set; }
     public ExperimentDefinition CurrentExperiment { get; private set; }
 
@@ -26,16 +27,14 @@ public class ExperimentManager : MonoBehaviour {
             Debug.LogError("[ExperimentManager] Sessão indisponível. Manager interrompido.");
             return;
         }
-
-        if (apiClient == null) {
+       if (apiClient == null) {
             apiClient = GetComponent<ExperimentApiClient>();
         }
 
         if (apiClient == null) {
             apiClient = gameObject.AddComponent<ExperimentApiClient>();
         }
-
-        runtime = new ExperimentRuntime();
+       runtime = new ExperimentRuntime();
         runtime.OnStepChanged += OnRuntimeStepChanged;
         runtime.OnExperimentFinished += OnRuntimeFinished;
     }
@@ -50,6 +49,49 @@ public class ExperimentManager : MonoBehaviour {
         runtime?.Tick(DateTime.Now);
     }
 
+    private bool ValidateValue(double? value) {
+        if (!value.HasValue) {
+            Debug.LogError($"Interaction '{CurrentStep.Interaction}' requires a value, but none was provided.");
+            return false;
+        }
+
+        double? expectedValue = CurrentStep.Value;
+        double tolerance = CurrentStep.Tolerance ?? 0.001;
+        if (!expectedValue.HasValue) {
+            Debug.LogError($"Interaction '{CurrentStep.Interaction}' requires a value, but no expected value is defined for the current step.");
+            return false;
+        }
+
+        if (Math.Abs(value.Value - expectedValue.Value) > tolerance) {
+            Debug.LogError($"requires a value of {expectedValue}, but received {value}.");
+            return false;
+        }
+
+        return true;
+    }
+
+    private bool ValidateInteraction(PlayerAction interaction) {
+        if (interaction == null || interaction.Target == null)
+            return false;
+
+        if (interaction.InteractionType != CurrentStep.Interaction)
+            return false;
+
+        var interactable = interaction.Target != null ? interaction.Target.GetComponent<StepInteractable>() : null;
+        if (interactable == null) {
+            Debug.LogError("Interaction target has no StepInteractable component.");
+            return false;
+        }
+
+        if (interactable.GetIdentifier() != CurrentStep.InteractionTarget)
+            return false;
+
+        if (RequireValue(interaction.InteractionType) && !ValidateValue(interaction.Value))
+            return false;
+
+        return true;
+    }
+
     public void StartExperiment(ExperimentDefinition experimentDefinition) {
         CurrentExperiment = experimentDefinition;
         SetupExperimentObjects(experimentDefinition);
@@ -58,11 +100,9 @@ public class ExperimentManager : MonoBehaviour {
 
     public void NextStep() {
         if (!IsExperimentRunning) {
-            return;
+           runtime.NextStep();
         }
-
-        runtime.NextStep();
-    }
+    } 
 
     public void End(int? finishScore = null) {
         if (!IsExperimentRunning) {
@@ -84,8 +124,19 @@ public class ExperimentManager : MonoBehaviour {
         if (!IsExperimentRunning) {
             return;
         }
+      runtime.ValidateValue(value);
+    }
 
-        runtime.ValidateValue(value);
+        
+    public void HandlePlayerAction(PlayerAction interaction) {
+		if (!IsExperimentRunning) return;
+        bool valid = ValidateInteraction(interaction);
+
+        if (valid) {
+            ValidStep();
+        }else {
+            InvalidStep();
+        }
     }
 
     public void ProcessBackgroundWork(BackgroundProcess work, float timeUsed) {
@@ -174,23 +225,24 @@ public class ExperimentManager : MonoBehaviour {
 
         interactable.stepType = step.Interaction;
 
-        if (step.Interaction == InteractionType.MOVE && !string.IsNullOrEmpty(step.InteractionTargetSecondary)) {
-            var gameObjectSecondary = GameObject.Find(step.InteractionTargetSecondary);
-            if (gameObjectSecondary != null) {
-                secondaryTargetBeam.transform.position = gameObjectSecondary.transform.position;
-                secondaryTargetBeam.SetActive(true);
-            }
-        }
-
-        if (step.Interaction == InteractionType.USE && !string.IsNullOrEmpty(step.OnSuccessStartBackgroundWorkId)) {
-            var equipment = interactable as EquipmentInteractable;
-            if (equipment != null) {
-                var bgWork = Array.Find(CurrentExperiment.experimentData.BackgroundProcesses, w => w.Id == step.OnSuccessStartBackgroundWorkId);
-                runtime.RegisterBackgroundWork(bgWork);
-                equipment.backgroundProcess = bgWork;
-            }
-        }
     }
+  
+   private IEnumerator BootstrapAndStart() {
+        Debug.Log($"Fetching experiment data for practice ID: {SessionData.Current.PracticeId}");
+
+        yield return StartCoroutine(apiClient.FetchAndStartExperiment(
+            SessionData.Current,
+            onSuccess: data => {
+                SessionData.Current.Username = data.Username;
+                SessionData.Current.UserPhotoURL = data.UserPhotoURL;
+                hudPresenter.UpdateUserInfo(data.Username, data.UserPhotoURL);
+                StartExperiment(data.Practice);
+            },
+            onError: error => Debug.LogError(error)
+        ));
+    }
+
+   
 
     private void OnRuntimeFinished(int score, double timeTakenSeconds) {
         CurrentExperiment = null;
