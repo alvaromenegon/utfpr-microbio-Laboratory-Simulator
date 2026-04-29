@@ -1,5 +1,7 @@
+using Assets.Scripts;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 public class ExperimentRuntime {
     public ExperimentDefinition Definition { get; private set; }
@@ -10,6 +12,8 @@ public class ExperimentRuntime {
     public Step CurrentStep => Definition?.experimentData?.Steps?[CurrentStepIndex];
 
     private readonly List<BackgroundProcess> backgroundProcesses = new();
+    public GoalEvaluator GoalEvaluator { get; } = new ();
+    public ActionExecutor ActionExecutor { get; } = new ();
 
     public event Action<Step, int, int> OnStepChanged;
     public event Action<string> OnFeedback;
@@ -44,6 +48,7 @@ public class ExperimentRuntime {
         if (!IsRunning || CurrentStep == null) {
             return;
         }
+        ActionExecutor.Execute(interaction);
 
         bool valid = interaction.InteractionType == CurrentStep.Interaction && interaction.Target.name == CurrentStep.InteractionTarget;
         if (valid) {
@@ -109,6 +114,10 @@ public class ExperimentRuntime {
 
         CurrentStepIndex = stepIndex;
         PublishStep();
+    }
+
+    public bool IsStepComplete(Step step) {
+        return step.Goals.All(goal=> GoalEvaluator.Evaluate(goal));
     }
 
     private void ValidStep() {

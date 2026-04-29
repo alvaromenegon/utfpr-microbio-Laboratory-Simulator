@@ -2,7 +2,6 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class Interaction : MonoBehaviour {
-    InteractionType interactionType;
 
     public static bool RequireValue(InteractionType interactionType) {
         return interactionType == InteractionType.SET_TIMER ||
@@ -20,5 +19,8 @@ public class Interaction : MonoBehaviour {
         SET_TIMER, // "SET_TIMER"
         SET_TEMPERATURE, // "SET_TEMPERATURE"
         SET_QUANTITY, // "SET_QUANTITY"
+        ACTIVATE,
+        DEACTIVATE,
+        SET_PROPERTY
     }
 }

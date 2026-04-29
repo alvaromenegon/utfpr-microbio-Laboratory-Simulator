@@ -70,14 +70,6 @@ public class ExperimentManager : MonoBehaviour {
         runtime.End(finishScore);
     }
 
-    public void ProcessInteraction(PlayerAction interaction, double? value = null) {
-        if (!IsExperimentRunning) {
-            return;
-        }
-
-        runtime.ProcessInteraction(interaction);
-    }
-
     public void ValidateValue(double? value) {
         if (!IsExperimentRunning) {
             return;

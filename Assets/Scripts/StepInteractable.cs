@@ -24,14 +24,14 @@ public class StepInteractable : LaboratoryObject, IInteractable {
         if (RequireValue(stepType)) {
             InputPanelController.Instance.Show(new PlayerAction {
                 InteractionType = stepType,
-                Target = gameObject
+                Target = this
             });        
             return;
 
         }
         PlayerAction action = new() {
             InteractionType = stepType,
-            Target = gameObject
+            Target = this
         };
         ExperimentManager.Instance.HandlePlayerAction(action);
     }
@@ -56,11 +56,11 @@ public class StepInteractable : LaboratoryObject, IInteractable {
         if (stepType == InteractionType.MOVE && other.gameObject.CompareTag("SecondaryTarget")) {
             PlayerAction action = new() {
                 InteractionType = stepType,
-                Target = gameObject
+                Target = this
             };
             Debug.Log($"Player moved {gameObject.name} to {other.gameObject.name}");
             ExperimentManager.Instance.OnSecondaryTargetInteraction(gameObject);
-            ExperimentManager.Instance.ProcessInteraction(action);
+            ExperimentManager.Instance.HandlePlayerAction(action);
         }
     }
 

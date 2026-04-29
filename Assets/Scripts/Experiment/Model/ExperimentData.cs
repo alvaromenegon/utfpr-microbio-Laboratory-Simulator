@@ -1,4 +1,7 @@
+using Assets.Scripts;
+using NUnit.Framework;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using static Interaction;
 
@@ -49,6 +52,8 @@ public class Step {
     public int OnFailureReturnToStep { get; set; }
     public OnStepFinished ActionOnSuccess { get; set; }
     public string OnSuccessStartBackgroundWorkId { get; set; }
+
+    public List<StepGoal> Goals { get; set; }
 
     public bool IsValid(int numSteps) {
         if (string.IsNullOrEmpty(Description)) {
