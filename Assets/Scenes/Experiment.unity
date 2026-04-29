@@ -1366,23 +1366,6 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 1206930793}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &239484397
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 239484384}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 01699208c2290b24caca0e1217a6622a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerInteraction
-  playerCamera: {fileID: 1211821980}
-  interactionRange: 1.3
-  interactableLayer:
-    serializedVersion: 2
-    m_Bits: 256
 --- !u!1 &285725327
 GameObject:
   m_ObjectHideFlags: 0
@@ -6112,9 +6095,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 114222333444555666, guid: bcb6684d471b3a345a3be779e91f2a93,
         type: 3}
-      propertyPath: playerInteraction
-      value: 
-      objectReference: {fileID: 0}
     - target: {fileID: 114375843542102630, guid: bcb6684d471b3a345a3be779e91f2a93,
         type: 3}
       propertyPath: m_Enabled

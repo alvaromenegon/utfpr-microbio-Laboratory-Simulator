@@ -2,7 +2,7 @@ using Assets.Scripts;
 using System;
 using UnityEngine;
 
-class InputFacade : MonoBehaviour {
+public class InputFacade : MonoBehaviour {
     [Header("References")]
     public Transform playerCamera;
     public CursorChanger cursorChanger;
@@ -64,6 +64,23 @@ class InputFacade : MonoBehaviour {
         }
     }
 
+
+
+    // Legacy compatibility API migrated from PlayerInteraction.
+    public bool TryGetInteractableInSight(out IInteractable interactable)
+    {
+        interactable = null;
+        if (!TryGetObjectInSight(out RaycastHit hit))
+        {
+            return false;
+        }
+
+        interactable = hit.collider.GetComponentInParent<IInteractable>();
+        return interactable != null;
+    }
+
+    // Legacy compatibility API migrated from PlayerInteraction.
+    public void TryInteract() => HandleInteract();
     public bool TryGetObjectInSight(out RaycastHit hit)
     {
         hit = default;
