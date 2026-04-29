@@ -1916,23 +1916,6 @@ Transform:
   - {fileID: 549932665}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &424564800
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 424564796}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 01699208c2290b24caca0e1217a6622a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerInteraction
-  playerCamera: {fileID: 656704826}
-  interactionRange: 3
-  interactableLayer:
-    serializedVersion: 2
-    m_Bits: 256
 --- !u!114 &424564801
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1945,7 +1928,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 57c86e33d2134f859ec8d7d37af6ec1e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ExperimentRunner
-  playerInteraction: {fileID: 424564800}
   orderedSteps: []
   onStepCompleted:
     m_PersistentCalls:
@@ -1965,7 +1947,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7c59b17f0a9a4ac6bf7a357aa6f7d322, type: 3}
   m_Name: ""
   m_EditorClassIdentifier: Assembly-CSharp::WebReticleController
-  playerInteraction: {fileID: 424564800}
   defaultReticleIcon: {fileID: 0}
   focusedReticleIcon: {fileID: 0}
   lockSystemCursorOnWeb: 1

@@ -1,98 +1,56 @@
 using System;
 using UnityEngine;
 
+/// <summary>
+/// LEGADO/DEPRECADO: fluxo de interação substituído por InputFacade.
+/// Mantenha este componente apenas para compatibilidade temporária em cenas antigas.
+/// </summary>
+[Obsolete("PlayerInteraction is deprecated. Use InputFacade as the official interaction flow.", false)]
 public class PlayerInteraction : MonoBehaviour
 {
-    [Header("References")]
-    public Transform playerCamera;
+    [Header("Legacy Bridge")]
+    [SerializeField] private InputFacade inputFacade;
 
-    [Header("Interaction Settings")]
-    public float interactionRange = 1.3f;
-    public LayerMask interactableLayer;
-
-    public event Action<IInteractable> InteractionPerformed;
-    public event Action<IInteractable> HoverEntered;
-    public event Action<IInteractable> HoverExited;
-
-    private IInteractable _currentHoveredInteractable;
-
-    private void Update()
+    public event Action<IInteractable> InteractionPerformed
     {
-        UpdateHoverState();
+        add { if (inputFacade != null) inputFacade.InteractionPerformed += value; }
+        remove { if (inputFacade != null) inputFacade.InteractionPerformed -= value; }
+    }
+
+    public event Action<IInteractable> HoverEntered
+    {
+        add { if (inputFacade != null) inputFacade.HoverEntered += value; }
+        remove { if (inputFacade != null) inputFacade.HoverEntered -= value; }
+    }
+
+    public event Action<IInteractable> HoverExited
+    {
+        add { if (inputFacade != null) inputFacade.HoverExited += value; }
+        remove { if (inputFacade != null) inputFacade.HoverExited -= value; }
+    }
+
+    private void Awake()
+    {
+        if (inputFacade == null)
+        {
+            inputFacade = GetComponent<InputFacade>();
+        }
     }
 
     public bool TryGetInteractableInSight(out IInteractable interactable)
     {
         interactable = null;
-
-        if (playerCamera == null)
-        {
-            return false;
-        }
-
-        Ray ray = new Ray(playerCamera.position, playerCamera.forward);
-        if (!Physics.Raycast(ray, out RaycastHit hit, interactionRange, interactableLayer))
-        {
-            return false;
-        }
-
-        interactable = hit.collider.GetComponentInParent<IInteractable>();
-        if (interactable != null)
-        {
-            return true;
-        }
-
-        StepInteractable stepInteractable = hit.collider.GetComponentInParent<StepInteractable>();
-        if (stepInteractable == null)
-        {
-            return false;
-        }
-
-        interactable = stepInteractable;
-        return true;
+        return inputFacade != null && inputFacade.TryGetInteractableInSight(out interactable);
     }
 
     public void TryInteract()
     {
-        if (playerCamera == null)
+        if (inputFacade == null)
         {
-            Debug.LogWarning("PlayerInteraction: playerCamera não atribuída.", this);
+            Debug.LogWarning("PlayerInteraction (legado): InputFacade não atribuído.", this);
             return;
         }
 
-        if (!TryGetInteractableInSight(out IInteractable interactable))
-        {
-            return;
-        }
-
-        interactable.Interact();
-        InteractionPerformed?.Invoke(interactable);
+        inputFacade.TryInteract();
     }
-
-    private void UpdateHoverState()
-    {
-        IInteractable nextHover = null;
-        if (TryGetInteractableInSight(out IInteractable interactable))
-        {
-            nextHover = interactable;
-        }
-
-        if (ReferenceEquals(_currentHoveredInteractable, nextHover))
-        {
-            return;
-        }
-
-        if (_currentHoveredInteractable != null)
-        {
-            HoverExited?.Invoke(_currentHoveredInteractable);
-        }
-
-        _currentHoveredInteractable = nextHover;
-
-        if (_currentHoveredInteractable != null)
-        {
-            HoverEntered?.Invoke(_currentHoveredInteractable);
-        }
-    }
-
 }
