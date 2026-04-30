@@ -1,9 +1,11 @@
+using Assets.Scripts;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class EffectSystem: MonoBehaviour {
+public class EffectSystem {
     public List<ActiveInteraction> activeInteractions = new();
     private ExperimentObjectRegistry registry;
+    private LoggerService logger = new ("EffectSystem");
 
     private List<ContinuousEffect> GetMatchingEffects(ActiveInteraction interaction) {
         // todo: implementar lógica para encontrar efeitos correspondentes 
@@ -20,19 +22,20 @@ public class EffectSystem: MonoBehaviour {
         if (effect == null) { return; }
         var source = registry.TryGetInteractable(effect.SourceObject, out var obj);
         if (!source) {
-            Debug.LogError($"EffectSystem: Could not find object with identifier {effect.SourceObject}");
+            logger.Error($"EffectSystem: Could not find object with identifier {effect.SourceObject}");
             return;
         }
         var target = registry.TryGetInteractable(effect.TargetObject, out var targetObj);
         if (!target) {
-            Debug.LogError($"EffectSystem: Could not find object with identifier {effect.TargetObject}");
+            logger.Error($"EffectSystem: Could not find object with identifier {effect.TargetObject}");
             return;
         }
         if (targetObj == null) {
-            Debug.LogError($"EffectSystem: Target object with identifier {effect.TargetObject} is null");
+            logger.Error($"EffectSystem: Target object with identifier {effect.TargetObject} is null");
             return;
         }
         targetObj.Set(effect.Property, effect.Rate * deltatime);
+        logger.Log($"EffectSystem: Applied effect from {effect.SourceObject} to {effect.TargetObject} on property {effect.Property} with rate {effect.Rate * deltatime}");
 
     }
 
@@ -48,7 +51,7 @@ public class EffectSystem: MonoBehaviour {
             return activeInteractions;
     }
 
-    private void Update() {
+    public void Update() {
         foreach (var interaction in activeInteractions) {
             var effects = GetMatchingEffects(interaction);
 

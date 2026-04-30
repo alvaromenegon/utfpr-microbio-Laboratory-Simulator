@@ -19,7 +19,9 @@ public class ExperimentManager : MonoBehaviour {
     private ExperimentHudPresenter hudPresenter;
 
     public bool IsExperimentRunning => runtime != null && runtime.IsRunning;
-    private Step CurrentStep => runtime.CurrentStep;
+    private InteractionSystem InteractionSystem;
+    private EffectSystem EffectSystem;
+    private DerivedPropertySystem DerivedPropertySystem;
 
     private void Awake() {
         Instance = this;
@@ -48,6 +50,9 @@ public class ExperimentManager : MonoBehaviour {
 
     private void Update() {
         runtime?.Tick(DateTime.Now);
+        InteractionSystem.Update();
+        EffectSystem.Update();
+        DerivedPropertySystem.Update();
     }
 
     public void StartExperiment(ExperimentDefinition experimentDefinition) {

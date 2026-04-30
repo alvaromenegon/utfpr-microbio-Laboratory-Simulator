@@ -5,7 +5,6 @@ using static Interaction;
 
 [DisallowMultipleComponent]
 public class StepInteractable : LaboratoryObject, IInteractable {
-    private readonly ExperimentObjectRegistry registry;
     [SerializeField, FormerlySerializedAs("stepId")] private string interactionIdentifier;
     [SerializeField] private bool applyInteractableLayer = true;
     public InteractionType stepType = InteractionType.USE;

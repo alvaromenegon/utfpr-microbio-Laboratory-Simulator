@@ -2,12 +2,12 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public class DerivedPropertySystem : MonoBehaviour {
+public class DerivedPropertySystem {
     List<DerivedProperty> derivedProperties = new();
     ExperimentObjectRegistry registry;
     // todo
 
-    private void Update() {
+    public void Update() {
         foreach(var rule in derivedProperties.OrderBy(dp => dp.Priority)) {
             ApplySet(rule);
         }
