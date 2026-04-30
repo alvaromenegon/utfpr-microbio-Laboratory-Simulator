@@ -3,6 +3,7 @@ using static Interaction;
 using UnityEngine;
 
 public class EquipmentInteractable : StepInteractable{
+
     private WorkingState workingState = WorkingState.Idle;
     private long timeUsed = 0;
     private long startTime; // tempo de início da utilização do equipamento, em milissegundos desde a época Unix

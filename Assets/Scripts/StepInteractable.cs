@@ -5,12 +5,10 @@ using static Interaction;
 
 [DisallowMultipleComponent]
 public class StepInteractable : LaboratoryObject, IInteractable {
-
+    private readonly ExperimentObjectRegistry registry;
     [SerializeField, FormerlySerializedAs("stepId")] private string interactionIdentifier;
     [SerializeField] private bool applyInteractableLayer = true;
     public InteractionType stepType = InteractionType.USE;
-
-    public string StepId { get; set; }
 
     public override string GetIdentifier() {
         if (!string.IsNullOrWhiteSpace(interactionIdentifier)) {
