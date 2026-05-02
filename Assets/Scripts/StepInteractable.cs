@@ -17,21 +17,21 @@ public class StepInteractable : LaboratoryObject, IInteractable {
         return base.GetIdentifier();
     }
 
-    public virtual void Interact() {
-        if (RequireValue(stepType)) {
-            InputPanelController.Instance.Show(new PlayerAction {
-                InteractionType = stepType,
-                Target = this
-            });        
-            return;
+    //public virtual void Interact() {
+    //    if (RequireValue(stepType)) {
+    //        InputPanelController.Instance.Show(new PlayerAction {
+    //            InteractionType = stepType,
+    //            Target = this.GetIdentifier()
+    //        });        
+    //        return;
 
-        }
-        PlayerAction action = new() {
-            InteractionType = stepType,
-            Target = this
-        };
-        ExperimentManager.Instance.HandlePlayerAction(action);
-    }
+    //    }
+    //    PlayerAction action = new() {
+    //        InteractionType = stepType,
+    //        Target = this.GetIdentifier()
+    //    };
+    //    ExperimentManager.Instance.HandlePlayerAction(action);
+    //}
 
     private void OnValidate() {
         if (!applyInteractableLayer) {
@@ -53,11 +53,11 @@ public class StepInteractable : LaboratoryObject, IInteractable {
         if (stepType == InteractionType.MOVE && other.gameObject.CompareTag("SecondaryTarget")) {
             PlayerAction action = new() {
                 InteractionType = stepType,
-                Target = this
+                Target = this.GetIdentifier()
             };
             Debug.Log($"Player moved {gameObject.name} to {other.gameObject.name}");
             ExperimentManager.Instance.OnSecondaryTargetInteraction(gameObject);
-            ExperimentManager.Instance.HandlePlayerAction(action);
+            //ExperimentManager.Instance.HandlePlayerAction(action);
         }
     }
 

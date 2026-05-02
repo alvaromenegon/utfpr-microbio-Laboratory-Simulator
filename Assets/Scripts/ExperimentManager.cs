@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Assets.Scripts;
+using System;
 using System.Collections;
 using TMPro;
 using UnityEngine;
@@ -11,7 +12,6 @@ public class ExperimentManager : MonoBehaviour {
     [SerializeField] private TMP_Text inputLabel;
     [SerializeField] private ExperimentApiClient apiClient;
 
-    [SerializeField] private ExperimentObjectRegistry objectRegistry;
     public static ExperimentManager Instance { get; private set; }
     public ExperimentDefinition CurrentExperiment { get; private set; }
 
@@ -21,6 +21,7 @@ public class ExperimentManager : MonoBehaviour {
     public bool IsExperimentRunning => runtime != null && runtime.IsRunning;
     private InteractionSystem InteractionSystem;
     private EffectSystem EffectSystem;
+    private EffectRegistry effectRegistry;
     private DerivedPropertySystem DerivedPropertySystem;
 
     private void Awake() {
@@ -30,6 +31,10 @@ public class ExperimentManager : MonoBehaviour {
             Debug.LogError("[ExperimentManager] Sessão indisponível. Manager interrompido.");
             return;
         }
+
+        InteractionSystem = new InteractionSystem();
+        DerivedPropertySystem = new DerivedPropertySystem();
+
        if (apiClient == null) {
             apiClient = GetComponent<ExperimentApiClient>();
         }
@@ -50,14 +55,21 @@ public class ExperimentManager : MonoBehaviour {
 
     private void Update() {
         runtime?.Tick(DateTime.Now);
-        InteractionSystem.Update();
-        EffectSystem.Update();
-        DerivedPropertySystem.Update();
+        InteractionSystem?.Update();
+        EffectSystem?.Update(InteractionSystem.GetActiveInteractions());
+        DerivedPropertySystem?.Update();
+        
+        if (IsExperimentRunning && runtime.CurrentStep != null) {
+            if (runtime.IsStepComplete(runtime.CurrentStep)) {
+                runtime.NextStep(); // Or handle the step completion properly according to runtime logic
+            }
+        }
     }
 
     public void StartExperiment(ExperimentDefinition experimentDefinition) {
         CurrentExperiment = experimentDefinition;
         SetupExperimentObjects(experimentDefinition);
+        effectRegistry.SetupRegistry(experimentDefinition.experimentData);
         runtime.Start(experimentDefinition);
     }
 
@@ -73,19 +85,6 @@ public class ExperimentManager : MonoBehaviour {
         }
 
         runtime.End(finishScore);
-    }
-
-    public void ValidateValue(double? value) {
-        if (!IsExperimentRunning) {
-            return;
-        }
-        runtime.ValidateValue(value);
-    }
-
-        
-    public void HandlePlayerAction(PlayerAction interaction) {
-		if (!IsExperimentRunning) return;
-        runtime.ProcessInteraction(interaction);
     }
 
     public void ProcessBackgroundWork(BackgroundProcess work, float timeUsed) {

@@ -1,5 +1,6 @@
 public class ExperimentHudPresenter {
     private readonly HUDController hud;
+    private InteractionSystem interactionSystem;
 
     public ExperimentHudPresenter(HUDController hudController) {
         hud = hudController;
@@ -9,6 +10,10 @@ public class ExperimentHudPresenter {
         runtime.OnTimerUpdated += HandleTimerUpdated;
         runtime.OnStepChanged += HandleStepChanged;
         runtime.OnFeedback += HandleFeedback;
+        interactionSystem.OnValueRequired += request =>
+        {
+            InputPanelController.Instance.Show(request);
+        };
     }
 
     public void Unbind(ExperimentRuntime runtime) {

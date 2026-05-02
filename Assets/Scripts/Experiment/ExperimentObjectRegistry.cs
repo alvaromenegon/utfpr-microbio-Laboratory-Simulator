@@ -5,6 +5,15 @@ using UnityEngine;
 
 public class ExperimentObjectRegistry : MonoBehaviour {
     private readonly Dictionary<string, StepInteractable> interactablesById = new(StringComparer.Ordinal);
+    public static ExperimentObjectRegistry Instance { get; private set; }
+
+    private void Awake() {
+        if (Instance != null && Instance != this) {
+            Destroy(this);
+        } else {
+            Instance = this;
+        }
+    }
 
     public void RebuildIndex() {
         interactablesById.Clear();

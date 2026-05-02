@@ -8,11 +8,12 @@ public class InputPanelController : MonoBehaviour {
     [SerializeField] private GameObject panel;
     [SerializeField] private TMP_InputField inputField;
     private PlayerAction pendingAction;
+    private EffectSystem effectSystem;
 
     void Awake() => Instance = this;
 
-    public void Show(PlayerAction action) {
-        pendingAction = action;
+    public void Show(InteractionRequest request) {
+        pendingAction = new PlayerAction { InteractionType = request.Type, Target = request.SecondaryObject, Value = null, Property = null};
         panel.SetActive(true);
         inputField.text = string.Empty;
         StartCoroutine(ActivateInputNextFrame());
@@ -35,25 +36,13 @@ public class InputPanelController : MonoBehaviour {
                 System.Globalization.NumberStyles.Any,
                 System.Globalization.CultureInfo.InvariantCulture, // evita bug de vírgula/ponto
                 out double value)) {
-            ExperimentManager.Instance.ValidateValue(value);
+            pendingAction.Property = PropertyCatalog.Instance.Resolve(pendingAction.InteractionType, pendingAction.Target);
+            pendingAction.Value = value;
+            effectSystem.ApplyValueAction(pendingAction);
         }
         else {
             Debug.Log("Valor inválido.");
-            // Opcional: mostrar feedback de erro na UI
+            // todo: mostrar feedback de erro na UI
         }
-
-        if (pendingAction == null || pendingAction.Target == null) {
-            Debug.LogError("No pending action available for input confirmation.");
-            Hide();
-            return;
-        }
-
-        PlayerAction action = new() {
-            InteractionType = pendingAction.InteractionType,
-            Target = pendingAction.Target,
-            Value = value
-        };
-        ExperimentManager.Instance.HandlePlayerAction(action);
-        pendingAction = null;
     }
 }

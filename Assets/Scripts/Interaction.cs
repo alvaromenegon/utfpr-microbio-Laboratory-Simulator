@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.UI;
 
 public class Interaction : MonoBehaviour {
 
@@ -8,8 +7,6 @@ public class Interaction : MonoBehaviour {
                interactionType == InteractionType.SET_TEMPERATURE ||
                interactionType == InteractionType.SET_QUANTITY;
     }
-
-
 
     public enum InteractionType {
         PICK_UP, // "PICK_UP"

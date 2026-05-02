@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace Assets.Scripts {
-    public class LaboratoryObject : MonoBehaviour {
+    public class LaboratoryObject : MonoBehaviour, IInteractable {
         [SerializeField] private string objectName;
         [SerializeField] private string canonicalIdentifier;
 

@@ -1,6 +1,7 @@
 using Assets.Scripts;
 using System;
 using UnityEngine;
+using static Interaction;
 
 class InputFacade : MonoBehaviour {
     [Header("References")]
@@ -13,28 +14,37 @@ class InputFacade : MonoBehaviour {
 
     private GameControls _controls;
     private IMovable _currentMovable;
-    private IInteractable _currentHoveredInteractable;
-    private LaboratoryObject _currentLaboratoryObject;
+    private LaboratoryObject _currentHoveredInteractable;
 
-    public event Action<IInteractable> InteractionPerformed;
-    public event Action<IInteractable> HoverEntered;
-    public event Action<IInteractable> HoverExited;
+    private InteractionSystem interactionSystem;
+    private InteractionRequest _activeRequest;
+
+    public event Action<LaboratoryObject> HoverEntered;
+    public event Action<LaboratoryObject> HoverExited;
 
     void Awake()
     {
         _controls = new GameControls();
         _controls.Player.Click.performed += _ => HandleClick();
         _controls.Player.Click.canceled += _ => HandleClickRelease();
-        _controls.Player.Interact.performed += _ => HandleInteract();
+        _controls.Player.Interact.performed += _ => HandleInteractStart();
+        _controls.Player.Interact.canceled += _ => HandleInteractEnd();
+
     }
 
-    private void HandleInteract()
-    {
-        if (_currentHoveredInteractable != null)
-        {
-            _currentHoveredInteractable.Interact();
-            InteractionPerformed?.Invoke(_currentHoveredInteractable);
-        }
+    private void HandleInteractStart(){
+        if (_currentHoveredInteractable == null) return;
+
+        _activeRequest = new InteractionResolver(_currentHoveredInteractable, _currentMovable).BuildRequest();
+
+        interactionSystem.HandleInteractionRequestStart(_activeRequest);
+    }
+
+    private void HandleInteractEnd(){
+        if (_activeRequest == null) return;
+
+        interactionSystem.HandleInteractionRequestEnd(_activeRequest);
+        _activeRequest = null;
     }
 
     void OnEnable() => _controls.Player.Enable();
@@ -80,15 +90,13 @@ class InputFacade : MonoBehaviour {
     private void UpdateHoverState()
     {
         IMovable nextMovable = null;
-        IInteractable nextInteractable = null;
-        LaboratoryObject nextLaboratoryObject = null;
+        LaboratoryObject nextInteractable = null;
         CursorChanger.CursorType cursorType = CursorChanger.CursorType.Pointer;
 
         if (TryGetObjectInSight(out RaycastHit hit))
         {
             nextMovable = hit.collider.GetComponentInParent<IMovable>();
-            nextInteractable = hit.collider.GetComponentInParent<IInteractable>();
-            nextLaboratoryObject = hit.collider.GetComponentInParent<LaboratoryObject>();         
+            nextInteractable = hit.collider.GetComponentInParent<LaboratoryObject>();
 
             if (nextMovable != null) {
                 cursorType = CursorChanger.CursorType.Selector;
@@ -96,21 +104,6 @@ class InputFacade : MonoBehaviour {
             else if (nextInteractable != null) {
                 cursorType = CursorChanger.CursorType.Interact;
             }
-        }
-
-        if (!ReferenceEquals(_currentLaboratoryObject, nextLaboratoryObject))
-        {
-            if (_currentLaboratoryObject != null)
-            {
-                _currentLaboratoryObject.OnExitHover();
-            }
-            _currentLaboratoryObject = nextLaboratoryObject;
-            if (_currentLaboratoryObject != null)
-            {
-                _currentLaboratoryObject.OnHover();
-            }
-        } else {
-            _currentLaboratoryObject = nextLaboratoryObject;
         }
 
         if (!ReferenceEquals(_currentMovable, nextMovable)) {

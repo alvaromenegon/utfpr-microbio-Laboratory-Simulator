@@ -38,35 +38,35 @@ public class EquipmentInteractable : StepInteractable{
         retainedObject = null;
     }
 
-    public override void Interact() {
-        if (workingState == WorkingState.Ended) {            
-            InputPanelController.Instance.Show(new PlayerAction {
-                InteractionType = stepType,
-                Target = this
-            });
-        }
-        if (stepType == InteractionType.USE) {
-            if (workingState == WorkingState.Idle) {
-                TurnOnEquipment();
-                PlayerAction action = new () {
-                    InteractionType = stepType,
-                    Target = this,
-                };
-                ExperimentManager.Instance.HandlePlayerAction(action);
-            }
-            else if (workingState == WorkingState.InUse) {
-                TurnOffEquipment();
-            }
-        } else if (RequireValue(stepType)) {
-            // tipo de interação que requer um valor obtido
-            // por entrada do usuário, como uma temperatura ou tempo.
-            InputPanelController.Instance.Show(new PlayerAction {
-                InteractionType = stepType,
-                Target = this
-            }  );
-            return;
-        }
-    }
+    //public override void Interact() {
+    //    if (workingState == WorkingState.Ended) {            
+    //        InputPanelController.Instance.Show(new PlayerAction {
+    //            InteractionType = stepType,
+    //            Target = this.GetIdentifier()
+    //        });
+    //    }
+    //    if (stepType == InteractionType.USE) {
+    //        if (workingState == WorkingState.Idle) {
+    //            TurnOnEquipment();
+    //            PlayerAction action = new () {
+    //                InteractionType = stepType,
+    //                Target = this.GetIdentifier(),
+    //            };
+    //            ExperimentManager.Instance.HandlePlayerAction(action);
+    //        }
+    //        else if (workingState == WorkingState.InUse) {
+    //            TurnOffEquipment();
+    //        }
+    //    } else if (RequireValue(stepType)) {
+    //        // tipo de interação que requer um valor obtido
+    //        // por entrada do usuário, como uma temperatura ou tempo.
+    //        InputPanelController.Instance.Show(new PlayerAction {
+    //            InteractionType = stepType,
+    //            Target = this.GetIdentifier()
+    //        }  );
+    //        return;
+    //    }
+    //}
 
     public virtual void SetValue(float newValue) {
         value = newValue;

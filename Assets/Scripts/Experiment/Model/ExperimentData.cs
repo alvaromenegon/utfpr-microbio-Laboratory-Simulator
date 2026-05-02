@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 [Serializable]
 public class ExperimentData {
@@ -7,6 +8,9 @@ public class ExperimentData {
     public string[] Objects { get; set; }
     public string Description { get; set; }
     public int Time { get; set; }
+    public List<ContinuousEffect> ContinuousEffects;
+    public List<InstantEffect> InstantEffects;
+    public List<DerivedProperty> DerivedProperties;
 
     public bool HasTimeLimit() {
         return Time > 0;

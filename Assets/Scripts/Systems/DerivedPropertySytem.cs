@@ -18,12 +18,12 @@ public class DerivedPropertySystem {
      * 
      */
     private void ApplySet(DerivedProperty rule) {
-        registry.TryGetInteractable(rule.identifier, out var obj);
+        registry.TryGetInteractable(rule.Identifier, out var obj);
         if(obj == null) {
-            Debug.LogError($"DerivedPropertySystem: Could not find object with identifier {rule.identifier}");
+            Debug.LogError($"DerivedPropertySystem: Could not find object with identifier {rule.Identifier}");
             return;
         }
-        foreach(var kvp in rule.setProperty) {
+        foreach(var kvp in rule.SetProperty) {
             obj.Set(kvp.Key, kvp.Value);
         }
     }

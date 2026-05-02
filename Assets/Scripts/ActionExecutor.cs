@@ -5,7 +5,7 @@ public class ActionExecutor {
     private ExperimentObjectRegistry registry;
 
     public void Execute(PlayerAction action) {
-        registry.TryGetInteractable(action.Target.GetIdentifier(), out var obj);
+        registry.TryGetInteractable(action.Target, out var obj);
 
         switch (action.InteractionType) {
             case InteractionType.ACTIVATE:
@@ -30,4 +30,5 @@ public class ActionExecutor {
                 break;
         }
     }
-}
+
+ }

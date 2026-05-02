@@ -44,40 +44,6 @@ public class ExperimentRuntime {
         }
     }
 
-    public void ProcessInteraction(PlayerAction interaction) {
-        if (!IsRunning || CurrentStep == null) {
-            return;
-        }
-        ActionExecutor.Execute(interaction);
-
-        bool valid = interaction.InteractionType == CurrentStep.Interaction && interaction.Target.name == CurrentStep.InteractionTarget;
-        if (valid) {
-            ValidStep();
-            return;
-        }
-
-        InvalidStep();
-    }
-
-    public void ValidateValue(double? value) {
-        if (!IsRunning || CurrentStep == null) {
-            return;
-        }
-
-        double? expectedValue = CurrentStep.Value;
-        double tolerance = CurrentStep.Tolerance ?? 0.001;
-        if (expectedValue == null || value == null) {
-            InvalidStep();
-            return;
-        }
-
-        if (Math.Abs(value.Value - expectedValue.Value) > tolerance) {
-            InvalidStep();
-            return;
-        }
-
-        ValidStep();
-    }
 
     public void ProcessBackgroundWork(BackgroundProcess work, float timeUsed) {
         if (!IsRunning || work == null) {
