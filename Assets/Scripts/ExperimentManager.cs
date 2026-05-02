@@ -87,14 +87,6 @@ public class ExperimentManager : MonoBehaviour {
         runtime.End(finishScore);
     }
 
-    public void ProcessBackgroundWork(BackgroundProcess work, float timeUsed) {
-        if (!IsExperimentRunning) {
-            return;
-        }
-
-        runtime.ProcessBackgroundWork(work, timeUsed);
-    }
-
     public void OnSecondaryTargetInteraction(GameObject gameObjectPrimary) {
         if (!IsExperimentRunning || runtime.CurrentStep == null) {
             return;

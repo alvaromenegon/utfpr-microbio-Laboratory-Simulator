@@ -1,12 +1,12 @@
 using System.Collections.Generic;
 using static Interaction;
 
-struct EffectKey {
+struct InteractionEffectKey {
     public InteractionType Type;
     public string Source;   // pode ser "*"
     public string Target;   // pode ser "*"
 
-    public EffectKey(InteractionType type, string source, string target) {
+    public InteractionEffectKey(InteractionType type, string source, string target) {
         Type = type;
         Source = source;
         Target = target;
@@ -15,8 +15,9 @@ struct EffectKey {
 
 public class EffectRegistry {
 
-    private Dictionary<EffectKey, List<ContinuousEffect>> continuousEffects = new();
-    private Dictionary<EffectKey, List<InstantEffect>> instantEffects = new();
+    private Dictionary<InteractionEffectKey, List<ContinuousEffect>> continuousEffects = new();
+    private Dictionary<InteractionEffectKey, List<InstantEffect>> instantEffects = new();
+    private Dictionary<string, TriggeredEffect> triggeredEffects = new(); // efeitos sem interação direta do usuário
     Dictionary<(InteractionType, string, string), List<ContinuousEffect>> cache; // (type, source, target)
 
 
@@ -25,7 +26,7 @@ public class EffectRegistry {
         InteractionType type,
         string source,
         string target) {
-        var key = new EffectKey(type, source, target);
+        var key = new InteractionEffectKey(type, source, target);
 
         if (continuousEffects.TryGetValue(key, out var list)) {
             results.AddRange(list);
@@ -37,7 +38,7 @@ public class EffectRegistry {
         InteractionType type,
         string source,
         string target) {
-        var key = new EffectKey(type, source, target);
+        var key = new InteractionEffectKey(type, source, target);
 
         if (instantEffects.TryGetValue(key, out var list)) {
             results.AddRange(list);
@@ -66,6 +67,13 @@ public class EffectRegistry {
         return results;
     }
 
+    public TriggeredEffect GetTriggeredEffect(string effectId) {
+        if (triggeredEffects.TryGetValue(effectId, out var effect)) {
+            return effect;
+        }
+        return null;
+    }
+
     public void SetupRegistry(ExperimentData experimentData) {
         continuousEffects.Clear();
         instantEffects.Clear();
@@ -73,18 +81,22 @@ public class EffectRegistry {
             return;
         }
         foreach (var effect in experimentData.ContinuousEffects) {
-            var key = new EffectKey(effect.InteractionType, effect.SourceObject, effect.TargetObject);
+            var key = new InteractionEffectKey(effect.InteractionType, effect.SourceObject, effect.TargetObject);
             if (!continuousEffects.ContainsKey(key)) {
                 continuousEffects[key] = new List<ContinuousEffect>();
             }
             continuousEffects[key].Add(effect);
         }
         foreach (var effect in experimentData.InstantEffects) {
-            var key = new EffectKey(effect.InteractionType, effect.SourceObject, effect.TargetObject);
+            var key = new InteractionEffectKey(effect.InteractionType, effect.SourceObject, effect.TargetObject);
             if (!instantEffects.ContainsKey(key)) {
                 instantEffects[key] = new List<InstantEffect>();
             }
             instantEffects[key].Add(effect);
         }
+        foreach (var effect in experimentData.TriggeredEffects) {
+            triggeredEffects[effect.Id] = effect;
+        }
+
     }
 }

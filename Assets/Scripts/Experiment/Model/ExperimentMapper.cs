@@ -69,7 +69,6 @@ public static class ExperimentMapper {
             ActionOnFailure = dto.ActionOnFailure,
             OnFailureReturnToStep = dto.OnFailureReturnToStep,
             Score = dto.Score,
-            ShouldCompleteBetweenSteps = dto.ShouldCompleteBetweenSteps,
         };
     }
 }

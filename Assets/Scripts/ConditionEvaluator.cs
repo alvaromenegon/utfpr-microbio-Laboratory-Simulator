@@ -1,30 +1,79 @@
 using Assets.Scripts;
+using NUnit.Framework.Constraints;
+using System;
 using System.Collections.Generic;
 
 public class ConditionEvaluator {
     private static ExperimentObjectRegistry experimentObjectRegistry = ExperimentObjectRegistry.Instance;
+
+    private static bool TryGetValue(When condition, out object value) {
+        value = null;
+
+        if (!experimentObjectRegistry.TryGetInteractable(condition.Identifier, out var obj))
+            return false;
+        if (!obj.TryGet(condition.Property, out value))
+            return false;
+
+        return true;
+    }
     public static bool Check(List<When> conditions) {
         foreach (var c in conditions) {
-            var obj = experimentObjectRegistry.TryGetInteractable(c.Identifier, out var interactable) ? interactable : null;
-            var value = obj.Get<object>(c.Property);
+            if (!TryGetValue(c, out var currentValue))
+                return false;
 
-            if (!Compare(value, c.Value, c.Comparison))
+
+            if (!Compare(currentValue, c.Value, c.Comparison))
                 return false;
         }
+
         return true;
     }
 
-    public static bool Compare(object value1, object value2, ComparisonType comparison) {
+    private static bool IsNumeric(object obj) {
+        return obj is byte or sbyte
+            or short or ushort
+            or int or uint
+            or long or ulong
+            or float or double
+            or decimal;
+    }
+
+    public static bool Compare(object a, object b, ComparisonType comparison, float tolerance = 0.01f) {
+        if (a == null || b == null)
+            return false;
+
+        // NUMÉRICOS
+        if (IsNumeric(a) && IsNumeric(b)) {
+            double da = Convert.ToDouble(a);
+            double db = Convert.ToDouble(b);
+
+            return comparison switch {
+                ComparisonType.EQUAL => Math.Abs(da - db) <= tolerance,
+                ComparisonType.NOT_EQUAL => Math.Abs(da - db) > tolerance,
+                ComparisonType.GREATER_THAN => da > db,
+                ComparisonType.LESS_THAN => da < db,
+                ComparisonType.GREATER_THAN_OR_EQUAL => da >= db,
+                ComparisonType.LESS_THAN_OR_EQUAL => da <= db,
+                _ => false
+            };
+        }
+
+        //  BOOLEAN
+        if (a is bool ba) {
+            return comparison switch {
+                ComparisonType.TRUE => ba,
+                ComparisonType.FALSE => !ba,
+                ComparisonType.EQUAL => ba.Equals(b),
+                ComparisonType.NOT_EQUAL => !ba.Equals(b),
+                _ => false
+            };
+        }
+
+        //  STRING / DEFAULT
         return comparison switch {
-            ComparisonType.EQUAL => value1.Equals(value2),
-            ComparisonType.NOT_EQUAL => !value1.Equals(value2),
-            ComparisonType.GREATER_THAN => (bool)((dynamic)value1 > (dynamic)value2),
-            ComparisonType.LESS_THAN => (bool)((dynamic)value1 < (dynamic)value2),
-            ComparisonType.GREATER_THAN_OR_EQUAL => (bool)((dynamic)value1 >= (dynamic)value2),
-            ComparisonType.LESS_THAN_OR_EQUAL => (bool)((dynamic)value1 <= (dynamic)value2),
-            ComparisonType.TRUE => value1 is bool b1 && b1,
-            ComparisonType.FALSE => value1 is bool b2 && !b2,
-            _ => false,
+            ComparisonType.EQUAL => a.Equals(b),
+            ComparisonType.NOT_EQUAL => !a.Equals(b),
+            _ => false
         };
     }
 }

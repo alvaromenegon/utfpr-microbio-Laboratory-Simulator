@@ -1,11 +1,19 @@
 
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 [Serializable]
 public class BackgroundProcess {
     public string Id { get; set; }
     public string Description { get; set; }
+
+    public List<When> StartConditions;
+    public List<When> CancelConditions;
+    public List<When> SuccessConditions;
+
+    public string OnSuccessEffectId;
+    public string OnFailureEffectId;
     public int Duration { get; set; }
     public int? Tolerance { get; set; }
     public string OnSuccessMessage { get; set; }
@@ -13,7 +21,6 @@ public class BackgroundProcess {
     public OnStepFinished ActionOnFailure { get; set; }
     public int OnFailureReturnToStep { get; set; }
     public int Score { get; set; }
-    public int?[] ShouldCompleteBetweenSteps { get; set; }
 
     public bool IsRunning { get; private set; } = false;
 
@@ -35,24 +42,4 @@ public class BackgroundProcess {
         Debug.Log($"Stopped BackgroundProcess: {Description}");
     }
 
-    public bool ValidateCompletion(int currentStepIndex) {
-        if (IsRunning) {
-            Debug.LogWarning($"BackgroundProcess {Id} is still running. Cannot validate completion.");
-            return false;
-        }
-
-        if (ShouldCompleteBetweenSteps == null || ShouldCompleteBetweenSteps.Length == 0) {
-            return true;
-        }
-        if (ShouldCompleteBetweenSteps[0] == null && ShouldCompleteBetweenSteps[1] != null) {
-            return currentStepIndex <= ShouldCompleteBetweenSteps[1];
-        }
-        if (ShouldCompleteBetweenSteps[0] != null && ShouldCompleteBetweenSteps[1] == null) {
-            return currentStepIndex >= ShouldCompleteBetweenSteps[0];
-        }
-        if (ShouldCompleteBetweenSteps[0] != null && ShouldCompleteBetweenSteps[1] != null) {
-            return currentStepIndex >= ShouldCompleteBetweenSteps[0] && currentStepIndex <= ShouldCompleteBetweenSteps[1];
-        }
-        return true;
-    }
 }

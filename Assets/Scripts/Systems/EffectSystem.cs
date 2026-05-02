@@ -73,6 +73,24 @@ public class EffectSystem {
         }
     }
 
+    public void ApplyTriggeredEffect(string effectId) {
+        var effect = effectRegistry.GetTriggeredEffect(effectId);
+        if (effect == null) {
+            logger.Error($"TriggeredEffect with identifier {effectId} not found in registry.");
+            return;
+        }
+        if (ConditionEvaluator.Check(effect.Conditions)) {
+            foreach (var operation in effect.Operations) {
+                registry.TryGetInteractable(operation.TargetObject, out var targetObj);
+                if (targetObj == null) {
+                    logger.Error($"Object with identifier {operation.TargetObject} not found in registry.");
+                    continue;
+                }
+                targetObj.Set(operation.Property, operation.Value);
+            }
+        }
+    }
+
     public void Update(List<ActiveInteraction> activeInteractions) {
         foreach (var interaction in activeInteractions) {
             var effects = GetMatchingContinuousEffects(interaction);

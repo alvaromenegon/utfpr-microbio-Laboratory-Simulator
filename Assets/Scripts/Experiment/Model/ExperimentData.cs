@@ -10,6 +10,7 @@ public class ExperimentData {
     public int Time { get; set; }
     public List<ContinuousEffect> ContinuousEffects;
     public List<InstantEffect> InstantEffects;
+    public List<TriggeredEffect> TriggeredEffects;
     public List<DerivedProperty> DerivedProperties;
 
     public bool HasTimeLimit() {

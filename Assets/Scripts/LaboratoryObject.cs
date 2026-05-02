@@ -9,6 +9,10 @@ namespace Assets.Scripts {
 
         private Dictionary<string, object> properties = new();
 
+        public bool TryGet(string key, out object value) {
+            return properties.TryGetValue(key, out value);
+        }
+
         public T Get<T>(string key) {
             return properties.ContainsKey(key) ? (T)properties[key] : default;
         }

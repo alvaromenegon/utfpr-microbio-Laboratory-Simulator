@@ -44,31 +44,6 @@ public class ExperimentRuntime {
         }
     }
 
-
-    public void ProcessBackgroundWork(BackgroundProcess work, float timeUsed) {
-        if (!IsRunning || work == null) {
-            return;
-        }
-
-        var tolerance = work.Tolerance ?? 0.5f;
-        if (Math.Abs(timeUsed - work.Duration) > tolerance || !work.ValidateCompletion(CurrentStepIndex)) {
-            InvalidBackgroundWork(work);
-            return;
-        }
-
-        ValidBackgroundWork(work);
-    }
-
-    public void RegisterBackgroundWork(BackgroundProcess work) {
-        if (work == null) {
-            return;
-        }
-
-        if (!backgroundProcesses.Contains(work)) {
-            backgroundProcesses.Add(work);
-        }
-    }
-
     public void ReturnToStep(int stepIndex) {
         if (!IsRunning || Definition == null) {
             return;
@@ -92,7 +67,6 @@ public class ExperimentRuntime {
 
         if (!string.IsNullOrEmpty(CurrentStep.OnSuccessStartBackgroundWorkId)) {
             var work = Array.Find(Definition.experimentData.BackgroundProcesses, w => w.Id == CurrentStep.OnSuccessStartBackgroundWorkId);
-            RegisterBackgroundWork(work);
             work?.Start();
         }
 
