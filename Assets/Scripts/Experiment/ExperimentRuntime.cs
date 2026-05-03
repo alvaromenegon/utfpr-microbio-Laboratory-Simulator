@@ -12,8 +12,6 @@ public class ExperimentRuntime {
     public Step CurrentStep => Definition?.experimentData?.Steps?[CurrentStepIndex];
 
     private readonly List<BackgroundProcess> backgroundProcesses = new();
-    public GoalEvaluator GoalEvaluator { get; } = new ();
-    public ActionExecutor ActionExecutor { get; } = new ();
 
     public event Action<Step, int, int> OnStepChanged;
     public event Action<string> OnFeedback;
@@ -28,7 +26,6 @@ public class ExperimentRuntime {
         StartTime = DateTime.Now;
         IsRunning = true;
 
-        PublishStep();
     }
 
     public void Tick(DateTime now) {
@@ -44,117 +41,18 @@ public class ExperimentRuntime {
         }
     }
 
-    public void ReturnToStep(int stepIndex) {
-        if (!IsRunning || Definition == null) {
-            return;
-        }
 
-        if (stepIndex < 0 || stepIndex >= Definition.experimentData.Steps.Length) {
-            return;
-        }
+   
 
-        CurrentStepIndex = stepIndex;
-        PublishStep();
+    public void End(bool withSuccess) {
+        Finish();
     }
 
-    public bool IsStepComplete(Step step) {
-        return step.Goals.All(goal=> GoalEvaluator.Evaluate(goal));
-    }
-
-    private void ValidStep() {
-        OnFeedback?.Invoke(CurrentStep.OnSuccessMessage);
-        Score += CurrentStep.Score;
-
-        if (!string.IsNullOrEmpty(CurrentStep.OnSuccessStartBackgroundWorkId)) {
-            var work = Array.Find(Definition.experimentData.BackgroundProcesses, w => w.Id == CurrentStep.OnSuccessStartBackgroundWorkId);
-            work?.Start();
-        }
-
-        AdvanceStep();
-    }
-
-    private void InvalidStep() {
-        var step = CurrentStep;
-        OnFeedback?.Invoke(step.OnFailureMessage);
-        switch (step.ActionOnFailure) {
-            case OnStepFinished.BACK_TO_STEP:
-                ReturnToStep(step.OnFailureReturnToStep);
-                break;
-            case OnStepFinished.COMPLETE_EXPERIMENT_FAILURE:
-                Finish(0);
-                break;
-            case OnStepFinished.COMPLETE_EXPERIMENT_STEP:
-                Finish();
-                break;
-        }
-    }
-
-    private void ValidBackgroundWork(BackgroundProcess work) {
-        OnFeedback?.Invoke(work.OnSuccessMessage);
-        Score += work.Score;
-    }
-
-    private void InvalidBackgroundWork(BackgroundProcess work) {
-        OnFeedback?.Invoke(work.OnFailureMessage);
-        switch (work.ActionOnFailure) {
-            case OnStepFinished.BACK_TO_STEP:
-                ReturnToStep(work.OnFailureReturnToStep);
-                break;
-            case OnStepFinished.COMPLETE_EXPERIMENT_FAILURE:
-                Finish(0);
-                break;
-            case OnStepFinished.COMPLETE_EXPERIMENT_STEP:
-                Finish();
-                break;
-        }
-    }
-
-    public void NextStep() {
-        if (!IsRunning || CurrentStep == null) {
-            return;
-        }
-
-        AdvanceStep();
-    }
-
-    public void End(int? finishScore = null) {
-        Finish(finishScore);
-    }
-
-    private void AdvanceStep() {
-        if (CurrentStep.ActionOnSuccess == OnStepFinished.COMPLETE_EXPERIMENT_SUCCESS) {
-            Finish();
-            return;
-        }
-
-        CurrentStepIndex++;
-        if (CurrentStepIndex >= Definition.experimentData.Steps.Length) {
-            Finish();
-            return;
-        }
-
-        PublishStep();
-    }
-
-    private bool HasBackgroundWorkRunning() {
-        foreach (var work in backgroundProcesses) {
-            if (work.IsRunning) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private void PublishStep() {
-        var total = Definition?.experimentData?.Steps?.Length ?? 0;
-        OnStepChanged?.Invoke(CurrentStep, CurrentStepIndex, total);
+    public void AddScore(int score) {
+        Score += score;
     }
 
     private void Finish(int? finishScore = null) {
-        if (HasBackgroundWorkRunning()) {
-            return;
-        }
 
         IsRunning = false;
         if (finishScore.HasValue) {

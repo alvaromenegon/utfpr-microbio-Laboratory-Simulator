@@ -1,14 +1,15 @@
+using Assets.Scripts.Registry;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
 public class DerivedPropertySystem {
-    List<DerivedProperty> derivedProperties = new();
+    DerivedPropertyRegistry propertyRegistry;
     ExperimentObjectRegistry registry;
     // todo
 
     public void Update() {
-        foreach(var rule in derivedProperties.OrderBy(dp => dp.Priority)) {
+        foreach(var rule in propertyRegistry.GetPropertiesByPriority()) {
             ApplySet(rule);
         }
     }

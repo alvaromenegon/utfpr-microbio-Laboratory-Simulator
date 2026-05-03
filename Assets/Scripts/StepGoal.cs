@@ -2,7 +2,7 @@
 using UnityEngine;
 
 namespace Assets.Scripts {
-    public class StepGoal : MonoBehaviour {
+    public class StepGoal {
         public string Identifier;
         public string Property;
         public ComparisonType Comparison;

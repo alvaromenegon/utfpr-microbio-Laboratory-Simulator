@@ -39,12 +39,12 @@ public class BackgroundProcessRegistry {
         return processesById.Values;
     }
 
-    public void SetupRegistry(ExperimentData experimentData) {
-        if (experimentData == null || experimentData.BackgroundProcesses == null) {
-            Debug.LogWarning("Experiment data is null or has no background processes defined.");
+    public void SetupRegistry(List<BackgroundProcess> backgroundProcesses) {
+        if (backgroundProcesses == null) {
+            Debug.LogWarning("Background processes list is null.");
             return;
         }
-        foreach (var processData in experimentData.BackgroundProcesses) {
+        foreach (var processData in backgroundProcesses) {
             if (string.IsNullOrWhiteSpace(processData.Id)) {
                 Debug.LogError("BackgroundProcessData has no valid identifier. Skipping.");
                 continue;

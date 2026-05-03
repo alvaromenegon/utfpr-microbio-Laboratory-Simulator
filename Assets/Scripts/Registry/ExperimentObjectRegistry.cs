@@ -53,7 +53,7 @@ public class ExperimentObjectRegistry : MonoBehaviour {
             return false;
         }
 
-        for (int i = 0; i < experimentDefinition.experimentData.Steps.Length; i++) {
+        for (int i = 0; i < experimentDefinition.experimentData.Steps.Count; i++) {
             var step = experimentDefinition.experimentData.Steps[i];
             ValidateTarget(step.InteractionTarget, i, "InteractionTarget", report);
 

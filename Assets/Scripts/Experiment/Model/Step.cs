@@ -30,7 +30,7 @@ public class Step {
     public OnStepFinished ActionOnSuccess { get; set; }
     public string OnSuccessStartBackgroundWorkId { get; set; }
 
-    public List<StepGoal> Goals { get; set; }
+    public List<When> Goals { get; set; }
 
     public bool IsValid(int numSteps) {
         if (string.IsNullOrEmpty(Description)) {

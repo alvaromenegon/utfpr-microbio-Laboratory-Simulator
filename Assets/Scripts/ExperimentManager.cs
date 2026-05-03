@@ -1,4 +1,5 @@
 ﻿using Assets.Scripts;
+using Assets.Scripts.Registry;
 using System;
 using System.Collections;
 using TMPro;
@@ -22,7 +23,10 @@ public class ExperimentManager : MonoBehaviour {
     private InteractionSystem InteractionSystem;
     private EffectSystem EffectSystem;
     private EffectRegistry effectRegistry;
+    private BackgroundProcessRegistry BackgroundProcessRegistry;
+    private DerivedPropertyRegistry DerivedPropertyRegistry;
     private DerivedPropertySystem DerivedPropertySystem;
+    private StepManager StepManager;
 
     private void Awake() {
         Instance = this;
@@ -58,33 +62,18 @@ public class ExperimentManager : MonoBehaviour {
         InteractionSystem?.Update();
         EffectSystem?.Update(InteractionSystem.GetActiveInteractions());
         DerivedPropertySystem?.Update();
-        
-        if (IsExperimentRunning && runtime.CurrentStep != null) {
-            if (runtime.IsStepComplete(runtime.CurrentStep)) {
-                runtime.NextStep(); // Or handle the step completion properly according to runtime logic
-            }
-        }
+        StepManager?.Update();
+       
     }
 
     public void StartExperiment(ExperimentDefinition experimentDefinition) {
         CurrentExperiment = experimentDefinition;
         SetupExperimentObjects(experimentDefinition);
         effectRegistry.SetupRegistry(experimentDefinition.experimentData);
+        BackgroundProcessRegistry.SetupRegistry(experimentDefinition.experimentData.BackgroundProcesses);
+        DerivedPropertyRegistry.SetupRegistry(experimentDefinition.experimentData.DerivedProperties);
+
         runtime.Start(experimentDefinition);
-    }
-
-    public void NextStep() {
-        if (!IsExperimentRunning) {
-           runtime.NextStep();
-        }
-    } 
-
-    public void End(int? finishScore = null) {
-        if (!IsExperimentRunning) {
-            return;
-        }
-
-        runtime.End(finishScore);
     }
 
     public void OnSecondaryTargetInteraction(GameObject gameObjectPrimary) {

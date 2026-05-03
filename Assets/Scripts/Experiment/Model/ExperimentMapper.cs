@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 public static class ExperimentMapper {
@@ -26,8 +27,8 @@ public static class ExperimentMapper {
             Description = dto.Description,
             Time = dto.Time,
             Objects = dto.Objects ?? Array.Empty<string>(),
-            Steps = dto.Steps?.Select(ToModel).ToArray() ?? Array.Empty<Step>(),
-            BackgroundProcesses = dto.BackgroundProcesses?.Select(ToModel).ToArray() ?? Array.Empty<BackgroundProcess>()
+            Steps = dto.Steps?.Select(ToModel).ToList() ?? new List<Step>(),
+            BackgroundProcesses = dto.BackgroundProcesses?.Select(ToModel).ToList() ?? new List<BackgroundProcess>()
         };
     }
 
