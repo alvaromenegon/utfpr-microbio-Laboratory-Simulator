@@ -19,27 +19,5 @@ public class BackgroundProcess {
     public string OnSuccessMessage { get; set; }
     public string OnFailureMessage { get; set; }
     public OnStepFinished ActionOnFailure { get; set; }
-    public int OnFailureReturnToStep { get; set; }
-    public int Score { get; set; }
-
-    public bool IsRunning { get; private set; } = false;
-
-    public void Start() {
-        if (IsRunning) {
-            Debug.LogWarning($"BackgroundProcess {Id} is already running.");
-            return;
-        }
-        IsRunning = true;
-        Debug.Log($"Started BackgroundProcess: {Description}");
-    }
-
-    public void Stop() {
-        if (!IsRunning) {
-            Debug.LogWarning($"BackgroundProcess {Id} is not running.");
-            return;
-        }
-        IsRunning = false;
-        Debug.Log($"Stopped BackgroundProcess: {Description}");
-    }
 
 }

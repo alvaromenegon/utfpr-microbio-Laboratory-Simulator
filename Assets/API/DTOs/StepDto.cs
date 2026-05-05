@@ -16,4 +16,5 @@ public class StepDto {
     public int OnFailureReturnToStep { get; set; }
     public OnStepFinished ActionOnSuccess { get; set; }
     public string OnSuccessStartBackgroundWorkId { get; set; }
+    public WhenDto[] Goals { get; set; }
 }
