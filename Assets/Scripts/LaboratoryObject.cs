@@ -18,7 +18,13 @@ namespace Assets.Scripts {
         }
 
         public void Set(string key, object value) {
+            if (properties.ContainsKey(key)) {
+                Debug.Log($"[{canonicalIdentifier}] - Property updated: {key} = {value} (was {properties[key]})");
+            } else {
+                Debug.Log($"[{canonicalIdentifier}] - Property added: {key} = {value}");
+            }
             properties[key] = value;
+            Debug.Log($"[{canonicalIdentifier}] - Property set: {key} = {value}");
         }
 
         public bool Has(string key) {
@@ -36,5 +42,6 @@ namespace Assets.Scripts {
         public virtual void OnExitHover() {
             // Implementar comportamento quando o hover termina, como remover destaque
         }
+
     }
 }

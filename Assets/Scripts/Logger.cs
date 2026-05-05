@@ -16,5 +16,9 @@ namespace Assets.Scripts {
         public void Error(string message) {
             Debug.LogError($"[Error at {ClassName} - {System.DateTime.Now}] {message}");
         }
+
+        public void Warning(string message) {
+            Debug.LogWarning($"[Warning at {ClassName} - {System.DateTime.Now}] {message}");
+        }
     }
 }

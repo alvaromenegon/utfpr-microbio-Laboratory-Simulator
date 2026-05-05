@@ -7,12 +7,18 @@ namespace Assets.Scripts {
         private ExperimentRuntime experimentRuntime;
         private Step currentStep = null;
 
+        public StepManager(ExperimentRuntime experimentRuntime) {
+            this.experimentRuntime = experimentRuntime;
+        }
+
         private void AddScore(int score) {
             experimentRuntime.AddScore(score);
         }
 
         private void CompleteStepSuccess() {
             AddScore(currentStep.Score);
+            Debug.Log($"Step '{currentStep.Description}' completed successfully. Added {currentStep.Score} points.");
+            Debug.Log(currentStep.OnSuccessMessage);
             HandleStepAction(currentStep.ActionOnSuccess);
 
         }
@@ -68,6 +74,10 @@ namespace Assets.Scripts {
                     currentStep = null;
                 }
             }
+        }
+
+        public void Start() {
+            currentStep = experimentRuntime.Definition.experimentData.Steps[0];
         }
 
         public void Update() {

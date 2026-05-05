@@ -20,7 +20,7 @@ public class ExperimentManager : MonoBehaviour {
     private ExperimentHudPresenter hudPresenter;
 
     public bool IsExperimentRunning => runtime != null && runtime.IsRunning;
-    private InteractionSystem InteractionSystem;
+    public InteractionSystem InteractionSystem;
     private EffectSystem EffectSystem;
     private EffectRegistry effectRegistry;
     private BackgroundProcessRegistry BackgroundProcessRegistry;
@@ -35,20 +35,29 @@ public class ExperimentManager : MonoBehaviour {
             Debug.LogError("[ExperimentManager] Sessão indisponível. Manager interrompido.");
             return;
         }
-
-        InteractionSystem = new InteractionSystem();
-        DerivedPropertySystem = new DerivedPropertySystem();
-
-       if (apiClient == null) {
+                
+        if (apiClient == null) {
             apiClient = GetComponent<ExperimentApiClient>();
         }
 
         if (apiClient == null) {
             apiClient = gameObject.AddComponent<ExperimentApiClient>();
         }
-       runtime = new ExperimentRuntime();
+        runtime = new ExperimentRuntime();
+        BackgroundProcessRegistry = new BackgroundProcessRegistry();
+        DerivedPropertyRegistry = new DerivedPropertyRegistry();
+        DerivedPropertySystem = new DerivedPropertySystem(DerivedPropertyRegistry);
+        effectRegistry = new EffectRegistry();
+        EffectSystem = new EffectSystem(effectRegistry);
+        InteractionSystem = new InteractionSystem(effectRegistry, EffectSystem);
+       
+        StepManager = new StepManager(runtime);
         runtime.OnStepChanged += OnRuntimeStepChanged;
         runtime.OnExperimentFinished += OnRuntimeFinished;
+    }
+
+    public EffectRegistry GetEffectRegistry() { // Interaction Resolver precisa acessar o EffectRegistry
+        return effectRegistry;
     }
 
     private void Start() {
@@ -58,22 +67,25 @@ public class ExperimentManager : MonoBehaviour {
     }
 
     private void Update() {
-        runtime?.Tick(DateTime.Now);
-        InteractionSystem?.Update();
-        EffectSystem?.Update(InteractionSystem.GetActiveInteractions());
-        DerivedPropertySystem?.Update();
-        StepManager?.Update();
+        if (IsExperimentRunning) {
+            runtime?.Tick(DateTime.Now);
+            InteractionSystem?.Update();
+            EffectSystem?.Update(InteractionSystem.GetActiveInteractions());
+            DerivedPropertySystem?.Update();
+            StepManager?.Update();
+        }
        
     }
 
     public void StartExperiment(ExperimentDefinition experimentDefinition) {
         CurrentExperiment = experimentDefinition;
-        SetupExperimentObjects(experimentDefinition);
+        //SetupExperimentObjects(experimentDefinition);
         effectRegistry.SetupRegistry(experimentDefinition.experimentData);
         BackgroundProcessRegistry.SetupRegistry(experimentDefinition.experimentData.BackgroundProcesses);
         DerivedPropertyRegistry.SetupRegistry(experimentDefinition.experimentData.DerivedProperties);
 
         runtime.Start(experimentDefinition);
+        StepManager.Start();
     }
 
     public void OnSecondaryTargetInteraction(GameObject gameObjectPrimary) {
@@ -109,28 +121,6 @@ public class ExperimentManager : MonoBehaviour {
             },
             onError: error => Debug.LogError(error)
         ));
-    }
-
-    private void SetupExperimentObjects(ExperimentDefinition experimentDefinition) {
-        var stepsDescription = "";
-        foreach (var step in experimentDefinition.experimentData.Steps) {
-            stepsDescription += $"- {step.Description}\n";
-        }
-
-        label.GetComponent<Text>().text = $"{experimentDefinition.experimentData.Description}\n{stepsDescription}";
-
-        foreach (var objName in experimentDefinition.experimentData.Objects) {
-            GameObject obj = GameObject.Find(objName);
-            if (obj == null) {
-                Debug.LogError($"Object '{objName}' not found in the scene.");
-                continue;
-            }
-
-            var interactable = obj.GetComponent<StepInteractable>();
-            if (interactable == null) {
-                obj.AddComponent<StepInteractable>();
-            }
-        }
     }
 
     private void OnRuntimeStepChanged(Step step, int index, int total) {

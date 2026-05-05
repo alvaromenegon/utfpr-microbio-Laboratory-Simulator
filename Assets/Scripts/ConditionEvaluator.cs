@@ -1,18 +1,24 @@
 using Assets.Scripts;
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 public class ConditionEvaluator {
     private static ExperimentObjectRegistry experimentObjectRegistry = ExperimentObjectRegistry.Instance;
 
     private static bool TryGetValue(When condition, out object value) {
         value = null;
+        //Debug.Log($"Trying to get value for condition: {condition.Identifier}.{condition.Property}");
 
-        if (!experimentObjectRegistry.TryGetInteractable(condition.Identifier, out var obj))
+        if (!experimentObjectRegistry.TryGetInteractable(condition.Identifier, out var obj)) {
+            Debug.LogWarning($"Object with identifier '{condition.Identifier}' not found.");
             return false;
-        if (!obj.TryGet(condition.Property, out value))
+        }
+        if (!obj.TryGet(condition.Property, out value)) {
+            //Debug.LogWarning($"Property '{condition.Property}' not found on object '{condition.Identifier}'.");
             return false;
-
+        }
+        //Debug.Log($"Retrieved value for {condition.Identifier}.{condition.Property}: {value}");
         return true;
     }
     public static bool Check(List<When> conditions) {
@@ -21,9 +27,12 @@ public class ConditionEvaluator {
                 return false;
 
 
-            if (!Compare(currentValue, c.Value, c.Comparison))
+            if (!Compare(currentValue, c.Value, c.Comparison)) {
+                Debug.Log($"Condition failed: {c.Identifier}.{c.Property} {c.Comparison} {c.Value ?? "null"} (current value: {currentValue})");
                 return false;
+             }
         }
+        Debug.Log("All conditions passed.");
 
         return true;
     }
@@ -38,13 +47,16 @@ public class ConditionEvaluator {
     }
 
     public static bool Compare(object a, object b, ComparisonType comparison, float tolerance = 0.01f) {
-        if (a == null || b == null)
+       if ( !(comparison == ComparisonType.TRUE || comparison == ComparisonType.FALSE) && (a == null || b == null)) {
+            Debug.LogWarning($"Cannot perform comparison '{comparison}' when one of the values is null: a={a}, b={b}");
             return false;
+        }
 
         // NUMÉRICOS
         if (IsNumeric(a) && IsNumeric(b)) {
             double da = Convert.ToDouble(a);
             double db = Convert.ToDouble(b);
+            Debug.Log($"Comparing numeric values: {da} {comparison} {db} with tolerance {tolerance}");
 
             return comparison switch {
                 ComparisonType.EQUAL => Math.Abs(da - db) <= tolerance,
@@ -59,6 +71,7 @@ public class ConditionEvaluator {
 
         //  BOOLEAN
         if (a is bool ba) {
+            Debug.Log($"Comparing boolean values: {ba} {comparison} {b}");
             return comparison switch {
                 ComparisonType.TRUE => ba,
                 ComparisonType.FALSE => !ba,
@@ -67,6 +80,8 @@ public class ConditionEvaluator {
                 _ => false
             };
         }
+
+        Debug.Log($"Comparing values: {a} {comparison} {b} (type: {a.GetType()})");
 
         //  STRING / DEFAULT
         return comparison switch {

@@ -9,11 +9,7 @@ public class ExperimentHudPresenter {
     public void Bind(ExperimentRuntime runtime) {
         runtime.OnTimerUpdated += HandleTimerUpdated;
         runtime.OnStepChanged += HandleStepChanged;
-        runtime.OnFeedback += HandleFeedback;
-        interactionSystem.OnValueRequired += request =>
-        {
-            InputPanelController.Instance.Show(request);
-        };
+        runtime.OnFeedback += HandleFeedback;        
     }
 
     public void Unbind(ExperimentRuntime runtime) {

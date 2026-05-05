@@ -1,7 +1,6 @@
 using Assets.Scripts;
 using System;
 using UnityEngine;
-using static Interaction;
 
 class InputFacade : MonoBehaviour {
     [Header("References")]
@@ -10,7 +9,8 @@ class InputFacade : MonoBehaviour {
 
     [Header("Interaction Settings")]
     public float interactionRange = 1.3f;
-    public LayerMask interactableLayer;
+    public LayerMask interactionLayer;
+    public LayerMask movableLayer;
 
     private GameControls _controls;
     private IMovable _currentMovable;
@@ -21,6 +21,10 @@ class InputFacade : MonoBehaviour {
 
     public event Action<LaboratoryObject> HoverEntered;
     public event Action<LaboratoryObject> HoverExited;
+
+    void Start() {
+        interactionSystem = ExperimentManager.Instance.InteractionSystem;
+    }
 
     void Awake()
     {
@@ -33,7 +37,11 @@ class InputFacade : MonoBehaviour {
     }
 
     private void HandleInteractStart(){
-        if (_currentHoveredInteractable == null) return;
+        Debug.Log("Interact started.");
+        if (_currentMovable == null && _currentHoveredInteractable == null) {
+            Debug.Log("No interactable in sight.");
+            return;
+        }
 
         _activeRequest = new InteractionResolver(_currentHoveredInteractable, _currentMovable).BuildRequest();
 
@@ -41,6 +49,7 @@ class InputFacade : MonoBehaviour {
     }
 
     private void HandleInteractEnd(){
+        Debug.Log("Interact ended.");
         if (_activeRequest == null) return;
 
         interactionSystem.HandleInteractionRequestEnd(_activeRequest);
@@ -53,16 +62,34 @@ class InputFacade : MonoBehaviour {
     void Update()
     {
         UpdateHoverState();
+        UpdateCursor();
     }
 
     public Vector2 GetMoveInput() => _controls.Player.Move.ReadValue<Vector2>();
     public Vector2 GetLookInput() => _controls.Player.Look.ReadValue<Vector2>();
 
+    private void UpdateCursor() {
+        var cursor = CursorChanger.CursorType.Pointer;
+        if (_currentMovable != null) {
+            cursor = CursorChanger.CursorType.Selector;
+        } else if (_currentHoveredInteractable != null) {
+            cursor = CursorChanger.CursorType.Interact;
+        }
+        cursorChanger.ChangeTo(cursor);
+    }
+
     private void HandleClick()
     {
-        if (_currentMovable != null && !_currentMovable.IsMoving)
-        {
-            _currentMovable.PickUp();
+        if (_currentMovable == null) {
+            if (TryGetMovable(out var movable)) {
+                _currentMovable = movable;
+                movable.PickUp();
+            }
+            else {
+                Debug.Log("No movable object in sight.");
+            }
+        } else {
+            Debug.Log("Already holding an object.");
         }
     }
 
@@ -70,65 +97,54 @@ class InputFacade : MonoBehaviour {
     {
         if (_currentMovable != null && _currentMovable.IsMoving){
             _currentMovable.Drop();
-            
+            _currentMovable = null;
         }
     }
 
-    public bool TryGetObjectInSight(out RaycastHit hit)
-    {
-        hit = default;
-
-        if (playerCamera == null)
-        {
-            return false;
-        }
+    private bool TryGetMovable(out IMovable movable) {       
+        movable = null;
 
         Ray ray = new(playerCamera.position, playerCamera.forward);
-        return Physics.Raycast(ray, out hit, interactionRange, interactableLayer);
+
+        if (Physics.Raycast(ray, out var hit, interactionRange, movableLayer)) {
+            movable = hit.collider.GetComponentInParent<IMovable>();
+            return movable != null;
+        }
+        return false;
     }
 
-    private void UpdateHoverState()
-    {
-        IMovable nextMovable = null;
-        LaboratoryObject nextInteractable = null;
-        CursorChanger.CursorType cursorType = CursorChanger.CursorType.Pointer;
+    private bool TryGetInteractionTarget(out RaycastHit hit) {
+        hit = default;
 
-        if (TryGetObjectInSight(out RaycastHit hit))
-        {
-            nextMovable = hit.collider.GetComponentInParent<IMovable>();
-            nextInteractable = hit.collider.GetComponentInParent<LaboratoryObject>();
+        Ray ray = new(playerCamera.position, playerCamera.forward);
 
-            if (nextMovable != null) {
-                cursorType = CursorChanger.CursorType.Selector;
-            }
-            else if (nextInteractable != null) {
-                cursorType = CursorChanger.CursorType.Interact;
-            }
-        }
+        return Physics.Raycast(ray, out hit, interactionRange, interactionLayer);
+    }
 
-        if (!ReferenceEquals(_currentMovable, nextMovable)) {
-            _currentMovable = nextMovable;
-        }
-
-        if (!ReferenceEquals(_currentHoveredInteractable, nextInteractable))
-        {
-            if (_currentHoveredInteractable != null)
-            {
+    private void UpdateHoveredObject(LaboratoryObject nextObject) {
+        if (_currentHoveredInteractable != nextObject) {
+            Debug.Log($"Hover changed from {_currentHoveredInteractable?.GetObjectName() ?? "none"} to {nextObject?.GetObjectName() ?? "none"}");
+            if (_currentHoveredInteractable != null) {
                 HoverExited?.Invoke(_currentHoveredInteractable);
             }
-
-            _currentHoveredInteractable = nextInteractable;
-
-            if (_currentHoveredInteractable != null)
-            {
+            _currentHoveredInteractable = nextObject;
+            if (_currentHoveredInteractable != null) {
                 HoverEntered?.Invoke(_currentHoveredInteractable);
             }
         }
-
-        if (cursorChanger != null)
-        {
-            cursorChanger.ChangeTo(cursorType);
-        }
     }
 
+    private void UpdateHoverState(){
+        LaboratoryObject nextObject = null;
+        if (playerCamera == null) {
+            Debug.LogError("Player camera reference is missing.");
+            return ;
+        }
+
+        if (TryGetInteractionTarget(out RaycastHit hit))
+        {
+            nextObject = hit.collider.GetComponentInParent<LaboratoryObject>();           
+        }        
+        UpdateHoveredObject(nextObject);
+    }
 }

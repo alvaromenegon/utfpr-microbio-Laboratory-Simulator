@@ -46,7 +46,6 @@ public class EquipmentInteractable : StepInteractable{
     public void TurnOnEquipment() {
         workingState = WorkingState.InUse;
         startTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        backgroundProcess?.Start();
         if (retainedObject != null) {
             if (retainedObject.TryGetComponent<MoveObjects>(out var move)) {
                 move.SetCanMove(false);
@@ -58,7 +57,6 @@ public class EquipmentInteractable : StepInteractable{
         workingState = WorkingState.Ended;
         endTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         timeUsed = (endTime - startTime) / 1000; // tempo de uso em segundos
-        backgroundProcess?.Stop();
         if (retainedObject != null) {
             if (retainedObject.TryGetComponent<MoveObjects>(out var move)) {
                 move.SetCanMove(true);
