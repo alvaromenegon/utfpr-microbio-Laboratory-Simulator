@@ -1,11 +1,16 @@
+using Assets.Scripts;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 
 public class ExperimentObjectRegistry : MonoBehaviour {
-    private readonly Dictionary<string, StepInteractable> interactablesById = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, LaboratoryObject> interactablesById = new(StringComparer.Ordinal);
     public static ExperimentObjectRegistry Instance { get; private set; }
+
+    private void Start() {
+        RebuildIndex();
+    }
 
     private void Awake() {
         if (Instance != null && Instance != this) {
@@ -17,17 +22,17 @@ public class ExperimentObjectRegistry : MonoBehaviour {
 
     public void RebuildIndex() {
         interactablesById.Clear();
-        StepInteractable[] interactables = FindObjectsByType<StepInteractable>(FindObjectsSortMode.None);
+        LaboratoryObject[] interactables = FindObjectsByType<LaboratoryObject>(FindObjectsSortMode.None);
 
         foreach (var interactable in interactables) {
             string identifier = interactable.GetIdentifier();
             if (string.IsNullOrWhiteSpace(identifier)) {
-                Debug.LogError($"StepInteractable '{interactable.gameObject.name}' has no canonical identifier configured.");
+                Debug.LogError($"LaboratoryObject '{interactable.gameObject.name}' has no canonical identifier configured.");
                 continue;
             }
 
             if (interactablesById.TryGetValue(identifier, out var existing)) {
-                Debug.LogError($"Duplicate StepInteractable identifier '{identifier}'. Objects: '{existing.gameObject.name}' and '{interactable.gameObject.name}'.");
+                Debug.LogError($"Duplicate LaboratoryObject identifier '{identifier}'. Objects: '{existing.gameObject.name}' and '{interactable.gameObject.name}'.");
                 continue;
             }
 
@@ -35,9 +40,13 @@ public class ExperimentObjectRegistry : MonoBehaviour {
         }
     }
 
-    public bool TryGetInteractable(string identifier, out StepInteractable interactable) {
+    private bool IsNull(string identifier) {
+        return string.IsNullOrWhiteSpace(identifier) || !interactablesById.ContainsKey(identifier);
+    }
+
+    public bool TryGetInteractable(string identifier, out LaboratoryObject interactable) {
         interactable = null;
-        if (string.IsNullOrWhiteSpace(identifier)) {
+        if (IsNull(identifier)) {
             return false;
         }
 

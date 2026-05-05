@@ -1,10 +1,11 @@
-﻿using System;
+﻿using Assets.Scripts;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class BackgroundProcessRegistry {
     private readonly Dictionary<string, BackgroundProcess> processesById = new(StringComparer.Ordinal);
-
+    private LoggerService logger = new LoggerService("BackgroundProcessRegistry");
 
     public void RegisterProcess(string identifier, BackgroundProcess process) {
         if (string.IsNullOrWhiteSpace(identifier)) {
@@ -55,6 +56,7 @@ public class BackgroundProcessRegistry {
             }
             processesById.Add(processData.Id, processData);
         }
+        logger.Log($"Setup Completed - Registered {processesById.Count} background processes.");
     }
 
 }

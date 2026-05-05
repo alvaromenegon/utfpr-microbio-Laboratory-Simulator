@@ -7,8 +7,13 @@ public class InstantEffect {
     public string SourceObject;
     public string TargetObject;
 
-    public string Property;
-    public object Value;
+    public List<EffectOperation> Operations;
 
     public List<When> Conditions;
+
+    public bool HasSource => !string.IsNullOrWhiteSpace(SourceObject) && SourceObject != "*";
+
+    public override string ToString() {
+        return $"InstantEffect(InteractionType={InteractionType}, SourceObject={SourceObject}, TargetObject={TargetObject}, Operations=[{string.Join(", ", Operations)}], Conditions=[{string.Join(", ", Conditions)}])";
+    }
 }

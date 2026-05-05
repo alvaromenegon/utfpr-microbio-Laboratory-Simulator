@@ -6,9 +6,14 @@ using static Interaction;
 public class InteractionSystem {
     private List<ActiveInteraction> activeInteractions = new();
     private LoggerService logger = new ("InteractionSystem");
-    private InteractionClassifier classifier = new();
+    private EffectRegistry EffectRegistry;
     private EffectSystem effectSystem;
     public event Action<InteractionRequest> OnValueRequired;
+
+    public InteractionSystem(EffectRegistry effectRegistry, EffectSystem effectSystem) {
+        this.EffectRegistry = effectRegistry;
+        this.effectSystem = effectSystem;
+    }
 
     public void HandleInteractionRequestStart(InteractionRequest request) {
         if (request == null) {
@@ -21,7 +26,8 @@ public class InteractionSystem {
             return;
         }
 
-        if (classifier.IsContinuous(request)) {
+        if (EffectRegistry.IsContinuous(request)) {
+            logger.Log($"{request} is continuous.");
             if (IsAlreadyActive(request)) {
                 logger.Log($"Interaction already active: {request}");
                 return;
@@ -63,6 +69,7 @@ public class InteractionSystem {
     }
 
     private void ExecuteInstantInteraction(InteractionRequest request) {
+        logger.Log($"Executing instant interaction: {request}");
         effectSystem.HandleInstantEffect(request);
     }
 

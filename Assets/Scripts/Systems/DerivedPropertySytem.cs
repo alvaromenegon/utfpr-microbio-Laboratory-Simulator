@@ -1,15 +1,17 @@
 using Assets.Scripts.Registry;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 public class DerivedPropertySystem {
     DerivedPropertyRegistry propertyRegistry;
     ExperimentObjectRegistry registry;
-    // todo
+
+    public DerivedPropertySystem(DerivedPropertyRegistry propertyRegistry) {
+        this.propertyRegistry = propertyRegistry;
+        registry = ExperimentObjectRegistry.Instance;
+    }
 
     public void Update() {
-        foreach(var rule in propertyRegistry.GetPropertiesByPriority()) {
+        foreach (var rule in propertyRegistry.GetPropertiesByPriority()) {
             ApplySet(rule);
         }
     }
