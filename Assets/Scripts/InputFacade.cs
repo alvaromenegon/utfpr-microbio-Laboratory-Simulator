@@ -123,7 +123,6 @@ class InputFacade : MonoBehaviour {
 
     private void UpdateHoveredObject(LaboratoryObject nextObject) {
         if (_currentHoveredInteractable != nextObject) {
-            Debug.Log($"Hover changed from {_currentHoveredInteractable?.GetObjectName() ?? "none"} to {nextObject?.GetObjectName() ?? "none"}");
             if (_currentHoveredInteractable != null) {
                 HoverExited?.Invoke(_currentHoveredInteractable);
             }

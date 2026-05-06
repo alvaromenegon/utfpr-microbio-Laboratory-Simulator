@@ -1,22 +1,32 @@
-using static Interaction;
+
+using System.Collections.Generic;
 
 public class ActiveInteraction {
-    public InteractionType Type;
-    public string Source;
-    public string Target;
+    public InteractionContext Context { get; }
+    public float ElapsedTime { get; private set; }
+
+    // Lista de efeitos contínuos associados a esta interação ativa
+    public List<EffectDefinition> Effects { get; set; } 
+
+    public ActiveInteraction(InteractionContext context) {
+        Context = context;
+        ElapsedTime = 0f;
+        Effects = new List<EffectDefinition>();
+    }
 
     public override bool Equals(object obj) {
-        if (obj is not ActiveInteraction other) return false;
-        return Type == other.Type && Source == other.Source && Target == other.Target;
+        if (obj is ActiveInteraction other) {
+            return Context.Equals(other.Context);
+        }
+        return false;
     }
 
     public override int GetHashCode() {
-        unchecked {
-            int hash = 17;
-            hash = hash * 23 + Type.GetHashCode();
-            hash = hash * 23 + (Source != null ? Source.GetHashCode() : 0);
-            hash = hash * 23 + (Target != null ? Target.GetHashCode() : 0);
-            return hash;
-        }
+        return base.GetHashCode();
+    }
+
+
+    public override string ToString() {
+        return $"ActiveInteraction(Context={Context}, ElapsedTime={ElapsedTime})";
     }
 }

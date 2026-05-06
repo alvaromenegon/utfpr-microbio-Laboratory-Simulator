@@ -32,34 +32,26 @@ public class InteractionSystem {
                 logger.Log($"Interaction already active: {request}");
                 return;
             }
-            var interaction = new ActiveInteraction {
-                Type = request.Type,
-                Source = request.PrimaryObject,
-                Target = request.SecondaryObject
-            };
+            var interaction = new ActiveInteraction(request.Context);
             StartActiveInteraction(interaction);
-            logger.Log($"Registered new interaction: {interaction}");
         } else {
             ExecuteInstantInteraction(request);
         }
     }
 
     public void HandleInteractionRequestEnd(InteractionRequest request) {
-        var interaction = activeInteractions.Find(i => 
-            i.Type == request.Type && 
-            i.Source == request.PrimaryObject && 
-            i.Target == request.SecondaryObject);
+        var interaction = activeInteractions.Find(i => i.Context == request.Context);
         
         if (interaction != null) {
             StopActiveInteraction(interaction);
-            logger.Log($"Unregistered interaction: {interaction}");
-        } else {
-            logger.Log($"Attempted to unregister non-existent interaction: {request}");
         }
     }
 
     private void StartActiveInteraction(ActiveInteraction interaction) {
         logger.Log($"Starting interaction: {interaction}");
+        logger.Log("Resolving effects for interaction...");
+        interaction.Effects = EffectRegistry.GetEffects(interaction.Context);
+        logger.Log($"Found {interaction.Effects.Count} effects for interaction.");
         activeInteractions.Add(interaction);
     }
 
@@ -74,10 +66,7 @@ public class InteractionSystem {
     }
 
     private bool IsAlreadyActive(InteractionRequest request) {
-        return activeInteractions.Exists(i => 
-            i.Type == request.Type && 
-            i.Source == request.PrimaryObject && 
-            i.Target == request.SecondaryObject);
+        return activeInteractions.Exists(i => i.Context == request.Context);
     }
 
     public List<ActiveInteraction> GetActiveInteractions() {

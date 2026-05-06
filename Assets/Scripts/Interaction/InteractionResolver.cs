@@ -1,60 +1,103 @@
 using Assets.Scripts;
+using System.Collections.Generic;
 using UnityEngine;
 using static Interaction;
 
 class InteractionResolver {
-    public LaboratoryObject PrimaryObject { get; private set; }
-    private EffectRegistry EffectRegistry;
+    private readonly LaboratoryObject _hovered;
+    private readonly IMovable _held;
+    private EffectRegistry _effectRegistry;
 
-    public IMovable HeldObject { get; private set; }
-
-    public InteractionResolver(LaboratoryObject primary, IMovable held) {
-        PrimaryObject = primary;
-        HeldObject = held;
-        EffectRegistry = ExperimentManager.Instance.GetEffectRegistry();
+    public InteractionResolver(LaboratoryObject hovered,IMovable held) {
+        _hovered = hovered;
+        _held = held;
+        _effectRegistry = ExperimentManager.Instance.GetEffectRegistry();
     }
 
-    // interação com apenas 1 objeto, sem nada na mão
-    private InteractionRequest BuildSimpleRequest() {
-        return new InteractionRequest {
-            Type = ResolveInteractionType(PrimaryObject.GetIdentifier()),
-            PrimaryObject = PrimaryObject.GetIdentifier(),
-            SecondaryObject = null
-        };
+    private InteractionType ResolveInteractionType(InteractionContext baseContext) {
+        foreach (var type in GetCandidateTypes(baseContext)) {
+            baseContext.Type = type;
+
+            if (_effectRegistry.HasEffect(baseContext))
+                return type;
+        }
+
+        throw new System.Exception($"No valid interaction type found for context: {baseContext}");
     }
 
-    // interação com 2 objetos, um na mão e outro alvo
-    private InteractionRequest BuildComplexRequest() {
-        var heldLabObject = HeldObject.GetLaboratoryObject();
-        if (heldLabObject == null)
+    private InteractionContext BuildContext() {
+        if (_hovered == null && _held == null)
             return null;
-        // primary é o objeto que faz algo
-        // secondary é o objeto que recebe a ação
-        return new InteractionRequest {
-            Type = ResolveInteractionType(PrimaryObject.GetIdentifier(), heldLabObject.GetIdentifier()),
-            PrimaryObject = PrimaryObject.GetIdentifier() ,
-            SecondaryObject = heldLabObject.GetIdentifier(),
-        };
+
+        var ctx = new InteractionContext();
+
+        var heldObj = _held?.GetLaboratoryObject();
+
+        //  CASO 1: tool + target
+        if (heldObj != null && _hovered != null) {
+            ctx.Roles[RoleType.TOOL] = heldObj;
+            ctx.Roles[RoleType.TARGET] = _hovered;
+            ctx.Roles[RoleType.ACTOR] = heldObj;
+
+            // heurística útil
+            if (_hovered.HasTag("device"))
+                ctx.Roles[RoleType.DEVICE] = _hovered;
+        }
+        //  CASO 2: interação simples
+        else if (_hovered != null) {
+            ctx.Roles[RoleType.TARGET] = _hovered;
+            ctx.Roles[RoleType.ACTOR] = _hovered;
+
+            if (_hovered.HasTag("device"))
+                ctx.Roles[RoleType.DEVICE] = _hovered;
+        }
+        //  CASO 3: só objeto na mão (opcional)
+        else if (heldObj != null) {
+            ctx.Roles[RoleType.TOOL] = heldObj;
+            ctx.Roles[RoleType.ACTOR] = heldObj;
+        }
+
+        return ctx;
     }
-    
 
     public InteractionRequest BuildRequest() {
-       if (HeldObject == null && PrimaryObject != null)
-            return BuildSimpleRequest();
-       if (HeldObject != null && PrimaryObject != null)
-            return BuildComplexRequest();
-       return null;
+        var context = BuildContext();
+        if (context == null)
+            return null;
+        try {
+            var type = ResolveInteractionType(context);
+            context.Type = type;
+            return new InteractionRequest {
+                Context = context,
+                Type = type
+            };
+        }
+        catch (System.Exception ex) {
+            Debug.LogWarning($"Failed to resolve interaction: {ex.Message}");
+            return null;
+        }
     }
 
-    public InteractionType ResolveInteractionType(string interacting, string held = null) {
-        Debug.Log($"Resolving interaction type for object {interacting} {(held != null ? $"while holding {held}" : "")}");
-        foreach (var type in System.Enum.GetValues(typeof(InteractionType))) {
-            if (EffectRegistry.HasEffect((InteractionType)type, held ?? "*", interacting)) {
-                Debug.Log($"Found interaction type {(InteractionType)type} for object {interacting} {(held != null ? $"while holding {held}" : "")}");
-                return (InteractionType)type;
-            }
+    private IEnumerable<InteractionType> GetCandidateTypes(InteractionContext ctx) {
+        var actor = ctx.Roles.GetValueOrDefault(RoleType.ACTOR);
+
+        if (ctx.Roles.ContainsKey(RoleType.TOOL) && ctx.Roles.ContainsKey(RoleType.TARGET))
+            yield return InteractionType.USE;
+
+        if (actor.HasTag("toggleable")) {
+            yield return InteractionType.ACTIVATE;
+            yield return InteractionType.DEACTIVATE;
         }
-        // todo: melhorar a exceção
-        throw new System.Exception($"No interaction type found for object {interacting} {(held != null ? $"while holding {held}" : "")}"); 
+
+        if (actor.HasTag("temperature_control"))
+            yield return InteractionType.SET_TEMPERATURE;
+
+        if (actor.HasTag("timed"))
+            yield return InteractionType.SET_TIMER;
+
+        if (actor.HasTag("measurable"))
+            yield return InteractionType.SET_QUANTITY;
+
+        yield return InteractionType.EXAMINE;
     }
 }

@@ -61,7 +61,8 @@ public class ExperimentManager : MonoBehaviour {
     }
 
     private void Start() {
-        hudPresenter = new ExperimentHudPresenter(HUDController.Instance);
+        ExperimentHudPresenter.New(HUDController.Instance);
+        hudPresenter = ExperimentHudPresenter.Instance;
         hudPresenter.Bind(runtime);
         StartCoroutine(BootstrapAndStart());
     }

@@ -1,3 +1,3 @@
-public interface IInteractable{
+public interface IInteractable{    
     string GetIdentifier();
 }

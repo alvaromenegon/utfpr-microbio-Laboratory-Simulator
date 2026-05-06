@@ -1,5 +1,6 @@
 ﻿using Assets.Scripts;
 using System.Collections.Generic;
+using System.Linq;
 using static Interaction;
 
 public class InteractionContext {
@@ -9,26 +10,11 @@ public class InteractionContext {
 
     public HashSet<string> Tags = new();
 
-    public InteractionContext BuildContext(LaboratoryObject currentHeld, LaboratoryObject currentHovered) {
-        var ctx = new InteractionContext();
+    public bool HasTag(string tag) => Tags.Contains(tag);
 
-        var held = currentHeld;
-        var hovered = currentHovered;
-
-        if (held != null && hovered != null) {
-            ctx.Type = InteractionType.USE;
-
-            ctx.Roles[RoleType.TOOL] = held;
-            ctx.Roles[RoleType.TARGET] = hovered;
-            ctx.Roles[RoleType.ACTOR] = held;
-        }
-        else if (hovered != null) {
-            ctx.Type = InteractionType.ACTIVATE;
-
-            ctx.Roles[RoleType.DEVICE] = hovered;
-            ctx.Roles[RoleType.ACTOR] = hovered;
-        }
-
-        return ctx;
+    public override string ToString() {
+        var rolesStr = string.Join(", ", Roles.Select(kv => $"{kv.Key}: {kv.Value.Identifier}"));
+        var tagsStr = string.Join(", ", Tags);
+        return $"InteractionContext(Type={Type}, Roles={{ {rolesStr} }}, Tags=[{tagsStr}])";
     }
 }
