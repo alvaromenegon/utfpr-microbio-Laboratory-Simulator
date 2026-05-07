@@ -62,4 +62,28 @@ public class ExperimentObjectRegistry : MonoBehaviour {
         return objectsById.TryGetValue(identifier, out interactable);
     }
 
+    public LaboratoryObject ResolveTargetFromContext(InteractionContext context) {
+        if (context == null) {
+            Debug.LogError("InteractionContext is null.");
+            return null;
+        }
+        var tags = context.Tags;
+        if (tags == null || tags.Count == 0) {
+            Debug.LogError("InteractionContext has no tags defined.");
+            return null;
+        }
+        foreach (var labObj in objectsById.Values) {
+            if (labObj.Tags != null && labObj.Tags.Count > 0) {
+                foreach (var tag in tags) {
+                    if (labObj.HasTag(tag)) {
+                        return labObj;
+                    }
+                }
+            }
+        }
+
+        return null;    
+    }
+
+
 }

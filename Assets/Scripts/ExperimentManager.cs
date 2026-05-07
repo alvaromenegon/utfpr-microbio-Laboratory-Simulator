@@ -52,7 +52,6 @@ public class ExperimentManager : MonoBehaviour {
         InteractionSystem = new InteractionSystem(effectRegistry, EffectSystem);
        
         StepManager = new StepManager(runtime);
-        runtime.OnStepChanged += OnRuntimeStepChanged;
         runtime.OnExperimentFinished += OnRuntimeFinished;
     }
 
@@ -89,25 +88,25 @@ public class ExperimentManager : MonoBehaviour {
         StepManager.Start();
     }
 
-    public void OnSecondaryTargetInteraction(GameObject gameObjectPrimary) {
-        if (!IsExperimentRunning || runtime.CurrentStep == null) {
-            return;
-        }
+    //public void OnSecondaryTargetInteraction(GameObject gameObjectPrimary) {
+    //    if (!IsExperimentRunning || runtime.CurrentStep == null) {
+    //        return;
+    //    }
 
-        var currentStep = runtime.CurrentStep;
-        var gameObjectSecondary = GameObject.Find(currentStep.InteractionTargetSecondary);
-        if (gameObjectSecondary == null) {
-            Debug.LogError($"Secondary target '{currentStep.InteractionTargetSecondary}' not found in the scene.");
-            return;
-        }
+    //    var currentStep = runtime.CurrentStep;
+    //    var gameObjectSecondary = GameObject.Find(currentStep.InteractionTargetSecondary);
+    //    if (gameObjectSecondary == null) {
+    //        Debug.LogError($"Secondary target '{currentStep.InteractionTargetSecondary}' not found in the scene.");
+    //        return;
+    //    }
 
-        var equipment = gameObjectSecondary.GetComponent<EquipmentInteractable>();
-        if (equipment == null || currentStep.Interaction != InteractionType.MOVE) {
-            return;
-        }
+    //    var equipment = gameObjectSecondary.GetComponent<EquipmentInteractable>();
+    //    if (equipment == null || currentStep.Interaction != InteractionType.MOVE) {
+    //        return;
+    //    }
 
-        equipment.MoveObjectToEquipment(gameObjectPrimary);
-    }
+    //    equipment.MoveObjectToEquipment(gameObjectPrimary);
+    //}
 
     private IEnumerator BootstrapAndStart() {
         Debug.Log($"Fetching experiment data for practice ID: {SessionData.Current.PracticeId}");
@@ -123,29 +122,7 @@ public class ExperimentManager : MonoBehaviour {
             onError: error => Debug.LogError(error)
         ));
     }
-
-    private void OnRuntimeStepChanged(Step step, int index, int total) {
-        secondaryTargetBeam.SetActive(false);
-        inputLabel.text = "";
-
-        if (step == null) {
-            return;
-        }
-
-        var gameObject = GameObject.Find(step.InteractionTarget);
-        if (gameObject == null) {
-            Debug.LogError($"Target '{step.InteractionTarget}' not found in the scene.");
-            return;
-        }
-
-        var interactable = gameObject.GetComponent<StepInteractable>();
-        if (interactable == null) {
-            interactable = gameObject.AddComponent<StepInteractable>();
-        }
-
-        interactable.stepType = step.Interaction;
-
-    }   
+   
 
     private void OnRuntimeFinished(int score, double timeTakenSeconds) {
         CurrentExperiment = null;

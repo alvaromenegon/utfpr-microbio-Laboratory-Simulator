@@ -28,11 +28,11 @@ public class ConditionEvaluator {
 
 
             if (!Compare(currentValue, c.Value, c.Comparison)) {
-                Debug.Log($"Condition failed: {c.Identifier}.{c.Property} {c.Comparison} {c.Value ?? "null"} (current value: {currentValue})");
+                //Debug.Log($"Condition failed: {c.Identifier}.{c.Property} {c.Comparison} {c.Value ?? "null"} (current value: {currentValue})");
                 return false;
              }
         }
-        Debug.Log("All conditions passed.");
+        //Debug.Log("All conditions passed.");
 
         return true;
     }
@@ -56,7 +56,7 @@ public class ConditionEvaluator {
         if (IsNumeric(a) && IsNumeric(b)) {
             double da = Convert.ToDouble(a);
             double db = Convert.ToDouble(b);
-            Debug.Log($"Comparing numeric values: {da} {comparison} {db} with tolerance {tolerance}");
+            //Debug.Log($"Comparing numeric values: {da} {comparison} {db} with tolerance {tolerance}");
 
             return comparison switch {
                 ComparisonType.EQUAL => Math.Abs(da - db) <= tolerance,
@@ -71,7 +71,7 @@ public class ConditionEvaluator {
 
         //  BOOLEAN
         if (a is bool ba) {
-            Debug.Log($"Comparing boolean values: {ba} {comparison} {b}");
+            //Debug.Log($"Comparing boolean values: {ba} {comparison} {b}");
             return comparison switch {
                 ComparisonType.TRUE => ba,
                 ComparisonType.FALSE => !ba,
@@ -81,7 +81,7 @@ public class ConditionEvaluator {
             };
         }
 
-        Debug.Log($"Comparing values: {a} {comparison} {b} (type: {a.GetType()})");
+        //Debug.Log($"Comparing values: {a} {comparison} {b} (type: {a.GetType()})");
 
         //  STRING / DEFAULT
         return comparison switch {

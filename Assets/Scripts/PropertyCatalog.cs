@@ -14,6 +14,10 @@ public class PropertyCatalog {
         // todo: implementar lógica para carregar propriedades de um arquivo de configuração
     }
 
+    public string Resolve(InteractionType interaction, InteractionContext context) {
+        throw new System.NotImplementedException("Método Resolve(InteractionType, InteractionContext) ainda não implementado.");
+    }
+
     public string Resolve(InteractionType interaction, string identifier) {
         foreach (var property in Properties) {
             if (property.AppliesTo.Contains(interaction.ToString()) && property.Id == identifier) {

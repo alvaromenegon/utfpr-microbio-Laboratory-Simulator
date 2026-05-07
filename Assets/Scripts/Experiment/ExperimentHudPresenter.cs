@@ -1,9 +1,21 @@
+using UnityEngine;
+
 public class ExperimentHudPresenter {
     private readonly HUDController hud;
-    private InteractionSystem interactionSystem;
+    public static ExperimentHudPresenter Instance { get; private set; }
 
-    public ExperimentHudPresenter(HUDController hudController) {
+    private ExperimentHudPresenter(HUDController hudController) {        
         hud = hudController;
+        Instance = this;
+    }
+
+    public static void New(HUDController hudController) {
+        if (Instance == null) {
+            new ExperimentHudPresenter(hudController);
+        }
+        else {
+            Debug.LogWarning("ExperimentHudPresenter instance already exists. New instance will not be created.");
+        }
     }
 
     public void Bind(ExperimentRuntime runtime) {
@@ -35,7 +47,7 @@ public class ExperimentHudPresenter {
         hud.UpdateDescription(step.Description);
     }
 
-    private void HandleFeedback(string message) {
+    public void HandleFeedback(string message) {
         if (!string.IsNullOrEmpty(message)) {
             hud.UpdateInfo(message);
         }

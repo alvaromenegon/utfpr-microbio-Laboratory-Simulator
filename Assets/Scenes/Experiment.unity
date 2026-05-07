@@ -2974,6 +2974,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 1740791580244772533, guid: 7308f0bad4681064193d3d736b55ea8c, type: 3}
+    - {fileID: 114870670860630700, guid: 7308f0bad4681064193d3d736b55ea8c, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents:
@@ -4204,6 +4205,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 4877387854533775493, guid: 6d0026e204ca41745b621d0644848a82, type: 3}
+    - {fileID: 114823692779577104, guid: 6d0026e204ca41745b621d0644848a82, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents:
@@ -8367,7 +8369,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: -37.355087, w: 0}
+  m_margin: {x: -64.59277, y: 0, z: -37.355087, w: 0}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0

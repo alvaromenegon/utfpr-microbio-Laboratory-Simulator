@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Assets.Scripts {
@@ -19,10 +20,22 @@ namespace Assets.Scripts {
             return properties.ContainsKey(key) ? (T)properties[key] : default;
         }
 
+        [Obsolete("Use SetProperty method instead.")]
         public void Set(string key, object value) {
             if (properties.ContainsKey(key)) {
                 //Debug.Log($"[{canonicalIdentifier}] - Property updated: {key} = {value} (was {properties[key]})");
             } else {
+                Debug.Log($"[{canonicalIdentifier}] - Property added: {key} = {value}");
+            }
+            properties[key] = value;
+            //Debug.Log($"[{canonicalIdentifier}] - Property set: {key} = {value}");
+        }
+
+        public void SetProperty(string key, object value) {
+            if (properties.ContainsKey(key)) {
+                //Debug.Log($"[{canonicalIdentifier}] - Property updated: {key} = {value} (was {properties[key]})");
+            }
+            else {
                 Debug.Log($"[{canonicalIdentifier}] - Property added: {key} = {value}");
             }
             properties[key] = value;
@@ -44,10 +57,10 @@ namespace Assets.Scripts {
 
         // evitar usar os métodos abaixo
         // mantidos por compatibilidade
-        [System.Obsolete("Use DisplayName instead.")]
+        [Obsolete("Use DisplayName instead.")]
         public virtual string GetObjectName() => objectName;
 
-        [System.Obsolete("Use Identifier instead.")]
+        [Obsolete("Use Identifier instead.")]
         public virtual string GetIdentifier() => canonicalIdentifier;
 
         public virtual void OnHover() {
