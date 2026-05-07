@@ -2233,6 +2233,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.LaboratoryObject
   objectName: "Al\xE7a"
   canonicalIdentifier: beaker_tongs
+  Tags: []
 --- !u!114 &438708845
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5975,6 +5976,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.LaboratoryObject
   objectName: "Al\xE7a de Inocula\xE7\xE3o"
   canonicalIdentifier: thing
+  Tags: []
 --- !u!64 &1081796096
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -7846,6 +7848,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.LaboratoryObject
   objectName: "Al\xE7a provis\xF3ria"
   canonicalIdentifier: inoculation_loop
+  Tags: []
 --- !u!1 &1496862051
 GameObject:
   m_ObjectHideFlags: 0
@@ -9269,6 +9272,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.LaboratoryObject
   objectName: Incubadora
   canonicalIdentifier: incubator
+  Tags:
+  - toggleable
 --- !u!1001 &1701706179
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -10593,6 +10598,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.LaboratoryObject
   objectName: petri
   canonicalIdentifier: petri_dish
+  Tags: []
 --- !u!1001 &1897873695
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -11382,6 +11388,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.LaboratoryObject
   objectName: bunsen improv
   canonicalIdentifier: bunsen_burner
+  Tags:
+  - toggleable
+  - heat_source
+  - temperature_control
 --- !u!1 &2059102007 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1092735969708940, guid: bcb6684d471b3a345a3be779e91f2a93,

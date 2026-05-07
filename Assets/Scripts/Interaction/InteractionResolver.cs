@@ -80,9 +80,11 @@ class InteractionResolver {
 
     private IEnumerable<InteractionType> GetCandidateTypes(InteractionContext ctx) {
         var actor = ctx.Roles.GetValueOrDefault(RoleType.ACTOR);
+        Debug.Log($"Resolving interaction for actor: {actor?.Identifier}, roles: [{string.Join(", ", ctx.Roles)}]");
 
         if (ctx.Roles.ContainsKey(RoleType.TOOL) && ctx.Roles.ContainsKey(RoleType.TARGET))
             yield return InteractionType.USE;
+        Debug.Log($"{actor.Identifier} tags = [{string.Join(", ", actor.Tags)}]");
 
         if (actor.HasTag("toggleable")) {
             yield return InteractionType.ACTIVATE;

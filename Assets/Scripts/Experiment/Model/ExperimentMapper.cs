@@ -94,6 +94,7 @@ public static class ExperimentMapper {
         }
         return new EffectOperation {
             TargetObject = dto.TargetObject,
+            TargetRole = Enum.TryParse(dto.TargetRole, out RoleType result) ? result : (RoleType?)null,
             Property = dto.Property,
             Value = dto.Value
         };
@@ -135,7 +136,13 @@ public static class ExperimentMapper {
             ExecutionType = executionType,
             Property = dto.Property,
             Rate = dto.Rate,
+            Operations = dto.Operations?.Select(ToModel).ToList() ?? new List<EffectOperation>(),
+            Roles = dto.Roles?.ToDictionary(kv => ResolveRoleType(kv.Key), kv => kv.Value) ?? new Dictionary<RoleType, string>(),
             Conditions = dto.Conditions?.Select(ToModel).ToList() ?? new List<When>()
         };
+    }
+
+    public static RoleType ResolveRoleType(string role) {
+        return Enum.TryParse(role, out RoleType result) ? result : RoleType.ACTOR;
     }
 }

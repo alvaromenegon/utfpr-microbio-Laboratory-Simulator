@@ -26,6 +26,7 @@ public class ExperimentManager : MonoBehaviour {
     private BackgroundProcessRegistry BackgroundProcessRegistry;
     private DerivedPropertyRegistry DerivedPropertyRegistry;
     private DerivedPropertySystem DerivedPropertySystem;
+    private BackgroundProcessSystem BackgroundProcessSystem;
     private StepManager StepManager;
 
     private void Awake() {
@@ -44,13 +45,15 @@ public class ExperimentManager : MonoBehaviour {
             apiClient = gameObject.AddComponent<ExperimentApiClient>();
         }
         runtime = new ExperimentRuntime();
+        PropertyCatalog.Initialize();
         BackgroundProcessRegistry = new BackgroundProcessRegistry();
         DerivedPropertyRegistry = new DerivedPropertyRegistry();
         DerivedPropertySystem = new DerivedPropertySystem(DerivedPropertyRegistry);
         effectRegistry = new EffectRegistry();
         EffectSystem = new EffectSystem(effectRegistry);
         InteractionSystem = new InteractionSystem(effectRegistry, EffectSystem);
-       
+        BackgroundProcessSystem = new BackgroundProcessSystem(BackgroundProcessRegistry, EffectSystem, effectRegistry);
+
         StepManager = new StepManager(runtime);
         runtime.OnExperimentFinished += OnRuntimeFinished;
     }
@@ -73,6 +76,7 @@ public class ExperimentManager : MonoBehaviour {
             EffectSystem?.Update(InteractionSystem.GetActiveInteractions());
             DerivedPropertySystem?.Update();
             StepManager?.Update();
+            BackgroundProcessSystem?.Update();
         }
        
     }

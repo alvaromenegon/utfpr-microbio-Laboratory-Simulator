@@ -1,5 +1,6 @@
 using Assets.Scripts;
 using System.Collections.Generic;
+using UnityEngine;
 
 class BackgroundProcessInstance {
     public string ProcessId;
@@ -14,6 +15,13 @@ public class BackgroundProcessSystem  {
     private List<BackgroundProcessInstance> activeProcesses = new List<BackgroundProcessInstance>();
     private LoggerService logger = new LoggerService("BackgroundProcessSystem");
     private EffectSystem effectSystem;
+    private EffectRegistry effectRegistry;
+
+    public BackgroundProcessSystem(BackgroundProcessRegistry registry, EffectSystem effectSystem, EffectRegistry effectRegistry) {
+        this.registry = registry;
+        this.effectSystem = effectSystem;
+        this.effectRegistry = effectRegistry;
+    }
 
     private void StartProcess(BackgroundProcess process) {
         activeProcesses.Add(new BackgroundProcessInstance { ProcessId = process.Id, ElapsedTime = 0, IsActive = true });
@@ -31,10 +39,12 @@ public class BackgroundProcessSystem  {
     private void CompleteProcess(BackgroundProcessInstance instance, BackgroundProcess process) {
         activeProcesses.Remove(instance);
         if (ConditionEvaluator.Check(process.SuccessConditions)) {
-            effectSystem.ApplyTriggeredEffect(process.OnSuccessEffectId);
+            var effect = effectRegistry.GetTriggeredEffect(process.OnSuccessEffectId);
+            effectSystem.ApplyTriggeredEffect(effect);
             logger.Log($"Completed background process successfully: {process.Id}");
         } else {
-            effectSystem.ApplyTriggeredEffect(process.OnFailureEffectId);
+            var effect = effectRegistry.GetTriggeredEffect(process.OnFailureEffectId);
+            effectSystem.ApplyTriggeredEffect(effect);
             logger.Log($"Completed background process with failure: {process.Id}");
         }
 
@@ -67,7 +77,8 @@ public class BackgroundProcessSystem  {
 
 
 
-    public void Update(float deltaTime) {
+    public void Update() {
+        float deltaTime = Time.deltaTime;
         foreach (var processData in registry.GetAllProcesses()) {
             if (ShouldStartProcess(processData) && !activeProcesses.Exists(p => p.ProcessId == processData.Id)) {
                 StartProcess(processData);

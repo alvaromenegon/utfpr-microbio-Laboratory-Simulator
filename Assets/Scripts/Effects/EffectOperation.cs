@@ -5,6 +5,6 @@ public class EffectOperation {
     public object Value;
 
     public override string ToString() {
-        return $"EffectOperation(TargetObject={TargetObject}, Property={Property}, Value={Value})";
+        return $"EffectOperation(TargetObject={TargetObject}, TargetRole={TargetRole}, Property={Property}, Value={Value})";
     }
 }

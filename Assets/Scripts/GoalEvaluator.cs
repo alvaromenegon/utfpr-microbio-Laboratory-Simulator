@@ -15,7 +15,7 @@ namespace Assets.Scripts {
         }
 
         public bool Evaluate(StepGoal goal) {
-            registry.TryGetInteractable(goal.Identifier, out var obj);
+            registry.TryGetObject(goal.Identifier, out var obj);
             var current = obj.Get<object>(goal.Property);
             return goal.Comparison switch {
                 ComparisonType.EQUAL => IsEqual(current, goal.Value, goal.Tolerance),

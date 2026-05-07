@@ -58,7 +58,10 @@ public class EffectSystem {
         if (!CheckRegistry()) { return; }
 
         foreach (var operation in effect.Operations) {
-            var obj = ResolveTarget(operation, ctx);
+            if (!TryResolveTarget(operation, ctx, out var obj)) {
+                logger.Error($"Failed to resolve target for operation: {operation}");
+                continue;
+            }
             var currentValue = obj.Get<float>(operation.Property);
             ExperimentHudPresenter.Instance.HandleFeedback($"Applied {obj}.{effect.Property}= {currentValue + effect.Rate * deltatime}");
         }//logger.Log($"EffectSystem: Applied effect from {effect.SourceObject} to {effect.TargetObject} on property {effect.Property} with rate {effect.Rate * deltatime}");
@@ -116,6 +119,14 @@ public class EffectSystem {
             return;
         }
         obj.SetProperty(action.Property, action.Value);
+    }
+
+    private bool TryResolveTarget(EffectOperation operation, InteractionContext ctx, out LaboratoryObject obj) {
+        obj = null;
+        if (operation.TargetRole.HasValue) {
+            return ctx.Roles.TryGetValue(operation.TargetRole.Value, out obj);
+        }
+        return registry.TryGetObject(operation.TargetObject, out obj);
     }
 
     private LaboratoryObject ResolveTarget(EffectOperation operation, InteractionContext ctx) {

@@ -1,44 +1,87 @@
+using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.IO;
+using UnityEngine;
 using static Interaction;
 
 public class PropertyCatalog {
     public static PropertyCatalog Instance { get; private set; }
 
     public List<PropertyDefinition> Properties { get; private set; } = new List<PropertyDefinition>();
+    public List<PropertyBinding> Bindings { get; private set; } = new List<PropertyBinding>();
 
     private PropertyCatalog() {
         LoadProperties();
     }
 
     private void LoadProperties() {
-        // todo: implementar lógica para carregar propriedades de um arquivo de configuração
+        string json = File.ReadAllText("Assets/Resources/property_catalog.json");
+        var catalogData = JsonConvert.DeserializeObject<PropertyCatalogData>(json);
+
+        Properties = catalogData.Properties;
+        Bindings = catalogData.Bindings;
+        Debug.Log($"Loaded {Properties.Count} properties and {Bindings.Count} bindings.");
+    }
+
+    private bool Matches(PropertyBinding binding, InteractionContext context) {
+        var actor = context.Roles.GetValueOrDefault(RoleType.ACTOR);
+        if (actor == null) return false;
+        if (binding.RequiredTags != null) {
+            foreach (var tag in binding.RequiredTags) {
+                if (!actor.HasTag(tag))
+                    return false;
+            }
+        }
+        if (binding.AllowedIdentifiers != null) {
+            if (!binding.AllowedIdentifiers.Contains(actor.Identifier))
+                return false;
+        }
+
+        return true;
     }
 
     public string Resolve(InteractionType interaction, InteractionContext context) {
-        throw new System.NotImplementedException("Método Resolve(InteractionType, InteractionContext) ainda não implementado.");
+        foreach (var binding in Bindings) {
+            if (binding.InteractionType != interaction) continue;
+            if (!Matches(binding, context)) continue;
+            return binding.PropertyId;
+        }
+        return null; // ou uma propriedade padrão
     }
 
-    public string Resolve(InteractionType interaction, string identifier) {
-        foreach (var property in Properties) {
-            if (property.AppliesTo.Contains(interaction.ToString()) && property.Id == identifier) {
-                return property.MapsTo.ContainsKey(interaction.ToString()) ? property.MapsTo[interaction.ToString()] : property.Id;
-            }
-        }
-        return null; // ou lançar uma exceção, dependendo do caso
-    }
+
 
     public static void Initialize() {
-        if (Instance == null) {
-            Instance = new PropertyCatalog();
-        }
+        Instance ??= new PropertyCatalog();
     }
+}
+
+public class PropertyCatalogData {
+    public List<PropertyDefinition> Properties;
+    public List<PropertyBinding> Bindings;
+}
+
+public enum PropertyDataType {
+    BOOLEAN,
+    INTEGER,
+    FLOAT,
+    STRING
 }
 
 public class PropertyDefinition {
     public string Id { get; set; }
     public string Label { get; set; }
     public object Description { get; set; }
-    public List<string> AppliesTo{ get; set; }
-    public string DataType { get; set; }
-    public Dictionary<string,string> MapsTo { get; set; } = new Dictionary<string,string>();
+    public string Unit { get; set; }
+    public PropertyDataType DataType;
+    public object DefaultValue { get; set; }
+
+}
+
+public class PropertyBinding {
+    public InteractionType InteractionType { get; set; }
+    public string PropertyId { get; set; }
+    public List<string> RequiredTags { get; set; }
+    public List<string> AllowedIdentifiers { get; set; }
+    public RoleType? RequiredRole { get; set; }
 }
