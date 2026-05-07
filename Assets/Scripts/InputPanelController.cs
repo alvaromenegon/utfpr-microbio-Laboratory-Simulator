@@ -1,6 +1,7 @@
 using System.Collections;
 using TMPro;
 using UnityEngine;
+using static Interaction;
 
 public class InputPanelController : MonoBehaviour {
     public static InputPanelController Instance;
@@ -13,7 +14,7 @@ public class InputPanelController : MonoBehaviour {
     void Awake() => Instance = this;
 
     public void Show(InteractionRequest request) {
-        pendingAction = new PlayerAction { InteractionType = request.Type, Target = request.SecondaryObject, Value = null, Property = null};
+        pendingAction = new PlayerAction { InteractionType = request.Type, Context = request.Context, Value = null, Property = null};
         panel.SetActive(true);
         inputField.text = string.Empty;
         StartCoroutine(ActivateInputNextFrame());
@@ -36,7 +37,7 @@ public class InputPanelController : MonoBehaviour {
                 System.Globalization.NumberStyles.Any,
                 System.Globalization.CultureInfo.InvariantCulture, // evita bug de vírgula/ponto
                 out double value)) {
-            pendingAction.Property = PropertyCatalog.Instance.Resolve(pendingAction.InteractionType, pendingAction.Target);
+            pendingAction.Property = PropertyCatalog.Instance.Resolve(pendingAction.InteractionType, pendingAction.Context);
             pendingAction.Value = value;
             effectSystem.ApplyValueAction(pendingAction);
         }

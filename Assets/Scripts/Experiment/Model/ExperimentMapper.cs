@@ -30,8 +30,7 @@ public static class ExperimentMapper {
             Objects = dto.Objects ?? Array.Empty<string>(),
             Steps = dto.Steps?.Select(ToModel).ToList() ?? new List<Step>(),
             BackgroundProcesses = dto.BackgroundProcesses?.Select(ToModel).ToList() ?? new List<BackgroundProcess>(),
-            ContinuousEffects = dto.ContinuousEffects?.Select(ToModel).ToList() ?? new List<ContinuousEffect>(),
-            InstantEffects = dto.InstantEffects?.Select(ToModel).ToList() ?? new List<InstantEffect>(),
+            Effects = dto.Effects?.Select(ToModel).ToList() ?? new List<EffectDefinition>(),
             TriggeredEffects = dto.TriggeredEffects?.Select(ToModel).ToList() ?? new List<TriggeredEffect>(),
             DerivedProperties = dto.DerivedProperties?.Select(ToModel).ToList() ?? new List<DerivedProperty>()
         };
@@ -123,27 +122,17 @@ public static class ExperimentMapper {
         };
     }
 
-    public static InstantEffect ToModel(InstantEffectDto dto) {
+    public static EffectDefinition ToModel(EffectDefinitionDto dto) {
         if (dto == null) {
             return null;
         }
-        return new InstantEffect {
-            InteractionType = Enum.TryParse(dto.InteractionType, out Interaction.InteractionType result) ? result : Interaction.InteractionType.USE,
-            SourceObject = dto.SourceObject,
-            TargetObject = dto.TargetObject,
-            Operations = dto.Operations?.Select(ToModel).ToList() ?? new List<EffectOperation>(),
-            Conditions = dto.Conditions?.Select(ToModel).ToList() ?? new List<When>()
-        };
-    }
+        if (!Enum.TryParse(dto.ExecutionType, out EffectExecutionType executionType)) {
+            throw new ArgumentException($"Invalid execution type: {dto.ExecutionType}");
+        }
 
-    public static ContinuousEffect ToModel(ContinuousEffectDto dto) {
-        if (dto == null) {
-            return null;
-        }
-        return new ContinuousEffect {
-            InteractionType = Enum.TryParse(dto.InteractionType, out Interaction.InteractionType result) ? result : Interaction.InteractionType.USE,
-            SourceObject = dto.SourceObject,
-            TargetObject = dto.TargetObject,
+        return new EffectDefinition {
+            Type = Enum.TryParse(dto.Type, out Interaction.InteractionType result) ? result : Interaction.InteractionType.USE,
+            ExecutionType = executionType,
             Property = dto.Property,
             Rate = dto.Rate,
             Conditions = dto.Conditions?.Select(ToModel).ToList() ?? new List<When>()

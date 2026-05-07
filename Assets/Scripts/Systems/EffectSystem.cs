@@ -5,26 +5,13 @@ using UnityEngine;
 public class EffectSystem {
     private ExperimentObjectRegistry registry;
     private EffectRegistry effectRegistry;
-    private LoggerService logger = new ("EffectSystem");
-    private HashSet<string> executedTriggeredEffectsId; // armazena os IDs dos TriggeredEffects já executados para evitar execuções repetidas
+    private readonly LoggerService logger = new ("EffectSystem");
+    private readonly HashSet<string> executedTriggeredEffectsId; // armazena os IDs dos TriggeredEffects já executados para evitar execuções repetidas
 
     public EffectSystem(EffectRegistry effectRegistry) {
         this.effectRegistry = effectRegistry;
         registry = ExperimentObjectRegistry.Instance;
         executedTriggeredEffectsId = new HashSet<string>();
-    }
-
-    private void ApplyContinuousEffect(EffectDefinition effect, float deltatime) {
-        if (effect == null) { return; }
-        if (!CheckRegistry()) { return; }
-
-        foreach (var operation in effect.Operations) {
-            registry.TryGetObject(operation.TargetObject, out var obj);
-            var currentValue = obj.Get<float>(effect.Property);
-            obj.Set(effect.Property, currentValue + effect.Rate * deltatime);
-            ExperimentHudPresenter.Instance.HandleFeedback($"Applied {obj}.{effect.Property}= {currentValue + effect.Rate * deltatime}");
-        }//logger.Log($"EffectSystem: Applied effect from {effect.SourceObject} to {effect.TargetObject} on property {effect.Property} with rate {effect.Rate * deltatime}");
-
     }
 
     public void HandleInstantEffect(InteractionRequest request) {
@@ -33,7 +20,7 @@ public class EffectSystem {
         effects = effects.FindAll(e => !e.IsContinuous);
         foreach (var effect in effects) {
             if (ConditionEvaluator.Check(effect.Conditions)) {
-                ApplyInstantEffect(effect);
+                ApplyInstantEffect(effect, request.Context);
             }           
         }
     }
@@ -45,7 +32,7 @@ public class EffectSystem {
                 if (executedTriggeredEffectsId.Contains(effect.Id)) {
                     continue;
                 }
-                ApplyTriggeredEffect(effect.Id);
+                ApplyTriggeredEffect(effect);
                 executedTriggeredEffectsId.Add(effect.Id);
             }
         }
@@ -64,36 +51,34 @@ public class EffectSystem {
         return true;
     }
 
-    private void ApplyInstantEffect(EffectDefinition effect) {
+    /* aplicação de efeitos */
 
+    private void ApplyContinuousEffect(EffectDefinition effect, InteractionContext ctx, float deltatime) {
+        if (effect == null) { return; }
+        if (!CheckRegistry()) { return; }
+
+        foreach (var operation in effect.Operations) {
+            var obj = ResolveTarget(operation, ctx);
+            var currentValue = obj.Get<float>(operation.Property);
+            ExperimentHudPresenter.Instance.HandleFeedback($"Applied {obj}.{effect.Property}= {currentValue + effect.Rate * deltatime}");
+        }//logger.Log($"EffectSystem: Applied effect from {effect.SourceObject} to {effect.TargetObject} on property {effect.Property} with rate {effect.Rate * deltatime}");
+
+    }
+
+    private void ApplyInstantEffect(EffectDefinition effect, InteractionContext ctx) {
         if (effect == null) { return; }
         if (!CheckRegistry()) { return; }
         logger.Log($"Applying instant effect: {effect}"); 
         
         foreach (var operation in effect.Operations) {
-            registry.TryGetObject(operation.TargetObject, out var obj);
-            if (obj == null) {
-                logger.Error($"Object with identifier {operation.TargetObject} not found in registry.");
-                continue;
-            }
-            obj.Set(operation.Property, operation.Value);
+            var obj = ResolveTarget(operation, ctx);
+            obj.SetProperty(operation.Property, operation.Value);
         }
     }
 
-    public void ApplyValueAction(PlayerAction action) {
-        if (registry.TryGetObject(action.Target, out var obj)) {
-
-            obj.Set(action.Property, action.Value);
-        }
-        else {
-            logger.Error($"Object with identifier {action.Target} not found in registry.");
-        }
-    }
-
-    public void ApplyTriggeredEffect(string effectId) {
-        var effect = effectRegistry.GetTriggeredEffect(effectId);
+    public void ApplyTriggeredEffect(TriggeredEffect effect) {
         if (effect == null) {
-            logger.Error($"TriggeredEffect with identifier {effectId} not found in registry.");
+            logger.Error("TriggeredEffect is null.");
             return;
         }
         if (registry == null) {
@@ -114,24 +99,44 @@ public class EffectSystem {
                     logger.Error($"Object with identifier {operation.TargetObject} not found in registry.");
                     continue;
                 }
-                targetObj.Set(operation.Property, operation.Value);
+                targetObj.SetProperty(operation.Property, operation.Value);
                 logger.Log("[ApplyTriggeredEffect] Applied operation on target: " + operation.TargetObject + " for property: " + operation.Property + " with value: " + operation.Value);
             }
         }
     }
 
+    /* */
+
+    public void ApplyValueAction(PlayerAction action) {
+        if (!CheckRegistry() || action == null) { return; }
+
+        var obj = registry.ResolveTargetFromContext(action.Context);
+        if (obj == null) {
+            logger.Error("Failed to resolve target from context.");
+            return;
+        }
+        obj.SetProperty(action.Property, action.Value);
+    }
+
+    private LaboratoryObject ResolveTarget(EffectOperation operation, InteractionContext ctx) {
+        if (operation.TargetRole.HasValue) {
+            return ctx.Roles[operation.TargetRole.Value];
+        }
+        registry.TryGetObject(operation.TargetObject, out var obj);
+        return obj;
+    }
+
     public void Update(List<ActiveInteraction> activeInteractions) {
         foreach (var interaction in activeInteractions) {
-
             foreach (var effect in interaction.Effects) {
                 //logger.Log("Evaluating continuous effect with source: " + effect.SourceObject + " and target: " + effect.TargetObject);
                 if (effect.IsContinuous) {
                     if (ConditionEvaluator.Check(effect.Conditions)) {
-                        ApplyContinuousEffect(effect, Time.deltaTime);
+                        ApplyContinuousEffect(effect, interaction.Context, Time.deltaTime);
                     }
                 }
-            }
-            EvaluateTriggeredEffects();
+            }            
         }
+        EvaluateTriggeredEffects();
     }
 }

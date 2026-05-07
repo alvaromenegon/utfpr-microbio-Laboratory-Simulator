@@ -1,5 +1,6 @@
 public class EffectOperation {
     public string TargetObject;
+    public RoleType? TargetRole;
     public string Property;
     public object Value;
 
