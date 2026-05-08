@@ -37,10 +37,7 @@ public class ExperimentRuntime {
         if (Definition.experimentData.HasTimeLimit() && elapsedSeconds > Definition.experimentData.Time) {
             Finish();
         }
-    }
-
-
-   
+    }   
 
     public void End(bool withSuccess) {
         Finish();
@@ -51,7 +48,6 @@ public class ExperimentRuntime {
     }
 
     private void Finish(int? finishScore = null) {
-
         IsRunning = false;
         if (finishScore.HasValue) {
             Score = finishScore.Value;

@@ -6,17 +6,28 @@ using UnityEngine;
 public class ConditionEvaluator {
     private static ExperimentObjectRegistry experimentObjectRegistry = ExperimentObjectRegistry.Instance;
 
+    private static object GetDefaultValue(When condition) {
+        return condition.Comparison switch {
+            ComparisonType.TRUE => false,
+            ComparisonType.FALSE => false,
+
+            ComparisonType.EQUAL => null,
+            ComparisonType.NOT_EQUAL => null,
+
+            _ => null
+        };
+    }
+
     private static bool TryGetValue(When condition, out object value) {
         value = null;
         //Debug.Log($"Trying to get value for condition: {condition.Identifier}.{condition.Property}");
 
-        if (!experimentObjectRegistry.TryGetInteractable(condition.Identifier, out var obj)) {
-            Debug.LogWarning($"Object with identifier '{condition.Identifier}' not found.");
+        if (!experimentObjectRegistry.TryGetObject(condition.Identifier, out var obj)) {
+            //Debug.LogWarning($"Object with identifier '{condition.Identifier}' not found.");
             return false;
         }
-        if (!obj.TryGet(condition.Property, out value)) {
-            //Debug.LogWarning($"Property '{condition.Property}' not found on object '{condition.Identifier}'.");
-            return false;
+        if (!obj.TryGetProperty(condition.Property, out value)) {
+            value = GetDefaultValue(condition);
         }
         //Debug.Log($"Retrieved value for {condition.Identifier}.{condition.Property}: {value}");
         return true;
@@ -48,7 +59,7 @@ public class ConditionEvaluator {
 
     public static bool Compare(object a, object b, ComparisonType comparison, float tolerance = 0.01f) {
        if ( !(comparison == ComparisonType.TRUE || comparison == ComparisonType.FALSE) && (a == null || b == null)) {
-            Debug.LogWarning($"Cannot perform comparison '{comparison}' when one of the values is null: a={a}, b={b}");
+            //Debug.LogWarning($"Cannot perform comparison '{comparison}' when one of the values is null: a={a}, b={b}");
             return false;
         }
 
@@ -71,7 +82,6 @@ public class ConditionEvaluator {
 
         //  BOOLEAN
         if (a is bool ba) {
-            //Debug.Log($"Comparing boolean values: {ba} {comparison} {b}");
             return comparison switch {
                 ComparisonType.TRUE => ba,
                 ComparisonType.FALSE => !ba,

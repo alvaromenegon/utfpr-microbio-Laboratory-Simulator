@@ -52,6 +52,8 @@ public class ExperimentManager : MonoBehaviour {
         effectRegistry = new EffectRegistry();
         EffectSystem = new EffectSystem(effectRegistry);
         InteractionSystem = new InteractionSystem(effectRegistry, EffectSystem);
+        InteractionSystem.OnValueRequired += request => InputPanelController.Instance.Show(request);
+        
         BackgroundProcessSystem = new BackgroundProcessSystem(BackgroundProcessRegistry, EffectSystem, effectRegistry);
 
         StepManager = new StepManager(runtime);
@@ -66,6 +68,8 @@ public class ExperimentManager : MonoBehaviour {
         ExperimentHudPresenter.New(HUDController.Instance);
         hudPresenter = ExperimentHudPresenter.Instance;
         hudPresenter.Bind(runtime);
+        var inputPanelController = InputPanelController.Instance;
+        inputPanelController.Bind(EffectSystem);
         StartCoroutine(BootstrapAndStart());
     }
 
@@ -77,8 +81,7 @@ public class ExperimentManager : MonoBehaviour {
             DerivedPropertySystem?.Update();
             StepManager?.Update();
             BackgroundProcessSystem?.Update();
-        }
-       
+        }       
     }
 
     public void StartExperiment(ExperimentDefinition experimentDefinition) {
@@ -91,26 +94,6 @@ public class ExperimentManager : MonoBehaviour {
         runtime.Start(experimentDefinition);
         StepManager.Start();
     }
-
-    //public void OnSecondaryTargetInteraction(GameObject gameObjectPrimary) {
-    //    if (!IsExperimentRunning || runtime.CurrentStep == null) {
-    //        return;
-    //    }
-
-    //    var currentStep = runtime.CurrentStep;
-    //    var gameObjectSecondary = GameObject.Find(currentStep.InteractionTargetSecondary);
-    //    if (gameObjectSecondary == null) {
-    //        Debug.LogError($"Secondary target '{currentStep.InteractionTargetSecondary}' not found in the scene.");
-    //        return;
-    //    }
-
-    //    var equipment = gameObjectSecondary.GetComponent<EquipmentInteractable>();
-    //    if (equipment == null || currentStep.Interaction != InteractionType.MOVE) {
-    //        return;
-    //    }
-
-    //    equipment.MoveObjectToEquipment(gameObjectPrimary);
-    //}
 
     private IEnumerator BootstrapAndStart() {
         Debug.Log($"Fetching experiment data for practice ID: {SessionData.Current.PracticeId}");

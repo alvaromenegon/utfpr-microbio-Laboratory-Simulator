@@ -21,13 +21,13 @@ public class DerivedPropertySystem {
      * 
      */
     private void ApplySet(DerivedProperty rule) {
-        registry.TryGetInteractable(rule.Identifier, out var obj);
+        registry.TryGetObject(rule.Identifier, out var obj);
         if(obj == null) {
             Debug.LogError($"DerivedPropertySystem: Could not find object with identifier {rule.Identifier}");
             return;
         }
         foreach(var kvp in rule.SetProperty) {
-            obj.Set(kvp.Key, kvp.Value);
+            obj.SetProperty(kvp.Key, kvp.Value);
         }
     }
 }

@@ -50,12 +50,9 @@ public class EffectRegistry {
             logger.Log("InteractionContext is null in IsContinuous check.");
             return false;
         }
-        foreach (var effect in _effects) {
-            if (effect.Type != ctx.Type)
-                continue;
-            if (MatchesRoles(effect, ctx) && effect.IsContinuous) {
-                return true;
-            }
+        if (HasEffect(ctx)) {
+            var effects = GetEffects(ctx);
+            return effects.Exists(e => e.IsContinuous);
         }
         return false;
     }
@@ -71,6 +68,20 @@ public class EffectRegistry {
         }
 
         return false;
+    }
+
+    // retorna uma lista de efeitos válidos para o contexto
+    public List<EffectDefinition> GetValidEffects(InteractionContext ctx) {
+        var validEffects = new List<EffectDefinition>();
+        foreach (var effect in _effects) {
+            if (effect.Type != ctx.Type)
+                continue;
+            if (MatchesRoles(effect, ctx)) {
+                validEffects.Add(effect);
+            }
+        }
+        return validEffects;
+
     }
 
     private bool MatchesIdentifierOrTag(LaboratoryObject obj, string value) {

@@ -14,10 +14,15 @@ public class InputPanelController : MonoBehaviour {
     void Awake() => Instance = this;
 
     public void Show(InteractionRequest request) {
+        Debug.Log($"Showing input panel for request: {request}");
         pendingAction = new PlayerAction { InteractionType = request.Type, Context = request.Context, Value = null, Property = null};
         panel.SetActive(true);
         inputField.text = string.Empty;
         StartCoroutine(ActivateInputNextFrame());
+    }
+
+    public void Bind(EffectSystem effectSystem) {
+        this.effectSystem = effectSystem;
     }
 
     private IEnumerator ActivateInputNextFrame() {
@@ -38,8 +43,10 @@ public class InputPanelController : MonoBehaviour {
                 System.Globalization.CultureInfo.InvariantCulture, // evita bug de vírgula/ponto
                 out double value)) {
             pendingAction.Property = PropertyCatalog.Instance.Resolve(pendingAction.InteractionType, pendingAction.Context);
+            Debug.Log($"Resolved property: {pendingAction.Property}");
             pendingAction.Value = value;
             effectSystem.ApplyValueAction(pendingAction);
+            Hide();
         }
         else {
             Debug.Log("Valor inválido.");

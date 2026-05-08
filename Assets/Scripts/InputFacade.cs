@@ -84,13 +84,8 @@ class InputFacade : MonoBehaviour {
             if (TryGetMovable(out var movable)) {
                 _currentMovable = movable;
                 movable.PickUp();
-            }
-            else {
-                Debug.Log("No movable object in sight.");
-            }
-        } else {
-            Debug.Log("Already holding an object.");
-        }
+            }           
+        } 
     }
 
     private void HandleClickRelease()
@@ -121,7 +116,7 @@ class InputFacade : MonoBehaviour {
         return Physics.Raycast(ray, out hit, interactionRange, interactionLayer);
     }
 
-    private void UpdateHoveredObject(LaboratoryObject nextObject) {
+    private void UpdateHoveredObject(LaboratoryObject nextObject) { 
         if (_currentHoveredInteractable != nextObject) {
             if (_currentHoveredInteractable != null) {
                 HoverExited?.Invoke(_currentHoveredInteractable);

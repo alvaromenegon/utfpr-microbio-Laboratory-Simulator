@@ -73,6 +73,11 @@ public static class ExperimentMapper {
             OnSuccessMessage = dto.OnSuccessMessage,
             OnFailureMessage = dto.OnFailureMessage,
             ActionOnFailure = dto.ActionOnFailure,
+            StartConditions = dto.StartConditions?.Select(ToModel).ToList() ?? new List<When>(),
+            CancelConditions = dto.CancelConditions?.Select(ToModel).ToList() ?? new List<When>(),
+            SuccessConditions = dto.SuccessConditions?.Select(ToModel).ToList() ?? new List<When>(),
+            OnSuccessEffectId = dto.OnSuccessEffectId,
+            OnFailureEffectId = dto.OnFailureEffectId
         };
     }
 

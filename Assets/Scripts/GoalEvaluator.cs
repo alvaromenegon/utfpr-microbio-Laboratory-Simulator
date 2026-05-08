@@ -16,7 +16,7 @@ namespace Assets.Scripts {
 
         public bool Evaluate(StepGoal goal) {
             registry.TryGetObject(goal.Identifier, out var obj);
-            var current = obj.Get<object>(goal.Property);
+            var current = obj.GetProperty<object>(goal.Property);
             return goal.Comparison switch {
                 ComparisonType.EQUAL => IsEqual(current, goal.Value, goal.Tolerance),
                 ComparisonType.NOT_EQUAL => !IsEqual(current, goal.Value, goal.Tolerance),

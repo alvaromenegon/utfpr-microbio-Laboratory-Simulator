@@ -17,9 +17,14 @@ class InteractionResolver {
     private InteractionType ResolveInteractionType(InteractionContext baseContext) {
         foreach (var type in GetCandidateTypes(baseContext)) {
             baseContext.Type = type;
-
-            if (_effectRegistry.HasEffect(baseContext))
-                return type;
+            Debug.Log($"Trying interaction type: {type}");
+            var effects = _effectRegistry.GetValidEffects(baseContext);
+            foreach (var effect in effects) {
+                Debug.Log($"Checking effect: {effect.Type} - Conditions: [{string.Join(", ", effect.Conditions)}]");
+                if (!ConditionEvaluator.Check(effect.Conditions)) continue;
+                Debug.Log($"Effect {effect.Type} is valid");
+                return effect.Type;
+            }
         }
 
         throw new System.Exception($"No valid interaction type found for context: {baseContext}");
@@ -81,9 +86,13 @@ class InteractionResolver {
     private IEnumerable<InteractionType> GetCandidateTypes(InteractionContext ctx) {
         var actor = ctx.Roles.GetValueOrDefault(RoleType.ACTOR);
         Debug.Log($"Resolving interaction for actor: {actor?.Identifier}, roles: [{string.Join(", ", ctx.Roles)}]");
+        Debug.Log($"Contains TOOL: {ctx.Roles.ContainsKey(RoleType.TOOL)}");
+        Debug.Log($"Contains TARGET: {ctx.Roles.ContainsKey(RoleType.TARGET)}");
 
-        if (ctx.Roles.ContainsKey(RoleType.TOOL) && ctx.Roles.ContainsKey(RoleType.TARGET))
+        if (ctx.Roles.ContainsKey(RoleType.TOOL) && ctx.Roles.ContainsKey(RoleType.TARGET)) {
+            Debug.Log("Actor has both TOOL and TARGET roles, yielding USE");
             yield return InteractionType.USE;
+        }
         Debug.Log($"{actor.Identifier} tags = [{string.Join(", ", actor.Tags)}]");
 
         if (actor.HasTag("toggleable")) {

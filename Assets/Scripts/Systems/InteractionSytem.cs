@@ -11,7 +11,7 @@ public class InteractionSystem {
     public event Action<InteractionRequest> OnValueRequired;
 
     public InteractionSystem(EffectRegistry effectRegistry, EffectSystem effectSystem) {
-        this.EffectRegistry = effectRegistry;
+        EffectRegistry = effectRegistry;
         this.effectSystem = effectSystem;
     }
 

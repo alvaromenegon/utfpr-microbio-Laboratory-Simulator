@@ -12,23 +12,31 @@ namespace Assets.Scripts {
         public string Identifier => canonicalIdentifier;
         public string DisplayName => objectName;
 
+        [Obsolete("Use TryGetProperty<T> instead for type safety.")]
         public bool TryGet(string key, out object value) {
             return properties.TryGetValue(key, out value);
         }
 
+        public bool TryGetProperty<T>(string key, out T value) {
+            if (properties.TryGetValue(key, out var objValue) && objValue is T typedValue) {
+                value = typedValue;
+                return true;
+            }
+            value = default;
+            return false;
+        }
+
+        public List<string> GetProperties() {
+            return new List<string>(properties.Keys);
+        }
+
+        [Obsolete("Use GetProperty<T> instead")]
         public T Get<T>(string key) {
             return properties.ContainsKey(key) ? (T)properties[key] : default;
         }
 
-        [Obsolete("Use SetProperty method instead.")]
-        public void Set(string key, object value) {
-            if (properties.ContainsKey(key)) {
-                //Debug.Log($"[{canonicalIdentifier}] - Property updated: {key} = {value} (was {properties[key]})");
-            } else {
-                Debug.Log($"[{canonicalIdentifier}] - Property added: {key} = {value}");
-            }
-            properties[key] = value;
-            //Debug.Log($"[{canonicalIdentifier}] - Property set: {key} = {value}");
+        public T GetProperty<T>(string key) {
+            return properties.ContainsKey(key) ? (T)properties[key] : default;
         }
 
         public void SetProperty(string key, object value) {
@@ -42,10 +50,7 @@ namespace Assets.Scripts {
             //Debug.Log($"[{canonicalIdentifier}] - Property set: {key} = {value}");
         }
 
-        [System.Obsolete("Use HasProperty method instead.")]
-        public bool Has(string key) {
-            return properties.ContainsKey(key);
-        }
+        public override string ToString() => $"LaboratoryObject(ID: {Identifier}, Name: {DisplayName})";
 
         public bool HasProperty(string key) {
             return properties.ContainsKey(key);
@@ -55,20 +60,12 @@ namespace Assets.Scripts {
             return Tags.Contains(tag);
         }
 
-        // evitar usar os métodos abaixo
-        // mantidos por compatibilidade
-        [Obsolete("Use DisplayName instead.")]
-        public virtual string GetObjectName() => objectName;
-
-        [Obsolete("Use Identifier instead.")]
-        public virtual string GetIdentifier() => canonicalIdentifier;
-
         public virtual void OnHover() {
-            // Implementar comportamento de hover, como destacar o objeto
+            Debug.Log($"Hovering over {DisplayName} (ID: {Identifier})");
         }
 
         public virtual void OnExitHover() {
-            // Implementar comportamento quando o hover termina, como remover destaque
+            Debug.Log($"Stopped hovering over {DisplayName} (ID: {Identifier})");
         }
 
     }

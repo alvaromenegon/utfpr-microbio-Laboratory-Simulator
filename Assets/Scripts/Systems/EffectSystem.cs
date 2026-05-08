@@ -34,6 +34,7 @@ public class EffectSystem {
                 }
                 ApplyTriggeredEffect(effect);
                 executedTriggeredEffectsId.Add(effect.Id);
+                logger.Log($"[EvaluateTriggeredEffects] TriggeredEffect with ID {effect.Id} has been applied and will not be applied again.");
             }
         }
     }
@@ -62,8 +63,9 @@ public class EffectSystem {
                 logger.Error($"Failed to resolve target for operation: {operation}");
                 continue;
             }
-            var currentValue = obj.Get<float>(operation.Property);
-            ExperimentHudPresenter.Instance.HandleFeedback($"Applied {obj}.{effect.Property}= {currentValue + effect.Rate * deltatime}");
+            var currentValue = obj.GetProperty<float>(operation.Property);
+            obj.SetProperty(operation.Property, currentValue + effect.Rate.Value * deltatime);
+            ExperimentHudPresenter.Instance.HandleFeedback($"Applied {obj.Identifier}.{operation.Property}= {currentValue + effect.Rate * deltatime}");
         }//logger.Log($"EffectSystem: Applied effect from {effect.SourceObject} to {effect.TargetObject} on property {effect.Property} with rate {effect.Rate * deltatime}");
 
     }
@@ -71,11 +73,12 @@ public class EffectSystem {
     private void ApplyInstantEffect(EffectDefinition effect, InteractionContext ctx) {
         if (effect == null) { return; }
         if (!CheckRegistry()) { return; }
-        logger.Log($"Applying instant effect: {effect}"); 
         
         foreach (var operation in effect.Operations) {
             var obj = ResolveTarget(operation, ctx);
             obj.SetProperty(operation.Property, operation.Value);
+            logger.Log($"Applied {obj.Identifier}.{operation.Property}= {operation.Value}");
+
         }
     }
 
@@ -84,15 +87,11 @@ public class EffectSystem {
             logger.Error("TriggeredEffect is null.");
             return;
         }
-        if (registry == null) {
-            logger.Warning("ExperimentObjectRegistry instance is null. Attempting to rebuild index.");
-            // tenta pegar novamente a instância do registry
-            registry = ExperimentObjectRegistry.Instance;
-            if (registry == null) {
-                logger.Error("ExperimentObjectRegistry instance is still null after attempting to rebuild index.");
-                return;
-            }
+        if (!CheckRegistry()) {
+            logger.Error("ExperimentObjectRegistry is not available.");
+            return;
         }
+        logger.Log($"Evaluating triggered effect with ID: {effect.Id} and conditions: {effect.Conditions}");
         if (ConditionEvaluator.Check(effect.Conditions)) {
             foreach (var operation in effect.Operations) {
                 //logger.Log("Applying operation on target: " + operation.TargetObject + " for property: " + operation.Property + " with value: " + operation.Value);
@@ -112,8 +111,7 @@ public class EffectSystem {
 
     public void ApplyValueAction(PlayerAction action) {
         if (!CheckRegistry() || action == null) { return; }
-
-        var obj = registry.ResolveTargetFromContext(action.Context);
+        var obj = action.Context.Roles[RoleType.TARGET];
         if (obj == null) {
             logger.Error("Failed to resolve target from context.");
             return;
