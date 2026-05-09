@@ -1,11 +1,11 @@
-﻿using System.Collections;
-using System.Linq;
+﻿using System;
 using UnityEngine;
 
 namespace Assets.Scripts {
     public class StepManager {
         private ExperimentRuntime experimentRuntime;
         private Step currentStep = null;
+        public event Action<Step, int, int> OnStepChanged;
 
         public StepManager(ExperimentRuntime experimentRuntime) {
             this.experimentRuntime = experimentRuntime;

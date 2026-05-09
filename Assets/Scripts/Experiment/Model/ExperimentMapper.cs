@@ -31,7 +31,8 @@ public static class ExperimentMapper {
             Steps = dto.Steps?.Select(ToModel).ToList() ?? new List<Step>(),
             BackgroundProcesses = dto.BackgroundProcesses?.Select(ToModel).ToList() ?? new List<BackgroundProcess>(),
             Effects = dto.Effects?.Select(ToModel).ToList() ?? new List<EffectDefinition>(),
-            TriggeredEffects = dto.TriggeredEffects?.Select(ToModel).ToList() ?? new List<TriggeredEffect>(),
+            ReactiveEffects = dto.ReactiveEffects?.Select(ToModel).ToList() ?? new List<ReactiveEffect>(),
+            ActionEffects = dto.ActionEffects?.Select(ToModel).ToList() ?? new List<ActionEffect>(),
             DerivedProperties = dto.DerivedProperties?.Select(ToModel).ToList() ?? new List<DerivedProperty>()
         };
     }
@@ -76,6 +77,7 @@ public static class ExperimentMapper {
             StartConditions = dto.StartConditions?.Select(ToModel).ToList() ?? new List<When>(),
             CancelConditions = dto.CancelConditions?.Select(ToModel).ToList() ?? new List<When>(),
             SuccessConditions = dto.SuccessConditions?.Select(ToModel).ToList() ?? new List<When>(),
+            OnStartEffectId = dto.OnStartEffectId,
             OnSuccessEffectId = dto.OnSuccessEffectId,
             OnFailureEffectId = dto.OnFailureEffectId
         };
@@ -117,13 +119,23 @@ public static class ExperimentMapper {
         };
     }
 
-    public static TriggeredEffect ToModel(TriggeredEffectDto dto) {
+    public static ReactiveEffect ToModel(ReactiveEffectDto dto) {
         if (dto == null) {
             return null;
         }
-        return new TriggeredEffect {
+        return new ReactiveEffect {
             Id = dto.Id,
             Conditions = dto.Conditions?.Select(ToModel).ToList() ?? new List<When>(),
+            Operations = dto.Operations?.Select(ToModel).ToList() ?? new List<EffectOperation>()
+        };
+    }
+
+    public static ActionEffect ToModel(ActionEffectDto dto) {
+        if (dto == null) {
+            return null;
+        }
+        return new ActionEffect {
+            Id = dto.Id,
             Operations = dto.Operations?.Select(ToModel).ToList() ?? new List<EffectOperation>()
         };
     }

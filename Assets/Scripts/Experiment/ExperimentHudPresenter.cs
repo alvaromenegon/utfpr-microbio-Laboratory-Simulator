@@ -18,16 +18,16 @@ public class ExperimentHudPresenter {
         }
     }
 
-    public void Bind(ExperimentRuntime runtime) {
+    public void Bind(ExperimentRuntime runtime, Assets.Scripts.StepManager stepManager) {
         runtime.OnTimerUpdated += HandleTimerUpdated;
-        runtime.OnStepChanged += HandleStepChanged;
-        runtime.OnFeedback += HandleFeedback;        
+        runtime.OnFeedback += HandleFeedback;   
+        stepManager.OnStepChanged += HandleStepChanged;
     }
 
-    public void Unbind(ExperimentRuntime runtime) {
+    public void Unbind(ExperimentRuntime runtime, Assets.Scripts.StepManager stepManager) {
         runtime.OnTimerUpdated -= HandleTimerUpdated;
-        runtime.OnStepChanged -= HandleStepChanged;
         runtime.OnFeedback -= HandleFeedback;
+        stepManager.OnStepChanged -= HandleStepChanged;
     }
 
     public void UpdateUserInfo(string username, string userPhotoUrl) {

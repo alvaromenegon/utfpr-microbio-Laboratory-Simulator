@@ -82,7 +82,7 @@ public class EffectSystem {
         }
     }
 
-    public void ApplyTriggeredEffect(TriggeredEffect effect) {
+    public void ApplyTriggeredEffect(ReactiveEffect effect) {
         if (effect == null) {
             logger.Error("TriggeredEffect is null.");
             return;
@@ -104,6 +104,26 @@ public class EffectSystem {
                 targetObj.SetProperty(operation.Property, operation.Value);
                 logger.Log("[ApplyTriggeredEffect] Applied operation on target: " + operation.TargetObject + " for property: " + operation.Property + " with value: " + operation.Value);
             }
+        }
+    }
+
+    public void ApplyActionEffect(ActionEffect effect) {
+        if (effect == null) {
+            logger.Error("ActionEffect is null.");
+            return;
+        }
+        if (!CheckRegistry()) {
+            logger.Error("ExperimentObjectRegistry is not available.");
+            return;
+        }
+        foreach (var operation in effect.Operations) {
+            registry.TryGetObject(operation.TargetObject, out var targetObj);
+            if (targetObj == null) {
+                logger.Error($"Object with identifier {operation.TargetObject} not found in registry.");
+                continue;
+            }
+            targetObj.SetProperty(operation.Property, operation.Value);
+            logger.Log($"Applied ActionEffect on target: {operation.TargetObject} for property: {operation.Property} with value: {operation.Value}");
         }
     }
 

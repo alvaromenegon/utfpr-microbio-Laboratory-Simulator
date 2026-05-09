@@ -9,7 +9,8 @@ public class ExperimentData {
     public string Description { get; set; }
     public int Time { get; set; }
     public List<EffectDefinition> Effects { get; set; }
-    public List<TriggeredEffect> TriggeredEffects { get; set; }
+    public List<ReactiveEffect> ReactiveEffects { get; set; }
+    public List<ActionEffect> ActionEffects { get; set; }
     public List<DerivedProperty> DerivedProperties { get; set; }
 
     public bool HasTimeLimit() {

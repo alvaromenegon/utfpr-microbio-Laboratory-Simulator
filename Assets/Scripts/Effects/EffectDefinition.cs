@@ -17,7 +17,7 @@ public class EffectDefinition {
     public float? Rate;
 
     public override string ToString() {
-        return $"EffectDefinition(Type={Type}, Roles=[{string.Join(", ", Roles)}], ExecutionType={ExecutionType}, Property={Property}, Rate={Rate})";
+        return $"EffectDefinition(Type={Type}, Roles=[{string.Join(", ", Roles)}], ExecutionType={ExecutionType}, Property={Property}, Rate={Rate}, Operations=[{string.Join(", ", Operations)}])";
     }
 }
 

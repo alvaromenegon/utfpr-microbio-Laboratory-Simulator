@@ -9,6 +9,8 @@ public class BackgroundProcessDto {
     public WhenDto[] CancelConditions { get; set; }
     public WhenDto[] SuccessConditions { get; set; }
 
+    public string OnStartEffectId { get; set; }
+
     public string OnSuccessEffectId { get; set; }
     public string OnFailureEffectId { get; set; }
 

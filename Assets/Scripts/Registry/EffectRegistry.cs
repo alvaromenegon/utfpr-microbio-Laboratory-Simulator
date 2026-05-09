@@ -29,16 +29,24 @@ struct InteractionEffectKey : IEquatable<InteractionEffectKey> {
 
 public class EffectRegistry {
     private LoggerService logger = new LoggerService("EffectRegistry");
-    private Dictionary<string, TriggeredEffect> triggeredEffects = new(); // efeitos sem interação direta do usuário
+    private Dictionary<string, ReactiveEffect> reactiveEffects = new(); // efeitos sem interação direta do usuário que reagem a mudanças no estado do experimento
+    private Dictionary<string, ActionEffect> actionEffects = new(); // efeitos acionados por outros sistemas, como o BackgroundProcessSystem
     private List<EffectDefinition> _effects = new();
     
 
-    public List<TriggeredEffect> GetAllTriggeredEffects() { // retorna todos os efeitos acionados, sem filtro
-        return new List<TriggeredEffect>(triggeredEffects.Values);
+    public List<ReactiveEffect> GetAllTriggeredEffects() { // retorna todos os efeitos acionados, sem filtro
+        return new List<ReactiveEffect>(reactiveEffects.Values);
     }
 
-    public TriggeredEffect GetTriggeredEffect(string effectId) {
-        if (triggeredEffects.TryGetValue(effectId, out var effect)) {
+    public ReactiveEffect GetTriggeredEffect(string effectId) {
+        if (reactiveEffects.TryGetValue(effectId, out var effect)) {
+            return effect;
+        }
+        return null;
+    }
+
+    public ActionEffect GetActionEffectById(string effectId) {
+        if (actionEffects.TryGetValue(effectId, out var effect)) {
             return effect;
         }
         return null;
@@ -138,11 +146,16 @@ public class EffectRegistry {
             Register(effect);
         }
 
-        foreach (var effect in experimentData.TriggeredEffects) {
-            triggeredEffects[effect.Id] = effect;
+        foreach (var effect in experimentData.ReactiveEffects) {
+            reactiveEffects[effect.Id] = effect;
         }
-        logger.Log($"Effects: {string.Join(", ", _effects)}");
-        logger.Log($"Triggered Effects: {string.Join(", ", triggeredEffects.Keys)}");
+        foreach (var effect in experimentData.ActionEffects) {
+            actionEffects[effect.Id] = effect;
+        }
+        logger.Log($"Instant Effects: {string.Join(", ", _effects.FindAll(e=>!e.IsContinuous))}");
+        logger.Log($"Continuous Effects: {string.Join(", ", _effects.FindAll(e=>e.IsContinuous))}");
+        logger.Log($"Reactive Effects: {string.Join(", ", reactiveEffects.Keys)}");
+        logger.Log($"Action Effects: {string.Join(", ", actionEffects.Keys)}");
 
     }
 }

@@ -4,8 +4,13 @@ using System;
 using System.Collections;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
-using static Interaction;
+
+enum ExperimentState {
+    NotStarted,
+    Running,
+    Finished,
+    InternalError
+}
 
 public class ExperimentManager : MonoBehaviour {
     [SerializeField] private GameObject label;
@@ -18,7 +23,7 @@ public class ExperimentManager : MonoBehaviour {
 
     private ExperimentRuntime runtime;
     private ExperimentHudPresenter hudPresenter;
-
+    private ExperimentState currentState = ExperimentState.NotStarted;
     public bool IsExperimentRunning => runtime != null && runtime.IsRunning;
     public InteractionSystem InteractionSystem;
     private EffectSystem EffectSystem;
@@ -28,6 +33,14 @@ public class ExperimentManager : MonoBehaviour {
     private DerivedPropertySystem DerivedPropertySystem;
     private BackgroundProcessSystem BackgroundProcessSystem;
     private StepManager StepManager;
+
+    private void OnDestroy() {
+        if (Instance == this) {
+            Instance = null;
+        }
+    }
+
+
 
     private void Awake() {
         Instance = this;
@@ -67,14 +80,14 @@ public class ExperimentManager : MonoBehaviour {
     private void Start() {
         ExperimentHudPresenter.New(HUDController.Instance);
         hudPresenter = ExperimentHudPresenter.Instance;
-        hudPresenter.Bind(runtime);
+        hudPresenter.Bind(runtime, StepManager);
         var inputPanelController = InputPanelController.Instance;
         inputPanelController.Bind(EffectSystem);
         StartCoroutine(BootstrapAndStart());
     }
 
     private void Update() {
-        if (IsExperimentRunning) {
+        if (IsExperimentRunning && currentState == ExperimentState.Running) {
             runtime?.Tick(DateTime.Now);
             InteractionSystem?.Update();
             EffectSystem?.Update(InteractionSystem.GetActiveInteractions());
@@ -93,6 +106,7 @@ public class ExperimentManager : MonoBehaviour {
 
         runtime.Start(experimentDefinition);
         StepManager.Start();
+        currentState = ExperimentState.Running;
     }
 
     private IEnumerator BootstrapAndStart() {
@@ -114,6 +128,12 @@ public class ExperimentManager : MonoBehaviour {
     private void OnRuntimeFinished(int score, double timeTakenSeconds) {
         CurrentExperiment = null;
         Debug.Log($"Experiment ended. Final score: {score}");
-        StartCoroutine(apiClient.SendDataToServer(SessionData.Current, score, timeTakenSeconds));
+        currentState = ExperimentState.Finished;
+        StartCoroutine(apiClient.SendDataToServer(SessionData.Current, score, timeTakenSeconds, onSuccess: () => {
+            Debug.Log("Result data sent successfully.");
+        }, onError: error => {
+            Debug.LogError($"Error sending result data: {error}");
+            currentState = ExperimentState.InternalError;
+        }));
     }
 }

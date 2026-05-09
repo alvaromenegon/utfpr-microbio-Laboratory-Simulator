@@ -24,7 +24,15 @@ public class BackgroundProcessSystem  {
     }
 
     private void StartProcess(BackgroundProcess process) {
+        logger.Log($"Attempting to start background process: {process}");
         activeProcesses.Add(new BackgroundProcessInstance { ProcessId = process.Id, ElapsedTime = 0, IsActive = true });
+        if (!string.IsNullOrEmpty(process.OnStartEffectId)) {
+            logger.Log($"Applying start effect for background process: {process.Id}");
+            var startEffect = effectRegistry.GetActionEffectById(process.OnStartEffectId);
+            effectSystem.ApplyActionEffect(startEffect);
+        } else {
+            logger.Log($"No start effect defined for background process: {process.Id}");
+        }
         logger.Log($"Started background process: {process.Id}");
     }
 
@@ -39,12 +47,12 @@ public class BackgroundProcessSystem  {
     private void CompleteProcess(BackgroundProcessInstance instance, BackgroundProcess process) {
         activeProcesses.Remove(instance);
         if (ConditionEvaluator.Check(process.SuccessConditions)) {
-            var effect = effectRegistry.GetTriggeredEffect(process.OnSuccessEffectId);
-            effectSystem.ApplyTriggeredEffect(effect);
+            var effect = effectRegistry.GetActionEffectById(process.OnSuccessEffectId);
+            effectSystem.ApplyActionEffect(effect);
             logger.Log($"Completed background process successfully: {process.Id}");
         } else {
-            var effect = effectRegistry.GetTriggeredEffect(process.OnFailureEffectId);
-            effectSystem.ApplyTriggeredEffect(effect);
+            var effect = effectRegistry.GetActionEffectById(process.OnFailureEffectId);
+            effectSystem.ApplyActionEffect(effect);
             logger.Log($"Completed background process with failure: {process.Id}");
         }
 
@@ -56,6 +64,9 @@ public class BackgroundProcessSystem  {
     }
 
     private bool ShouldCancelProcess(BackgroundProcess process) {
+        if (process.CancelConditions == null || process.CancelConditions.Count == 0) {
+            return false;
+        }
         return ConditionEvaluator.Check(process.CancelConditions);
     }
 
@@ -73,9 +84,6 @@ public class BackgroundProcessSystem  {
         }
 
     }
-
-
-
 
     public void Update() {
         float deltaTime = Time.deltaTime;

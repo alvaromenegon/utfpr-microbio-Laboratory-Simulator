@@ -8,6 +8,7 @@ public class ExperimentDataDto {
     public string Description { get; set; }
     public int Time { get; set; }
     public EffectDefinitionDto[] Effects { get; set; }
-    public TriggeredEffectDto[] TriggeredEffects { get; set; }
+    public ReactiveEffectDto[] ReactiveEffects { get; set; }
+    public ActionEffectDto[] ActionEffects { get; set; }
     public DerivedPropertyDto[] DerivedProperties { get; set; }
 }

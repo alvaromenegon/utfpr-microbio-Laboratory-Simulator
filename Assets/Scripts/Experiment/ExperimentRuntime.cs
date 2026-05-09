@@ -11,7 +11,6 @@ public class ExperimentRuntime {
 
     private readonly List<BackgroundProcess> backgroundProcesses = new();
 
-    public event Action<Step, int, int> OnStepChanged;
     public event Action<string> OnFeedback;
     public event Action<int, double> OnExperimentFinished;
     public event Action<double, double> OnTimerUpdated;
