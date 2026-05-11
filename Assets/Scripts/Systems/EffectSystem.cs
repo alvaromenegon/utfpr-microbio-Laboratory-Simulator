@@ -1,4 +1,5 @@
 using Assets.Scripts;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,7 +7,7 @@ public class EffectSystem {
     private ExperimentObjectRegistry registry;
     private EffectRegistry effectRegistry;
     private readonly LoggerService logger = new ("EffectSystem");
-    private readonly HashSet<string> executedTriggeredEffectsId; // armazena os IDs dos TriggeredEffects j· executados para evitar execuÁıes repetidas
+    private readonly HashSet<string> executedTriggeredEffectsId; // armazena os IDs dos TriggeredEffects j√° executados para evitar execu√ß√µes repetidas
 
     public EffectSystem(EffectRegistry effectRegistry) {
         this.effectRegistry = effectRegistry;
@@ -42,7 +43,7 @@ public class EffectSystem {
     private bool CheckRegistry() {
         if (registry == null) {
             logger.Warning("ExperimentObjectRegistry instance is null. Attempting to rebuild index.");
-            // tenta pegar novamente a inst‚ncia do registry
+            // tenta pegar novamente a inst√¢ncia do registry
             registry = ExperimentObjectRegistry.Instance;
             if (registry == null) {
                 logger.Error("ExperimentObjectRegistry instance is still null after attempting to rebuild index.");
@@ -52,7 +53,7 @@ public class EffectSystem {
         return true;
     }
 
-    /* aplicaÁ„o de efeitos */
+    /* aplica√ß√£o de efeitos */
 
     private void ApplyContinuousEffect(EffectDefinition effect, InteractionContext ctx, float deltatime) {
         if (effect == null) { return; }
@@ -96,7 +97,7 @@ public class EffectSystem {
             foreach (var operation in effect.Operations) {
                 //logger.Log("Applying operation on target: " + operation.TargetObject + " for property: " + operation.Property + " with value: " + operation.Value);
                 ExperimentHudPresenter.Instance.HandleFeedback($"Applying operation on target: {operation.TargetObject} for property: {operation.Property} with value: {operation.Value}");
-                registry.TryGetObject(operation.TargetObject, out var targetObj);
+                TryResolveObjectTarget(operation, null, out var targetObj);
                 if (targetObj == null) {
                     logger.Error($"Object with identifier {operation.TargetObject} not found in registry.");
                     continue;
@@ -117,7 +118,7 @@ public class EffectSystem {
             return;
         }
         foreach (var operation in effect.Operations) {
-            registry.TryGetObject(operation.TargetObject, out var targetObj);
+            TryResolveObjectTarget(operation, null, out var targetObj);
             if (targetObj == null) {
                 logger.Error($"Object with identifier {operation.TargetObject} not found in registry.");
                 continue;
@@ -139,19 +140,30 @@ public class EffectSystem {
         obj.SetProperty(action.Property, action.Value);
     }
 
+    private bool TryResolveObjectTarget(EffectOperation operation, InteractionContext ctx, out LaboratoryObject obj) {
+        obj = null;
+        if (!string.IsNullOrWhiteSpace(operation.TargetInstanceId)) {
+            return registry.TryGetObjectInstance(operation.TargetInstanceId, out obj);
+        }
+        if (!string.IsNullOrWhiteSpace(operation.TargetObject)) {
+            return registry.TryGetObject(operation.TargetObject, out obj);
+        }
+        return false;
+    }
+
     private bool TryResolveTarget(EffectOperation operation, InteractionContext ctx, out LaboratoryObject obj) {
         obj = null;
         if (operation.TargetRole.HasValue) {
             return ctx.Roles.TryGetValue(operation.TargetRole.Value, out obj);
         }
-        return registry.TryGetObject(operation.TargetObject, out obj);
+        return TryResolveObjectTarget(operation, ctx, out obj);
     }
 
     private LaboratoryObject ResolveTarget(EffectOperation operation, InteractionContext ctx) {
         if (operation.TargetRole.HasValue) {
             return ctx.Roles[operation.TargetRole.Value];
         }
-        registry.TryGetObject(operation.TargetObject, out var obj);
+        TryResolveObjectTarget(operation, ctx, out var obj);
         return obj;
     }
 

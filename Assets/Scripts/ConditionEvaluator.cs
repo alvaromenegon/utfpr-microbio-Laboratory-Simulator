@@ -18,11 +18,19 @@ public class ConditionEvaluator {
         };
     }
 
+    private static bool TryResolveObject(When condition, out LaboratoryObject obj) {
+        obj = null;
+        if (!string.IsNullOrWhiteSpace(condition.InstanceId)) {
+            return experimentObjectRegistry.TryGetObjectInstance(condition.InstanceId, out obj);
+        }
+        return experimentObjectRegistry.TryGetObject(condition.Identifier, out obj);
+    }
+
     private static bool TryGetValue(When condition, out object value) {
         value = null;
         //Debug.Log($"Trying to get value for condition: {condition.Identifier}.{condition.Property}");
 
-        if (!experimentObjectRegistry.TryGetObject(condition.Identifier, out var obj)) {
+        if (!TryResolveObject(condition, out var obj)) {
             //Debug.LogWarning($"Object with identifier '{condition.Identifier}' not found.");
             return false;
         }
@@ -63,7 +71,7 @@ public class ConditionEvaluator {
             return false;
         }
 
-        // NUMÉRICOS
+        // NUMÃ‰RICOS
         if (IsNumeric(a) && IsNumeric(b)) {
             double da = Convert.ToDouble(a);
             double db = Convert.ToDouble(b);

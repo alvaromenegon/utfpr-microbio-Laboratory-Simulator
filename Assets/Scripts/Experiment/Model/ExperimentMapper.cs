@@ -89,6 +89,7 @@ public static class ExperimentMapper {
         }
         return new When {
             Identifier = dto.Identifier,
+            InstanceId = dto.InstanceId,
             Property = dto.Property,
             Value = dto.Value,
             Comparison = Enum.TryParse(dto.Comparison, out ComparisonType result) ? result : ComparisonType.EQUAL
@@ -101,6 +102,7 @@ public static class ExperimentMapper {
         }
         return new EffectOperation {
             TargetObject = dto.TargetObject,
+            TargetInstanceId = dto.TargetInstanceId,
             TargetRole = Enum.TryParse(dto.TargetRole, out RoleType result) ? result : (RoleType?)null,
             Property = dto.Property,
             Value = dto.Value

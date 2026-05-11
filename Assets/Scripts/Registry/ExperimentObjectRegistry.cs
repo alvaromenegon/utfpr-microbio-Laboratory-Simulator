@@ -33,8 +33,21 @@ public class ExperimentObjectRegistry : MonoBehaviour {
                 continue;
             }
 
-            if (objectsById.TryGetValue(identifier, out var existing)) {
-                Debug.LogError($"Duplicate LaboratoryObject identifier '{identifier}'. Objects: '{existing.gameObject.name}' and '{interactable.gameObject.name}'.");
+            if (!objectsByIdentifier.TryGetValue(identifier, out var sameIdentifierObjects)) {
+                sameIdentifierObjects = new List<LaboratoryObject>();
+                objectsByIdentifier.Add(identifier, sameIdentifierObjects);
+            }
+            sameIdentifierObjects.Add(interactable);
+
+            if (!string.IsNullOrWhiteSpace(interactable.InstanceId)) {
+                if (objectsByInstanceId.TryGetValue(interactable.InstanceId, out var instanceCollision)) {
+                    Debug.LogError($"Duplicate LaboratoryObject instance id '{interactable.InstanceId}'. Objects: '{instanceCollision.gameObject.name}' and '{interactable.gameObject.name}'.");
+                } else {
+                    objectsByInstanceId.Add(interactable.InstanceId, interactable);
+                }
+            }
+
+            if (objectsById.ContainsKey(identifier)) {
                 continue;
             }
 
@@ -43,7 +56,7 @@ public class ExperimentObjectRegistry : MonoBehaviour {
     }
 
     private bool IsNull(string identifier) {
-        return string.IsNullOrWhiteSpace(identifier) || !objectsById.ContainsKey(identifier);
+        return string.IsNullOrWhiteSpace(identifier);
     }
 
     public bool TryGetObject(string identifier, out LaboratoryObject interactable) {
@@ -51,7 +64,17 @@ public class ExperimentObjectRegistry : MonoBehaviour {
         if (IsNull(identifier)) {
             return false;
         }
-        return objectsById.TryGetValue(identifier, out interactable);
+        if (objectsById.TryGetValue(identifier, out interactable)) {
+            return true;
+        }
+
+        var byIdentifier = GetAllByIdentifier(identifier);
+        if (byIdentifier.Count > 0) {
+            interactable = byIdentifier[0];
+            return true;
+        }
+
+        return false;
     }
 
     public bool TryGetObjectInstance(string instanceId, out LaboratoryObject interactable) {

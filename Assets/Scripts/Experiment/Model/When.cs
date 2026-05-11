@@ -4,9 +4,10 @@ using System;
 [Serializable]
 public class When {
     public string Identifier;
-    public string Property; // a propriedade do objeto que ser· comparada, equivale a uma chave do Dictionary
-    public object Value; // o valor com o qual a propriedade ser· comparada
-    public ComparisonType Comparison; // o tipo de comparaÁ„o a ser realizada (igual, diferente, maior que, etc.)
+    public string InstanceId;
+        return $"When(Identifier: {Identifier}, InstanceId: {InstanceId}, Property: {Property}, Value: {Value}, Comparison: {Comparison})";
+    public object Value; // o valor com o qual a propriedade ser√° comparada
+    public ComparisonType Comparison; // o tipo de compara√ß√£o a ser realizada (igual, diferente, maior que, etc.)
 
     public override string ToString() {
         return $"When(Identifier: {Identifier}, Property: {Property}, Value: {Value}, Comparison: {Comparison})";
