@@ -20,14 +20,22 @@ public class ExperimentHudPresenter {
 
     public void Bind(ExperimentRuntime runtime, Assets.Scripts.StepManager stepManager) {
         runtime.OnTimerUpdated += HandleTimerUpdated;
-        runtime.OnFeedback += HandleFeedback;   
+        stepManager.OnScoreUpdated += score => hud.UpdateScore(score);
+        runtime.OnExperimentFinished += (finalScore, elapsedSeconds) => {
+            hud.UpdateInfo($"Experimento finalizado! Pontuação: {finalScore}, Tempo: {elapsedSeconds:F0} s");
+        };
         stepManager.OnStepChanged += HandleStepChanged;
+        stepManager.OnFeedback += HandleFeedback;
     }
 
     public void Unbind(ExperimentRuntime runtime, Assets.Scripts.StepManager stepManager) {
         runtime.OnTimerUpdated -= HandleTimerUpdated;
-        runtime.OnFeedback -= HandleFeedback;
+        stepManager.OnFeedback -= HandleFeedback;
         stepManager.OnStepChanged -= HandleStepChanged;
+        stepManager.OnScoreUpdated -= score => hud.UpdateScore(score);
+            runtime.OnExperimentFinished -= (finalScore, elapsedSeconds) => {
+                hud.UpdateInfo($"Experimento finalizado! Pontuação: {finalScore}, Tempo: {elapsedSeconds:F0} s");
+            };
     }
 
     public void UpdateUserInfo(string username, string userPhotoUrl) {

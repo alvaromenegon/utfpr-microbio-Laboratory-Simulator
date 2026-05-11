@@ -6,6 +6,8 @@ namespace Assets.Scripts {
         private ExperimentRuntime experimentRuntime;
         private Step currentStep = null;
         public event Action<Step, int, int> OnStepChanged;
+        public event Action<int> OnScoreUpdated;
+        public event Action<string> OnFeedback;
 
         public StepManager(ExperimentRuntime experimentRuntime) {
             this.experimentRuntime = experimentRuntime;
@@ -13,12 +15,14 @@ namespace Assets.Scripts {
 
         private void AddScore(int score) {
             experimentRuntime.AddScore(score);
+            OnScoreUpdated?.Invoke(experimentRuntime.Score);
         }
 
         private void CompleteStepSuccess() {
             AddScore(currentStep.Score);
             Debug.Log($"Step '{currentStep.Description}' completed successfully. Added {currentStep.Score} points.");
             Debug.Log(currentStep.OnSuccessMessage);
+            OnFeedback?.Invoke(currentStep.OnSuccessMessage);
             HandleStepAction(currentStep.ActionOnSuccess);
 
         }
@@ -51,10 +55,12 @@ namespace Assets.Scripts {
 
         private void RestartExperiment() {
             currentStep = experimentRuntime.Definition.experimentData.Steps[0];
+            OnStepChanged?.Invoke(currentStep, experimentRuntime.Score, 0);
         }
 
         private void GoToStep(int stepIndex) {
             currentStep = experimentRuntime.Definition.experimentData.Steps[stepIndex];
+            OnStepChanged?.Invoke(currentStep, experimentRuntime.Score, 0);
         }
 
         private void CompleteExperiment(bool withSuccess = true) {
@@ -69,6 +75,7 @@ namespace Assets.Scripts {
                 int currentIndex = experimentRuntime.Definition.experimentData.Steps.IndexOf(currentStep);
                 if (currentIndex < experimentRuntime.Definition.experimentData.Steps.Count - 1) {
                     currentStep = experimentRuntime.Definition.experimentData.Steps[currentIndex + 1];
+                    OnStepChanged?.Invoke(currentStep, experimentRuntime.Score, currentIndex + 1);
                 } else {
                     // No more steps, experiment finished
                     currentStep = null;
@@ -78,6 +85,7 @@ namespace Assets.Scripts {
 
         public void Start() {
             currentStep = experimentRuntime.Definition.experimentData.Steps[0];
+            OnStepChanged?.Invoke(currentStep, experimentRuntime.Score, 0);
         }
 
         public void Update() {

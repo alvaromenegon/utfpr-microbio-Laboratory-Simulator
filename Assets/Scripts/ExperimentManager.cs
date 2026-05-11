@@ -40,8 +40,6 @@ public class ExperimentManager : MonoBehaviour {
         }
     }
 
-
-
     private void Awake() {
         Instance = this;
 
