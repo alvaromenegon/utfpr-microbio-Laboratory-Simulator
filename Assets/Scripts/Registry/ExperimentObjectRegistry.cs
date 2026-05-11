@@ -6,11 +6,11 @@ using UnityEngine;
 
 public class ExperimentObjectRegistry : MonoBehaviour {
     private readonly Dictionary<string, LaboratoryObject> objectsById = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, List<LaboratoryObject>> objectsByIdentifier = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, LaboratoryObject> objectsByInstanceId = new(StringComparer.Ordinal);
+  
     public static ExperimentObjectRegistry Instance { get; private set; }
 
-    private void Start() {
-        RebuildIndex();
-    }
 
     private void Awake() {
         if (Instance != null && Instance != this) {
@@ -22,6 +22,8 @@ public class ExperimentObjectRegistry : MonoBehaviour {
 
     public void RebuildIndex() {
         objectsById.Clear();
+        objectsByIdentifier.Clear();
+        objectsByInstanceId.Clear();
         LaboratoryObject[] interactables = FindObjectsByType<LaboratoryObject>(FindObjectsSortMode.None);
 
         foreach (var interactable in interactables) {
@@ -44,16 +46,6 @@ public class ExperimentObjectRegistry : MonoBehaviour {
         return string.IsNullOrWhiteSpace(identifier) || !objectsById.ContainsKey(identifier);
     }
 
-    [Obsolete("Use TryGetObject instead.")]
-    public bool TryGetInteractable(string identifier, out LaboratoryObject interactable) {
-        interactable = null;
-        if (IsNull(identifier)) {
-            return false;
-        }
-
-        return objectsById.TryGetValue(identifier, out interactable);
-    }
-
     public bool TryGetObject(string identifier, out LaboratoryObject interactable) {
         interactable = null;
         if (IsNull(identifier)) {
@@ -62,28 +54,19 @@ public class ExperimentObjectRegistry : MonoBehaviour {
         return objectsById.TryGetValue(identifier, out interactable);
     }
 
-    public LaboratoryObject ResolveTargetFromContext(InteractionContext context) {
-        if (context == null) {
-            Debug.LogError("InteractionContext is null.");
-            return null;
+    public bool TryGetObjectInstance(string instanceId, out LaboratoryObject interactable) {
+        interactable = null;
+        if (string.IsNullOrWhiteSpace(instanceId)) {
+            return false;
         }
-        var tags = context.Tags;
-        if (tags == null || tags.Count == 0) {
-            Debug.LogError("InteractionContext has no tags defined.");
-            return null;
-        }
-        foreach (var labObj in objectsById.Values) {
-            if (labObj.Tags != null && labObj.Tags.Count > 0) {
-                foreach (var tag in tags) {
-                    if (labObj.HasTag(tag)) {
-                        return labObj;
-                    }
-                }
-            }
-        }
-
-        return null;    
+        return objectsByInstanceId.TryGetValue(instanceId, out interactable);
     }
 
+    public List<LaboratoryObject> GetAllByIdentifier(string identifier) {
+        if (IsNull(identifier)) {
+            return new List<LaboratoryObject>();
+        }
+        return objectsByIdentifier.TryGetValue(identifier, out var list) ? list : new List<LaboratoryObject>(); 
+    }
 
 }
