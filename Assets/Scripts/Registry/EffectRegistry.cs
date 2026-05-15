@@ -24,7 +24,7 @@ struct InteractionEffectKey : IEquatable<InteractionEffectKey> {
         return HashCode.Combine(Type, Source, Target);
     }
 
-    public override string ToString() => $"(type={Type}, source={Source}, target={Target})";
+    public override readonly string ToString() => $"(type={Type}, source={Source}, target={Target})";
 }
 
 public class EffectRegistry {
@@ -96,7 +96,11 @@ public class EffectRegistry {
         if (value == "*")
             return true;
 
-        if (obj.Identifier == value)
+        // Try InstanceId first (for multi-instance support)
+        if (!string.IsNullOrWhiteSpace(obj.InstanceId) && obj.InstanceId == value)
+            return true;
+
+        if (obj.Identifier == value) // útil para objetos únicos na cena, como uma incubadora única
             return true;
 
         return obj.Tags != null && obj.Tags.Contains(value);

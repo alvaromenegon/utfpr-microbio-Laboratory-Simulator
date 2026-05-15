@@ -27,13 +27,26 @@ public static class ExperimentMapper {
         return new ExperimentData {
             Description = dto.Description,
             Time = dto.Time,
-            Objects = dto.Objects ?? Array.Empty<string>(),
+            Objects = dto.Objects?.Select(ToModel).ToList() ?? new List<ExperimentObject>(),
             Steps = dto.Steps?.Select(ToModel).ToList() ?? new List<Step>(),
             BackgroundProcesses = dto.BackgroundProcesses?.Select(ToModel).ToList() ?? new List<BackgroundProcess>(),
             Effects = dto.Effects?.Select(ToModel).ToList() ?? new List<EffectDefinition>(),
             ReactiveEffects = dto.ReactiveEffects?.Select(ToModel).ToList() ?? new List<ReactiveEffect>(),
             ActionEffects = dto.ActionEffects?.Select(ToModel).ToList() ?? new List<ActionEffect>(),
             DerivedProperties = dto.DerivedProperties?.Select(ToModel).ToList() ?? new List<DerivedProperty>()
+        };
+    }
+
+    public static ExperimentObject ToModel(ExperimentObjectDto dto) {
+        if (dto == null) {
+            return null;
+        }
+        return new ExperimentObject {
+            Identifier = dto.Identifier,
+            Instances = dto.Instances?.Select(i => new InstanceObject {
+                InstanceId = i.InstanceId,
+                SpawnLocation = i.SpawnLocation
+            }).ToList() ?? new List<InstanceObject>()
         };
     }
 

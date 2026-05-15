@@ -19,7 +19,7 @@ public class EffectSystem {
         var effects = effectRegistry.GetEffects(request.Context);
         effects = effects.FindAll(e => !e.IsContinuous);
         foreach (var effect in effects) {
-            if (ConditionEvaluator.Check(effect.Conditions)) {
+            if (ConditionEvaluator.Check(effect.Conditions, request.Context)) {
                 ApplyInstantEffect(effect, request.Context);
             }           
         }

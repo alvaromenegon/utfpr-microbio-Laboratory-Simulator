@@ -1,7 +1,6 @@
 using System.Collections;
 using TMPro;
 using UnityEngine;
-using static Interaction;
 
 public class InputPanelController : MonoBehaviour {
     public static InputPanelController Instance;

@@ -69,10 +69,42 @@ public class ExperimentManager : MonoBehaviour {
 
         StepManager = new StepManager(runtime);
         runtime.OnExperimentFinished += OnRuntimeFinished;
+        ExperimentObjectRegistry.Instance.WillRebuildIndex += () => PrefabRegistry.GetInstance().ClearRegistry(); // limpar o PrefabRegistry antes de reconstruir o índice para evitar referências a objetos antigos que podem não existir mais
     }
 
     public EffectRegistry GetEffectRegistry() { // Interaction Resolver precisa acessar o EffectRegistry
         return effectRegistry;
+    }
+
+    private void SetupExperimentObjects(ExperimentDefinition experimentDefinition) {
+        if (experimentDefinition?.experimentData?.Objects == null || experimentDefinition.experimentData.Objects.Count == 0) {
+            Debug.Log("[ExperimentManager] No objects defined in ExperimentData.");
+            return;
+        }
+
+        ExperimentObjectRegistry.Instance.RebuildIndex();
+
+        foreach (var experimentObject in experimentDefinition.experimentData.Objects) {
+            if (experimentObject?.Instances == null || experimentObject.Instances.Count == 0) {
+                continue;
+            }
+
+            foreach (var instanceObject in experimentObject.Instances) {
+                if (string.IsNullOrWhiteSpace(instanceObject.InstanceId)) {
+                    Debug.LogWarning($"[ExperimentManager] Instance of object '{experimentObject.Identifier}' has no instanceId.");
+                    continue;
+                }
+
+                if (!ExperimentObjectRegistry.Instance.TryGetObject(experimentObject.Identifier, out var laboratoryObject)) {
+                    Debug.LogWarning($"[ExperimentManager] No LaboratoryObject found with identifier '{experimentObject.Identifier}' for instance '{instanceObject.InstanceId}'.");
+                    continue;
+                }
+
+                laboratoryObject.InstanceId = instanceObject.InstanceId;
+                ExperimentObjectRegistry.Instance.RegisterInstance(instanceObject.InstanceId, laboratoryObject);
+                Debug.Log($"[ExperimentManager] Registered instance '{instanceObject.InstanceId}' for object '{experimentObject.Identifier}'.");
+            }
+        }
     }
 
     private void Start() {
@@ -97,7 +129,7 @@ public class ExperimentManager : MonoBehaviour {
 
     public void StartExperiment(ExperimentDefinition experimentDefinition) {
         CurrentExperiment = experimentDefinition;
-        //SetupExperimentObjects(experimentDefinition);
+        SetupExperimentObjects(experimentDefinition);
         effectRegistry.SetupRegistry(experimentDefinition.experimentData);
         BackgroundProcessRegistry.SetupRegistry(experimentDefinition.experimentData.BackgroundProcesses);
         DerivedPropertyRegistry.SetupRegistry(experimentDefinition.experimentData.DerivedProperties);
