@@ -3,12 +3,16 @@ using System.Collections.Generic;
 
 [Serializable]
 public class ExperimentObjectDto {
-    public string Identifier { get; set; }
-    public List<InstanceObjectDto> Instances { get; set; }
+    public string CanonicalIdentifier { get; set; }
+    public string InstanceId { get; set; }
+    public string[] Tags { get; set; }
+    public ObjectBindingDto Binding { get; set; }
+    public Dictionary<string, object> InitialProperties { get; set; } = new Dictionary<string, object>();
 }
 
 [Serializable]
-public class InstanceObjectDto {
-    public string InstanceId { get; set; }
-    public string SpawnLocation { get; set; }
+public class ObjectBindingDto {
+    public string Type;
+    public string SceneObjectId;
+    public string SpawnLocation;
 }

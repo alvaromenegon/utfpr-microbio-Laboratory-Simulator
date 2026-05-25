@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Assets.Scripts;
+using UnityEngine;
 
 public static class ExperimentMapper {
     public static ExperimentDefinition ToModel(ExperimentDefinitionDto dto) {
@@ -27,7 +28,7 @@ public static class ExperimentMapper {
         return new ExperimentData {
             Description = dto.Description,
             Time = dto.Time,
-            Objects = dto.Objects?.Select(ToModel).ToList() ?? new List<ExperimentObject>(),
+            Objects = dto.Objects?.Select(ToModel).ToList() ?? new List<ExperimentInstanceObject>(),
             Steps = dto.Steps?.Select(ToModel).ToList() ?? new List<Step>(),
             BackgroundProcesses = dto.BackgroundProcesses?.Select(ToModel).ToList() ?? new List<BackgroundProcess>(),
             Effects = dto.Effects?.Select(ToModel).ToList() ?? new List<EffectDefinition>(),
@@ -37,16 +38,28 @@ public static class ExperimentMapper {
         };
     }
 
-    public static ExperimentObject ToModel(ExperimentObjectDto dto) {
+    public static ExperimentInstanceObject ToModel(ExperimentObjectDto dto) {
         if (dto == null) {
             return null;
         }
-        return new ExperimentObject {
-            Identifier = dto.Identifier,
-            Instances = dto.Instances?.Select(i => new InstanceObject {
-                InstanceId = i.InstanceId,
-                SpawnLocation = i.SpawnLocation
-            }).ToList() ?? new List<InstanceObject>()
+        Debug.Log($"Mapping ExperimentObjectDto to ExperimentInstanceObject: {dto.CanonicalIdentifier}, {dto.InstanceId}, {dto.Binding}, Tags=[{string.Join(", ", dto.Tags ?? new string[0])}], InitialProperties=[{string.Join(", ", dto.InitialProperties ?? new Dictionary<string, object>())}]");
+        return new ExperimentInstanceObject {
+            CanonicalIdentifier = dto.CanonicalIdentifier,
+            InstanceId = dto.InstanceId,
+            Tags = dto.Tags?.ToList() ?? new List<string>(),
+            Binding = ToModel(dto.Binding),
+            InitialProperties = dto.InitialProperties ?? new Dictionary<string, object>()
+        };
+    }
+
+    public static ObjectBinding ToModel(ObjectBindingDto dto) {
+        if (dto == null) {
+            return null;
+        }
+        return new ObjectBinding {
+            Type = Enum.TryParse(dto.Type, out ObjectBindingType result) ? result : ObjectBindingType.SCENE,
+            SceneObjectId = dto.SceneObjectId,
+            SpawnLocation = dto.SpawnLocation
         };
     }
 
@@ -90,9 +103,10 @@ public static class ExperimentMapper {
             StartConditions = dto.StartConditions?.Select(ToModel).ToList() ?? new List<When>(),
             CancelConditions = dto.CancelConditions?.Select(ToModel).ToList() ?? new List<When>(),
             SuccessConditions = dto.SuccessConditions?.Select(ToModel).ToList() ?? new List<When>(),
-            OnStartEffectId = dto.OnStartEffectId,
-            OnSuccessEffectId = dto.OnSuccessEffectId,
-            OnFailureEffectId = dto.OnFailureEffectId
+            OnStartEffectIds = dto.OnStartEffectIds?.Select(id => id).ToList() ?? new List<string>(),
+            OnSuccessEffectIds = dto.OnSuccessEffectIds?.Select(id => id).ToList() ?? new List<string>(),
+            OnFailureEffectIds = dto.OnFailureEffectIds?.Select(id => id).ToList() ?? new List<string>(),
+            BoundObject = ToModel(dto.BoundObject)
         };
     }
 
@@ -101,10 +115,11 @@ public static class ExperimentMapper {
             return null;
         }
         return new When {
-            Identifier = dto.Identifier,
+            Target = ToModel(dto.Target),
             Property = dto.Property,
             Value = dto.Value,
-            Comparison = Enum.TryParse(dto.Comparison, out ComparisonType result) ? result : ComparisonType.EQUAL
+            Comparison = Enum.TryParse(dto.Comparison, out ComparisonType result) ? result : ComparisonType.EQUAL,
+            MatchMode = Enum.TryParse(dto.MatchMode, out QueryMatchMode matchResult) ? matchResult : QueryMatchMode.ALL
         };
     }
 
@@ -113,10 +128,12 @@ public static class ExperimentMapper {
             return null;
         }
         return new EffectOperation {
-            TargetObject = dto.TargetObject,
-            TargetRole = Enum.TryParse(dto.TargetRole, out RoleType result) ? result : (RoleType?)null,
+            Target = ToModel(dto.Target),
             Property = dto.Property,
-            Value = dto.Value
+            Value = dto.Value,
+            OperationType = Enum.TryParse(dto.OperationType, out EffectOperationType result) ? result : EffectOperationType.SET_PROPERTY,
+            ProcessId = dto.ProcessId
+
         };
     }
 
@@ -132,6 +149,22 @@ public static class ExperimentMapper {
         };
     }
 
+    public static ObjectReference ToModel(ObjectReferenceDto dto) {
+        if (dto == null) {
+            return null;
+        }
+        return new ObjectReference {
+            InstanceId = dto.InstanceId,
+            CanonicalIdentifier = dto.CanonicalIdentifier,
+            Role = Enum.TryParse(dto.Role, out RoleType result) ? result : (RoleType?)null,
+            RequiredTags = dto.RequiredTags?.ToList() ?? new List<string>(),
+            ExcludedTags = dto.ExcludedTags?.ToList() ?? new List<string>(),
+            RequiredZoneIds = dto.RequiredZoneIds?.ToList() ?? new List<string>(),
+            RequiredZoneTags = dto.RequiredZoneTags?.ToList() ?? new List<string>(),
+            ExcludedZoneTags = dto.ExcludedZoneTags?.ToList() ?? new List<string>()
+        };
+    }
+
     public static ReactiveEffect ToModel(ReactiveEffectDto dto) {
         if (dto == null) {
             return null;
@@ -139,7 +172,9 @@ public static class ExperimentMapper {
         return new ReactiveEffect {
             Id = dto.Id,
             Conditions = dto.Conditions?.Select(ToModel).ToList() ?? new List<When>(),
-            Operations = dto.Operations?.Select(ToModel).ToList() ?? new List<EffectOperation>()
+            Operations = dto.Operations?.Select(ToModel).ToList() ?? new List<EffectOperation>(),
+            ExecuteOncePerSubject = dto.ExecuteOncePerSubject,
+            Subject = ToModel(dto.Subject)
         };
     }
 

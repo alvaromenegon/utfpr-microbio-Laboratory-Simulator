@@ -8,11 +8,12 @@ public class BackgroundProcessDto {
     public WhenDto[] StartConditions { get; set; }
     public WhenDto[] CancelConditions { get; set; }
     public WhenDto[] SuccessConditions { get; set; }
+    public ObjectReferenceDto BoundObject { get; set; }
 
-    public string OnStartEffectId { get; set; }
+    public string[] OnStartEffectIds { get; set; }
 
-    public string OnSuccessEffectId { get; set; }
-    public string OnFailureEffectId { get; set; }
+    public string[] OnSuccessEffectIds { get; set; }
+    public string[] OnFailureEffectIds { get; set; }
 
     public int Duration { get; set; }
     public int? Tolerance { get; set; }

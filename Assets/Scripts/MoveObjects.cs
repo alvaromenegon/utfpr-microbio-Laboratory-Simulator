@@ -6,6 +6,8 @@ public class MoveObjects : MonoBehaviour, IMovable {
 	[SerializeField] private Transform guide;
 	[SerializeField] private LaboratoryObject laboratoryObject;
 
+	private LayerMask originalLayer;
+
     GameObject _tempParent;
 	Rigidbody _rigidbody;
     private bool _isMoving;
@@ -14,6 +16,10 @@ public class MoveObjects : MonoBehaviour, IMovable {
 	public void SetCanMove(bool canMove) {
 		_canMove = canMove;
     }
+
+	private void Awake() {
+		originalLayer = gameObject.layer;
+	}
 
     public bool IsMoving => _isMoving;
 
@@ -77,7 +83,7 @@ public class MoveObjects : MonoBehaviour, IMovable {
 
         ResetTempParent();
 		_isMoving = false;
-		gameObject.layer = LayerMask.NameToLayer("Movable");
+		gameObject.layer = originalLayer;
 
     }
 

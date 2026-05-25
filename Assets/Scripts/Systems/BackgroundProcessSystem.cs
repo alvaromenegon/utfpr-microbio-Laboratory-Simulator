@@ -4,9 +4,9 @@ using UnityEngine;
 
 class BackgroundProcessInstance {
     public string ProcessId;
-
+    public LaboratoryObject BoundObject;
     public float ElapsedTime;
-
+    public InteractionContext Context;
     public bool IsActive;
 }
 
@@ -21,77 +21,123 @@ public class BackgroundProcessSystem  {
         this.registry = registry;
         this.effectSystem = effectSystem;
         this.effectRegistry = effectRegistry;
-    }
-
-    private void StartProcess(BackgroundProcess process) {
-        logger.Log($"Attempting to start background process: {process}");
-        activeProcesses.Add(new BackgroundProcessInstance { ProcessId = process.Id, ElapsedTime = 0, IsActive = true });
-        if (!string.IsNullOrEmpty(process.OnStartEffectId)) {
-            logger.Log($"Applying start effect for background process: {process.Id}");
-            var startEffect = effectRegistry.GetActionEffectById(process.OnStartEffectId);
-            effectSystem.ApplyActionEffect(startEffect);
-        } else {
-            logger.Log($"No start effect defined for background process: {process.Id}");
-        }
-        logger.Log($"Started background process: {process.Id}");
-    }
-
-    private void CancelProcess(string processId) {
-        var process = activeProcesses.Find(p => p.ProcessId == processId);
-        if (process != null) {
-            activeProcesses.Remove(process);
-            logger.Log($"Canceled background process: {processId}");
-        }
-    }
+    }  
 
     private void CompleteProcess(BackgroundProcessInstance instance, BackgroundProcess process) {
-        activeProcesses.Remove(instance);
-        if (ConditionEvaluator.Check(process.SuccessConditions)) {
-            var effect = effectRegistry.GetActionEffectById(process.OnSuccessEffectId);
-            effectSystem.ApplyActionEffect(effect);
+        if (ConditionEvaluator.Check(process.SuccessConditions, instance.Context)) {
+            HandleEffects(process.OnSuccessEffectIds, instance.Context);
             logger.Log($"Completed background process successfully: {process.Id}");
         } else {
-            var effect = effectRegistry.GetActionEffectById(process.OnFailureEffectId);
-            effectSystem.ApplyActionEffect(effect);
+            HandleEffects(process.OnFailureEffectIds, instance.Context);
             logger.Log($"Completed background process with failure: {process.Id}");
+        }          
+    }
+
+    private void HandleEffects(List<string> effectIds, InteractionContext context) {
+        if (effectIds == null) return;
+        foreach (var effectId in effectIds) {
+            var effect = effectRegistry.GetActionEffectById(effectId);
+            if (effect != null) {
+                logger.Log($"Applying effect {effectId}");
+                effectSystem.ApplyActionEffect(effect, context);
+            } else {
+                logger.Log($"No effect found with ID: {effectId}");
+            }
         }
-
     }
 
-
-    private bool ShouldStartProcess(BackgroundProcess process) {
-        return ConditionEvaluator.Check(process.StartConditions);
-    }
-
-    private bool ShouldCancelProcess(BackgroundProcess process) {
-        if (process.CancelConditions == null || process.CancelConditions.Count == 0) {
+    private bool ShouldCancelProcess(List<When> cancelConditions, InteractionContext context) {
+        if (cancelConditions == null || cancelConditions.Count == 0) {
             return false;
         }
-        return ConditionEvaluator.Check(process.CancelConditions);
+        return ConditionEvaluator.Check(cancelConditions, context);
     }
 
     private void UpdateActiveProcesses(float deltaTime) {
-        foreach (var instance in activeProcesses) {
-            instance.ElapsedTime += deltaTime;
-            registry.TryGetProcess(instance.ProcessId, out var process);
-            if (ShouldCancelProcess(process)) {
-                CancelProcess(instance.ProcessId);
+        for (int i = activeProcesses.Count - 1; i >= 0; i--) { 
+            var instance = activeProcesses[i];
+            if (!registry.TryGetProcess(instance.ProcessId, out var process)) {
+                logger.Error($"Background process not found: {instance.ProcessId}");
+                activeProcesses.RemoveAt(i);
                 continue;
             }
+            if (ShouldCancelProcess(process.CancelConditions, instance.Context)) {
+                activeProcesses.RemoveAt(i);
+                logger.Log($"Canceled background process: {instance.ProcessId}");
+                continue;
+            }
+            instance.ElapsedTime += deltaTime;
             if (instance.ElapsedTime >= process.Duration) {
                 CompleteProcess(instance, process);
+                activeProcesses.RemoveAt(i);
             }
         }
 
     }
 
-    public void Update() {
-        float deltaTime = Time.deltaTime;
-        foreach (var processData in registry.GetAllProcesses()) {
-            if (ShouldStartProcess(processData) && !activeProcesses.Exists(p => p.ProcessId == processData.Id)) {
-                StartProcess(processData);
-            }
+    private InteractionContext CreateProcessContext( BackgroundProcess definition, InteractionContext originalContext,LaboratoryObject boundObject) {
+        var processContext = new InteractionContext();
+
+        foreach (var pair in originalContext.Roles)
+            processContext.Roles[pair.Key] = pair.Value;
+
+        processContext.Roles[RoleType.PROCESS_SUBJECT] = boundObject;
+
+        if (originalContext.Roles.TryGetValue(RoleType.TARGET, out var device))
+            processContext.Roles[RoleType.PROCESS_DEVICE] = device;
+
+        return processContext;
+    }
+
+    private bool IsAlreadyRunning(string processId, string instanceId) {
+        return activeProcesses.Exists(p => p.ProcessId == processId && p.BoundObject.InstanceId == instanceId);
+    }
+
+    public bool TryStartProcessById(string processId, InteractionContext context) {
+        if (!registry.TryGetProcess(processId, out var definition)) {
+            logger.Log($"No background process found with ID: {processId}");
+            return false;
         }
+        logger.Log($"Attempting to start background process: {definition} with context: {context}");
+
+        if (!ConditionEvaluator.Check(definition.StartConditions, context))
+            return false;
+        logger.Log($"Background process {processId} with BoundObject {definition.BoundObject} start conditions met.");
+        var objectResolver = new ObjectResolver(definition.BoundObject, context);
+        var boundObjects = objectResolver.Resolve();
+
+        if (boundObjects.Count == 0)
+            return false;
+
+        var boundObject = boundObjects[0];
+
+        if (IsAlreadyRunning(processId, boundObject.InstanceId))
+            return false;
+        Debug.Log($"Original TOOL: {context.Roles.GetValueOrDefault(RoleType.TOOL)?.InstanceId}");
+        Debug.Log($"Original TARGET: {context.Roles.GetValueOrDefault(RoleType.TARGET)?.InstanceId}");
+        var instance = new BackgroundProcessInstance {
+            ProcessId = processId,
+            BoundObject = boundObject,
+            Context = CreateProcessContext(definition, context, boundObject),
+            ElapsedTime = 0f,
+            IsActive = true
+        };
+        foreach (var role in instance.Context.Roles) {
+            Debug.Log($"ProcessContext role {role.Key}: {role.Value.InstanceId}");
+        }
+
+        activeProcesses.Add(instance);
+
+        foreach (var effectId in definition.OnStartEffectIds) {
+            var effect = effectRegistry.GetActionEffectById(effectId);
+            effectSystem.ApplyActionEffect(effect, instance.Context);
+        }
+
+        return true;
+    }
+
+    public void Update() {
+        float deltaTime = Time.deltaTime;    
 
         UpdateActiveProcesses(deltaTime);
     }

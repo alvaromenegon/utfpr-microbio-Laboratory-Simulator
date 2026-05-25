@@ -7,7 +7,7 @@ public class DerivedPropertySystem {
 
     public DerivedPropertySystem(DerivedPropertyRegistry propertyRegistry) {
         this.propertyRegistry = propertyRegistry;
-        registry = ExperimentObjectRegistry.Instance;
+        registry = ExperimentObjectRegistry.GetInstance();
     }
 
     public void Update() {

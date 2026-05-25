@@ -116,8 +116,10 @@ class InputFacade : MonoBehaviour {
         return Physics.Raycast(ray, out hit, interactionRange, interactionLayer);
     }
 
-    private void UpdateHoveredObject(LaboratoryObject nextObject) { 
+    private void UpdateHoveredObject(LaboratoryObject nextObject) {         
         if (_currentHoveredInteractable != nextObject) {
+            HoverEntered += (obj) => obj.OnHover();
+            HoverExited += (obj) => obj.OnExitHover();
             if (_currentHoveredInteractable != null) {
                 HoverExited?.Invoke(_currentHoveredInteractable);
             }
@@ -125,6 +127,8 @@ class InputFacade : MonoBehaviour {
             if (_currentHoveredInteractable != null) {
                 HoverEntered?.Invoke(_currentHoveredInteractable);
             }
+            HoverEntered = null;
+            HoverExited = null;
         }
     }
 

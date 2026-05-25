@@ -34,7 +34,7 @@ public class EffectRegistry {
     private List<EffectDefinition> _effects = new();
     
 
-    public List<ReactiveEffect> GetAllTriggeredEffects() { // retorna todos os efeitos acionados, sem filtro
+    public List<ReactiveEffect> GetAllReactiveEffects() { // retorna todos os efeitos acionados, sem filtro
         return new List<ReactiveEffect>(reactiveEffects.Values);
     }
 
@@ -158,8 +158,8 @@ public class EffectRegistry {
         }
         logger.Log($"Instant Effects: {string.Join(", ", _effects.FindAll(e=>!e.IsContinuous))}");
         logger.Log($"Continuous Effects: {string.Join(", ", _effects.FindAll(e=>e.IsContinuous))}");
-        logger.Log($"Reactive Effects: {string.Join(", ", reactiveEffects.Keys)}");
-        logger.Log($"Action Effects: {string.Join(", ", actionEffects.Keys)}");
+        logger.Log($"Reactive Effects: {string.Join("|| ", reactiveEffects.Values)}");
+        logger.Log($"Action Effects: {string.Join("|| ", actionEffects.Values)}");
 
     }
 }

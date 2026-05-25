@@ -21,7 +21,10 @@ class InteractionResolver {
             var effects = _effectRegistry.GetValidEffects(baseContext);
             foreach (var effect in effects) {
                 Debug.Log($"Checking effect: {effect.Type} - Conditions: [{string.Join(", ", effect.Conditions)}]");
-                if (!ConditionEvaluator.Check(effect.Conditions)) continue;
+                if (!ConditionEvaluator.Check(effect.Conditions, baseContext)) {
+                    Debug.Log($"Effect {effect.Type} conditions ({string.Join(", ", effect.Conditions)}) not met");
+                    continue;
+                }
                 Debug.Log($"Effect {effect.Type} is valid");
                 return effect.Type;
             }
@@ -35,6 +38,9 @@ class InteractionResolver {
             return null;
 
         var ctx = new InteractionContext();
+        Debug.Log($"Building context with hovered: {_hovered?.Identifier}, held: {_held?.GetLaboratoryObject()?.Identifier}");
+        Debug.Log($"Hovered properties = [{string.Join(", ", _hovered?.GetAllProperties() ?? new Dictionary<string, object>())}]");
+        Debug.Log($"Held properties = [{string.Join(", ", _held?.GetLaboratoryObject()?.GetAllProperties() ?? new Dictionary<string, object>())}]");
 
         var heldObj = _held?.GetLaboratoryObject();
 
@@ -93,7 +99,7 @@ class InteractionResolver {
             Debug.Log("Actor has both TOOL and TARGET roles, yielding USE");
             yield return InteractionType.USE;
         }
-        Debug.Log($"{actor.Identifier} tags = [{string.Join(", ", actor.Tags)}]");
+        Debug.Log($"{actor.Identifier} ({actor.InstanceId}) tags = [{string.Join(", ", actor.Tags)}]");
 
         if (actor.HasTag("toggleable")) {
             yield return InteractionType.ACTIVATE;

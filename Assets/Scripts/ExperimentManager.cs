@@ -2,6 +2,7 @@
 using Assets.Scripts.Registry;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
@@ -25,6 +26,7 @@ public class ExperimentManager : MonoBehaviour {
     private ExperimentHudPresenter hudPresenter;
     private ExperimentState currentState = ExperimentState.NotStarted;
     public bool IsExperimentRunning => runtime != null && runtime.IsRunning;
+    private ExperimentObjectRegistry experimentObjectRegistry;
     public InteractionSystem InteractionSystem;
     private EffectSystem EffectSystem;
     private EffectRegistry effectRegistry;
@@ -56,6 +58,7 @@ public class ExperimentManager : MonoBehaviour {
             apiClient = gameObject.AddComponent<ExperimentApiClient>();
         }
         runtime = new ExperimentRuntime();
+        experimentObjectRegistry = ExperimentObjectRegistry.GetInstance();
         PropertyCatalog.Initialize();
         BackgroundProcessRegistry = new BackgroundProcessRegistry();
         DerivedPropertyRegistry = new DerivedPropertyRegistry();
@@ -66,45 +69,15 @@ public class ExperimentManager : MonoBehaviour {
         InteractionSystem.OnValueRequired += request => InputPanelController.Instance.Show(request);
         
         BackgroundProcessSystem = new BackgroundProcessSystem(BackgroundProcessRegistry, EffectSystem, effectRegistry);
+        EffectSystem.BindBackgroundProcessSystem(BackgroundProcessSystem);
 
         StepManager = new StepManager(runtime);
         runtime.OnExperimentFinished += OnRuntimeFinished;
-        ExperimentObjectRegistry.Instance.WillRebuildIndex += () => PrefabRegistry.GetInstance().ClearRegistry(); // limpar o PrefabRegistry antes de reconstruir o índice para evitar referências a objetos antigos que podem não existir mais
+        //experimentObjectRegistry.WillRebuildIndex += () => PrefabRegistry.GetInstance().ClearRegistry(); // limpar o PrefabRegistry antes de reconstruir o índice para evitar referências a objetos antigos que podem não existir mais
     }
 
     public EffectRegistry GetEffectRegistry() { // Interaction Resolver precisa acessar o EffectRegistry
         return effectRegistry;
-    }
-
-    private void SetupExperimentObjects(ExperimentDefinition experimentDefinition) {
-        if (experimentDefinition?.experimentData?.Objects == null || experimentDefinition.experimentData.Objects.Count == 0) {
-            Debug.Log("[ExperimentManager] No objects defined in ExperimentData.");
-            return;
-        }
-
-        ExperimentObjectRegistry.Instance.RebuildIndex();
-
-        foreach (var experimentObject in experimentDefinition.experimentData.Objects) {
-            if (experimentObject?.Instances == null || experimentObject.Instances.Count == 0) {
-                continue;
-            }
-
-            foreach (var instanceObject in experimentObject.Instances) {
-                if (string.IsNullOrWhiteSpace(instanceObject.InstanceId)) {
-                    Debug.LogWarning($"[ExperimentManager] Instance of object '{experimentObject.Identifier}' has no instanceId.");
-                    continue;
-                }
-
-                if (!ExperimentObjectRegistry.Instance.TryGetObject(experimentObject.Identifier, out var laboratoryObject)) {
-                    Debug.LogWarning($"[ExperimentManager] No LaboratoryObject found with identifier '{experimentObject.Identifier}' for instance '{instanceObject.InstanceId}'.");
-                    continue;
-                }
-
-                laboratoryObject.InstanceId = instanceObject.InstanceId;
-                ExperimentObjectRegistry.Instance.RegisterInstance(instanceObject.InstanceId, laboratoryObject);
-                Debug.Log($"[ExperimentManager] Registered instance '{instanceObject.InstanceId}' for object '{experimentObject.Identifier}'.");
-            }
-        }
     }
 
     private void Start() {
@@ -129,14 +102,92 @@ public class ExperimentManager : MonoBehaviour {
 
     public void StartExperiment(ExperimentDefinition experimentDefinition) {
         CurrentExperiment = experimentDefinition;
-        SetupExperimentObjects(experimentDefinition);
+        //experimentObjectRegistry.SetupRegistry(experimentDefinition.experimentData.Objects);
         effectRegistry.SetupRegistry(experimentDefinition.experimentData);
         BackgroundProcessRegistry.SetupRegistry(experimentDefinition.experimentData.BackgroundProcesses);
         DerivedPropertyRegistry.SetupRegistry(experimentDefinition.experimentData.DerivedProperties);
+        SetupScene(experimentDefinition.experimentData.Objects);
 
         runtime.Start(experimentDefinition);
         StepManager.Start();
         currentState = ExperimentState.Running;
+    }
+
+    private void SetupScene(List<ExperimentInstanceObject> objectsDefinition) {
+        foreach (var def in objectsDefinition) {
+            LaboratoryObject obj = def.Binding.Type switch {
+                ObjectBindingType.SCENE => BindSceneObject(def),
+                ObjectBindingType.SPAWN => SpawnRuntimeObject(def),
+                _ => null
+            };
+
+            if (obj == null) {
+                Debug.LogError($"Failed to load object {def.InstanceId}");
+                continue;
+            }
+
+            ConfigureObject(obj, def);
+            ExperimentObjectRegistry.GetInstance().Register(obj);
+        }
+    }
+
+    private LaboratoryObject BindSceneObject(ExperimentInstanceObject def) {
+        if (!SceneObjectRegistry.GetInstance().TryGet(def.Binding.SceneObjectId, out var obj)) {
+            Debug.LogError($"Scene object not found: {def.Binding.SceneObjectId}");
+            return null;
+        }
+
+        return obj;
+    }
+
+    private LaboratoryObject SpawnRuntimeObject(ExperimentInstanceObject def) {
+        var prefab = PrefabRegistry.GetInstance().GetPrefab(def.CanonicalIdentifier);
+
+
+        if (!SpawnLocationRegistry.GetInstance().TryResolve(def.Binding.SpawnLocation, out var spawn)) {
+            Debug.LogError($"Spawn point not found: {def.Binding.SpawnLocation}");
+            return null;
+        }
+
+        var instance = Instantiate(prefab, spawn.position, spawn.rotation);
+
+        var labObject = instance.GetComponent<LaboratoryObject>();
+
+        if (labObject == null) {
+            Debug.LogError($"Prefab {def.CanonicalIdentifier} has no LaboratoryObject.");
+            return null;
+        }
+
+        return labObject;
+    }
+
+    private void ConfigureObject(
+    LaboratoryObject obj,
+    ExperimentInstanceObject def) {
+        obj.InstanceId = def.InstanceId;
+        obj.canonicalIdentifier = def.CanonicalIdentifier;
+        Debug.Log($"Configuring object {obj}");
+        Debug.Log($"Definition:{def}");
+
+        if (def.Tags != null) {
+            // apenas adiciona as tags definidas, sem sobrescrever
+            if (obj.Tags == null) {
+                obj.Tags = new List<string>(def.Tags);
+            } else {
+                foreach (var tag in def.Tags) {
+                    if (!obj.Tags.Contains(tag)) {
+                        obj.Tags.Add(tag);
+                    }
+                }
+            }
+        }
+
+        if (def.InitialProperties != null) {
+            foreach (var pair in def.InitialProperties) {
+                obj.SetProperty(pair.Key, pair.Value);
+                Debug.Log($"Set initial property {pair.Key} to {pair.Value} on object {obj.InstanceId}");
+            }
+        }
     }
 
     private IEnumerator BootstrapAndStart() {

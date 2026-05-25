@@ -1,17 +1,23 @@
 using Assets.Scripts;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class EffectSystem {
     private ExperimentObjectRegistry registry;
     private EffectRegistry effectRegistry;
+    private BackgroundProcessSystem backgroundProcessSystem;
     private readonly LoggerService logger = new ("EffectSystem");
-    private readonly HashSet<string> executedTriggeredEffectsId; // armazena os IDs dos TriggeredEffects já executados para evitar execuções repetidas
+    private readonly HashSet<string> executedReactiveEffects = new();
 
     public EffectSystem(EffectRegistry effectRegistry) {
         this.effectRegistry = effectRegistry;
-        registry = ExperimentObjectRegistry.Instance;
-        executedTriggeredEffectsId = new HashSet<string>();
+        registry = ExperimentObjectRegistry.GetInstance();
+    }
+
+    public void BindBackgroundProcessSystem(BackgroundProcessSystem backgroundProcessSystem) {
+        this.backgroundProcessSystem = backgroundProcessSystem;
     }
 
     public void HandleInstantEffect(InteractionRequest request) {
@@ -25,17 +31,32 @@ public class EffectSystem {
         }
     }
 
-    private void EvaluateTriggeredEffects() {
-        var effects = effectRegistry.GetAllTriggeredEffects();
+    private void EvaluateReactiveEffects() {
+        var effects = effectRegistry.GetAllReactiveEffects();
         foreach (var effect in effects) {
-            if (ConditionEvaluator.Check(effect.Conditions)) {
-                if (executedTriggeredEffectsId.Contains(effect.Id)) {
+            var objectResolver = new ObjectResolver(effect.Subject, null);
+            var subjects = objectResolver.Resolve();
+
+            foreach (var subject in subjects) {
+                var context = new InteractionContext();
+                context.Roles[RoleType.SUBJECT] = subject;
+
+                string executionKey = $"{effect.Id}:{subject.InstanceId}";
+
+                if (effect.ExecuteOncePerSubject &&
+                    executedReactiveEffects.Contains(executionKey)) {
                     continue;
                 }
-                ApplyTriggeredEffect(effect);
-                executedTriggeredEffectsId.Add(effect.Id);
-                logger.Log($"[EvaluateTriggeredEffects] TriggeredEffect with ID {effect.Id} has been applied and will not be applied again.");
-            }
+
+                if (!ConditionEvaluator.Check(effect.Conditions, context))
+                    continue;
+
+                ApplyReactiveEffect(effect, context);
+                logger.Log($"[EvaluateReactiveEffects] ReactiveEffect with ID {effect.Id} has been applied.");
+                if (effect.ExecuteOncePerSubject)
+                    executedReactiveEffects.Add(executionKey);
+
+            }  
         }
     }
 
@@ -43,7 +64,7 @@ public class EffectSystem {
         if (registry == null) {
             logger.Warning("ExperimentObjectRegistry instance is null. Attempting to rebuild index.");
             // tenta pegar novamente a instância do registry
-            registry = ExperimentObjectRegistry.Instance;
+            registry = ExperimentObjectRegistry.GetInstance();
             if (registry == null) {
                 logger.Error("ExperimentObjectRegistry instance is still null after attempting to rebuild index.");
                 return false;
@@ -53,19 +74,26 @@ public class EffectSystem {
     }
 
     /* aplicação de efeitos */
+   
 
     private void ApplyContinuousEffect(EffectDefinition effect, InteractionContext ctx, float deltatime) {
         if (effect == null) { return; }
         if (!CheckRegistry()) { return; }
 
         foreach (var operation in effect.Operations) {
-            if (!TryResolveTarget(operation, ctx, out var obj)) {
+            
+            var targets = new ObjectResolver(operation.Target, ctx).Resolve();
+            if (targets.Count == 0) {
                 logger.Error($"Failed to resolve target for operation: {operation}");
                 continue;
             }
-            var currentValue = obj.GetProperty<float>(operation.Property);
-            obj.SetProperty(operation.Property, currentValue + effect.Rate.Value * deltatime);
-            ExperimentHudPresenter.Instance.HandleFeedback($"Applied {obj.Identifier}.{operation.Property}= {currentValue + effect.Rate * deltatime}");
+            logger.Log($"Applying continuous effect operation: {operation} on targets: {string.Join(", ", targets.Select(t => t.InstanceId))}");
+            foreach (var obj in targets) {
+                var currentValue = obj.GetProperty<float>(operation.Property);
+                obj.SetProperty(operation.Property, currentValue + effect.Rate.Value * deltatime);
+                logger.Log($"Applied {obj.InstanceId}.{operation.Property}= {currentValue + effect.Rate * deltatime}");
+                ExperimentHudPresenter.Instance.HandleFeedback($"Aplicado {currentValue + effect.Rate * deltatime}% na propriedade {operation.Property} do objeto {obj.DisplayName} ({obj.InstanceId})");
+            }
         }//logger.Log($"EffectSystem: Applied effect from {effect.SourceObject} to {effect.TargetObject} on property {effect.Property} with rate {effect.Rate * deltatime}");
 
     }
@@ -75,39 +103,58 @@ public class EffectSystem {
         if (!CheckRegistry()) { return; }
         
         foreach (var operation in effect.Operations) {
-            var obj = ResolveTarget(operation, ctx);
-            obj.SetProperty(operation.Property, operation.Value);
-            logger.Log($"Applied {obj.Identifier}.{operation.Property}= {operation.Value}");
+            if (operation.OperationType == EffectOperationType.START_PROCESS) {
+                logger.Log($"Found START_PROCESS operation for ProcessId: {operation.ProcessId}. Delegating to BackgroundProcessSystem.");
+                backgroundProcessSystem.TryStartProcessById(operation.ProcessId, ctx);
+                continue;
+            }
+            logger.Log($"Applying operation: {operation.Property} = {operation.Value}");
+            logger.Log($"Target reference: Role={operation.Target?.Role}, InstanceId={operation.Target?.InstanceId}, Canonical={operation.Target?.CanonicalIdentifier}");
+
+            var targets = new ObjectResolver(operation.Target, ctx).Resolve();
+            if (targets.Count == 0) {
+                logger.Error($"Failed to resolve target for operation: {operation}");
+                continue;
+            }
+            logger.Log($"Resolved targets: {string.Join(", ", targets.Select(t => t.InstanceId))}");
+            foreach (var obj in targets) {
+                obj.SetProperty(operation.Property, operation.Value);
+                logger.Log($"Applied {obj.Identifier}.{operation.Property}= {operation.Value}");
+                ExperimentHudPresenter.Instance.HandleFeedback($"Aplicado {operation.Value} na propriedade {operation.Property} do objeto {obj.InstanceId}");
+            }
 
         }
     }
 
-    public void ApplyTriggeredEffect(ReactiveEffect effect) {
+    public void ApplyReactiveEffect(ReactiveEffect effect, InteractionContext context=null) {
         if (effect == null) {
-            logger.Error("TriggeredEffect is null.");
+            logger.Error("ReactiveEffect is null.");
             return;
         }
         if (!CheckRegistry()) {
             logger.Error("ExperimentObjectRegistry is not available.");
             return;
         }
-        logger.Log($"Evaluating triggered effect with ID: {effect.Id} and conditions: {effect.Conditions}");
-        if (ConditionEvaluator.Check(effect.Conditions)) {
+        logger.Log($"Evaluating reactive effect with ID: {effect.Id} and conditions: {effect.Conditions}");
+        if (ConditionEvaluator.Check(effect.Conditions, context)) {
             foreach (var operation in effect.Operations) {
-                //logger.Log("Applying operation on target: " + operation.TargetObject + " for property: " + operation.Property + " with value: " + operation.Value);
-                ExperimentHudPresenter.Instance.HandleFeedback($"Applying operation on target: {operation.TargetObject} for property: {operation.Property} with value: {operation.Value}");
-                registry.TryGetObject(operation.TargetObject, out var targetObj);
-                if (targetObj == null) {
-                    logger.Error($"Object with identifier {operation.TargetObject} not found in registry.");
+                var targets = new ObjectResolver(operation.Target, context).Resolve();
+                if (targets.Count == 0) {
+                    logger.Error($"Failed to resolve target for operation: {operation}");
                     continue;
                 }
-                targetObj.SetProperty(operation.Property, operation.Value);
-                logger.Log("[ApplyTriggeredEffect] Applied operation on target: " + operation.TargetObject + " for property: " + operation.Property + " with value: " + operation.Value);
+                logger.Log($"Applying reactive effect operation: {operation} on targets: {string.Join(", ", targets.Select(t => t.InstanceId))}");
+                foreach (var targetObj in targets) {
+                    targetObj.SetProperty(operation.Property, operation.Value);
+                    ExperimentHudPresenter.Instance.HandleFeedback($"Aplicado {operation.Value} na propriedade {operation.Property} do objeto {targetObj.InstanceId}");
+
+                    logger.Log("[ApplyReactiveEffect] Applied operation on target: " + operation.Target + " for property: " + operation.Property + " with value: " + operation.Value);
+                }
             }
         }
     }
 
-    public void ApplyActionEffect(ActionEffect effect) {
+    public void ApplyActionEffect(ActionEffect effect, InteractionContext context=null) {
         if (effect == null) {
             logger.Error("ActionEffect is null.");
             return;
@@ -117,13 +164,16 @@ public class EffectSystem {
             return;
         }
         foreach (var operation in effect.Operations) {
-            registry.TryGetObject(operation.TargetObject, out var targetObj);
-            if (targetObj == null) {
-                logger.Error($"Object with identifier {operation.TargetObject} not found in registry.");
-                continue;
+            var targets = new ObjectResolver(operation.Target, context).Resolve();
+            if (targets.Count == 0) {
+                logger.Error($"Failed to resolve target for operation: {operation}");
+            } 
+            foreach (var targetObj in targets) {
+                targetObj.SetProperty(operation.Property, operation.Value);
+                ExperimentHudPresenter.Instance.HandleFeedback($"Aplicado {operation.Value} na propriedade {operation.Property} do objeto {targetObj.DisplayName} ({targetObj.InstanceId})");
+                logger.Log($"Applied ActionEffect on target: {targetObj.DisplayName} ({targetObj.InstanceId}) for property: {operation.Property} with value: {operation.Value}");
+                logger.Log($"Current properties of {targetObj.DisplayName} ({targetObj.InstanceId}): {string.Join(", ", targetObj.GetAllProperties().Select(kv => $"{kv.Key}: {kv.Value}"))}");
             }
-            targetObj.SetProperty(operation.Property, operation.Value);
-            logger.Log($"Applied ActionEffect on target: {operation.TargetObject} for property: {operation.Property} with value: {operation.Value}");
         }
     }
 
@@ -139,33 +189,18 @@ public class EffectSystem {
         obj.SetProperty(action.Property, action.Value);
     }
 
-    private bool TryResolveTarget(EffectOperation operation, InteractionContext ctx, out LaboratoryObject obj) {
-        obj = null;
-        if (operation.TargetRole.HasValue) {
-            return ctx.Roles.TryGetValue(operation.TargetRole.Value, out obj);
-        }
-        return registry.TryGetObject(operation.TargetObject, out obj);
-    }
-
-    private LaboratoryObject ResolveTarget(EffectOperation operation, InteractionContext ctx) {
-        if (operation.TargetRole.HasValue) {
-            return ctx.Roles[operation.TargetRole.Value];
-        }
-        registry.TryGetObject(operation.TargetObject, out var obj);
-        return obj;
-    }
-
     public void Update(List<ActiveInteraction> activeInteractions) {
+        if (activeInteractions.Count > 0) logger.Log($"EffectSystem Update called with {activeInteractions.Count} active interactions.");
         foreach (var interaction in activeInteractions) {
             foreach (var effect in interaction.Effects) {
                 //logger.Log("Evaluating continuous effect with source: " + effect.SourceObject + " and target: " + effect.TargetObject);
-                if (effect.IsContinuous) {
-                    if (ConditionEvaluator.Check(effect.Conditions)) {
+                if (effect.IsContinuous) {                   
+                    if (ConditionEvaluator.Check(effect.Conditions, interaction.Context)) {
                         ApplyContinuousEffect(effect, interaction.Context, Time.deltaTime);
                     }
                 }
             }            
         }
-        EvaluateTriggeredEffects();
+        EvaluateReactiveEffects();
     }
 }

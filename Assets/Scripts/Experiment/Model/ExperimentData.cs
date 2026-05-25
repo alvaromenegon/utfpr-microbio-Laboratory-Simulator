@@ -5,7 +5,7 @@ using System.Collections.Generic;
 public class ExperimentData {
     public List<Step> Steps { get; set; }
     public List<BackgroundProcess> BackgroundProcesses { get; set; }
-    public List<ExperimentObject> Objects { get; set; }
+    public List<ExperimentInstanceObject> Objects { get; set; }
     public string Description { get; set; }
     public int Time { get; set; }
     public List<EffectDefinition> Effects { get; set; }

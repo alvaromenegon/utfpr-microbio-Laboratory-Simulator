@@ -69,6 +69,7 @@ public class ExperimentApiClient : MonoBehaviour {
         }
         catch (Exception e) {
             Debug.LogError($"Failed to parse experiment data: {e.Message}");
+            Debug.LogError($"Response content: {json}");
         }
 
         return null;

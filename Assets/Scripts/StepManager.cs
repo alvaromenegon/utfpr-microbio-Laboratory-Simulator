@@ -64,7 +64,6 @@ namespace Assets.Scripts {
         }
 
         private void CompleteExperiment(bool withSuccess = true) {
-            AddScore(currentStep.Score);
             experimentRuntime.End(withSuccess);
         }
 
@@ -89,8 +88,9 @@ namespace Assets.Scripts {
         }
 
         public void Update() {
-            if (currentStep == null) return;
+            if (currentStep == null) return;            
             if (ConditionEvaluator.Check(currentStep.Goals)) {
+                Debug.Log($"Step '{currentStep.Description}' goals achieved.");
                 CompleteStepSuccess();
             }
 

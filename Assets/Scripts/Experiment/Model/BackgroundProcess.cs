@@ -1,7 +1,6 @@
 
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 [Serializable]
 public class BackgroundProcess {
@@ -11,10 +10,11 @@ public class BackgroundProcess {
     public List<When> StartConditions;
     public List<When> CancelConditions;
     public List<When> SuccessConditions;
+    public ObjectReference BoundObject;
 
-    public string OnStartEffectId;
-    public string OnSuccessEffectId;
-    public string OnFailureEffectId;
+    public List<string> OnStartEffectIds;
+    public List<string> OnSuccessEffectIds;
+    public List<string> OnFailureEffectIds;
     public int Duration { get; set; }
     public int? Tolerance { get; set; }
     public string OnSuccessMessage { get; set; }
@@ -22,7 +22,7 @@ public class BackgroundProcess {
     public OnStepFinished ActionOnFailure { get; set; }
 
     public override string ToString() {
-        return $"BackgroundProcess(Id={Id}, Description={Description}, Duration={Duration}, Tolerance={Tolerance}, StartConditions=[{string.Join(", ", StartConditions)}], CancelConditions=[{string.Join(", ", CancelConditions)}], SuccessConditions=[{string.Join(", ", SuccessConditions)}], OnStartEffectId={OnStartEffectId}, OnSuccessEffectId={OnSuccessEffectId}, OnFailureEffectId={OnFailureEffectId}, OnSuccessMessage={OnSuccessMessage}, OnFailureMessage={OnFailureMessage}, ActionOnFailure={ActionOnFailure})";
+        return $"BackgroundProcess(Id={Id}, Description={Description},BoundObject={BoundObject}, Duration={Duration}, Tolerance={Tolerance}, StartConditions=[{string.Join(", ", StartConditions)}], CancelConditions=[{string.Join(", ", CancelConditions)}], SuccessConditions=[{string.Join(", ", SuccessConditions)}], OnStartEffectIds={OnStartEffectIds}, OnSuccessEffectIds={OnSuccessEffectIds}, OnFailureEffectIds={OnFailureEffectIds}, OnSuccessMessage={OnSuccessMessage}, OnFailureMessage={OnFailureMessage}, ActionOnFailure={ActionOnFailure})";
     }
 
 }

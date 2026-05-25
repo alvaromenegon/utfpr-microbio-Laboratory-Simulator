@@ -1,10 +1,17 @@
 public class EffectOperation {
-    public string TargetObject;
-    public RoleType? TargetRole;
+    public EffectOperationType OperationType;
+    public ObjectReference Target;
     public string Property;
     public object Value;
-
+    public string ProcessId;
     public override string ToString() {
-        return $"EffectOperation(TargetObject={TargetObject}, TargetRole={TargetRole}, Property={Property}, Value={Value})";
+        return $"EffectOperation(Target={Target}, Property={Property}, Value={Value}, ProcessId={ProcessId})";
     }
+}
+
+public enum EffectOperationType {
+    SET_PROPERTY,
+    ADD_PROPERTY,
+    START_PROCESS,
+    STOP_PROCESS
 }
