@@ -46,7 +46,7 @@ public class BackgroundProcessSystem  {
         }
     }
 
-    private bool ShouldCancelProcess(List<When> cancelConditions, InteractionContext context) {
+    private bool ShouldCancelProcess(List<Condition> cancelConditions, InteractionContext context) {
         if (cancelConditions == null || cancelConditions.Count == 0) {
             return false;
         }

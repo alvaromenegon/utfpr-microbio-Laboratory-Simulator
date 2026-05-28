@@ -5,7 +5,7 @@ using System.Linq;
 using UnityEngine;
 
 public class ConditionEvaluator {
-    private static object GetDefaultValue(When condition) {
+    private static object GetDefaultValue(Condition condition) {
         return condition.Comparison switch {
             ComparisonType.TRUE => false,
             ComparisonType.FALSE => false,
@@ -17,7 +17,7 @@ public class ConditionEvaluator {
         };
     }
 
-    public static bool Check(List<When> conditions, InteractionContext ctx = null) {
+    public static bool Check(List<Condition> conditions, InteractionContext ctx = null) {
         foreach (var c in conditions) {           
             var resolver = new ObjectResolver(c.Target, ctx);
             
@@ -44,7 +44,7 @@ public class ConditionEvaluator {
         return true;
     }
 
-    private static bool Evaluate(LaboratoryObject obj, When c) {
+    private static bool Evaluate(LaboratoryObject obj, Condition c) {
         if (obj == null) return false;
         if (!obj.TryGetProperty<object>(c.Property, out var value)) {
             value = GetDefaultValue(c);

@@ -6,7 +6,7 @@ public class EffectDefinition {
 
     public Dictionary<RoleType, string> Roles;
 
-    public List<When> Conditions;
+    public List<Condition> Conditions;
     public List<EffectOperation> Operations;
 
     public EffectExecutionType ExecutionType;

@@ -23,11 +23,18 @@ namespace Assets.Scripts {
             Debug.Log($"Step '{currentStep.Description}' completed successfully. Added {currentStep.Score} points.");
             Debug.Log(currentStep.OnSuccessMessage);
             OnFeedback?.Invoke(currentStep.OnSuccessMessage);
-            HandleStepAction(currentStep.ActionOnSuccess);
+            HandleStepAction(currentStep.ActionOnSuccess, true);
 
         }
 
-        void HandleStepAction(OnStepFinished action) {
+        private void CompleteStepFailure() {
+            Debug.Log($"Step '{currentStep.Description}' failed. No points added.");
+            Debug.Log(currentStep.OnFailureMessage);
+            OnFeedback?.Invoke(currentStep.OnFailureMessage);
+            HandleStepAction(currentStep.ActionOnFailure, false);
+        }
+
+        void HandleStepAction(OnStepFinished action, bool success = true) {
             switch (action) {
                 case OnStepFinished.COMPLETE_EXPERIMENT_SUCCESS:
                     CompleteExperiment(true);
@@ -44,9 +51,15 @@ namespace Assets.Scripts {
                 case OnStepFinished.BACK_TO_START:
                     RestartExperiment();
                     break;
-
-                case OnStepFinished.COMPLETE_EXPERIMENT_STEP:
                 case OnStepFinished.DEFAULT:
+                    if (success) {
+                        NextStep();
+                    } else {
+                        RestartExperiment();
+                    }
+                    break;
+                case OnStepFinished.COMPLETE_EXPERIMENT_STEP:                
+
                 default:
                     NextStep();
                     break;
@@ -88,9 +101,12 @@ namespace Assets.Scripts {
         }
 
         public void Update() {
-            if (currentStep == null) return;            
+            if (currentStep == null) return;
+            if (ConditionEvaluator.Check(currentStep.FailureConditions)) {
+                CompleteStepFailure();
+                return;
+            }
             if (ConditionEvaluator.Check(currentStep.Goals)) {
-                Debug.Log($"Step '{currentStep.Description}' goals achieved.");
                 CompleteStepSuccess();
             }
 

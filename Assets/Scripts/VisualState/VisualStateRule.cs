@@ -3,7 +3,7 @@ using System.Collections.Generic;
 public class VisualStateRule {
     public string Id;
 
-    public List<When> Conditions;
+    public List<Condition> Conditions;
     public ObjectReference Subject;
 
     public string VisualAssetId;

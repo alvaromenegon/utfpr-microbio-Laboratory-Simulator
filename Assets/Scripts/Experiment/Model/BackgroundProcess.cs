@@ -7,9 +7,9 @@ public class BackgroundProcess {
     public string Id { get; set; }
     public string Description { get; set; }
 
-    public List<When> StartConditions;
-    public List<When> CancelConditions;
-    public List<When> SuccessConditions;
+    public List<Condition> StartConditions;
+    public List<Condition> CancelConditions;
+    public List<Condition> SuccessConditions;
     public ObjectReference BoundObject;
 
     public List<string> OnStartEffectIds;

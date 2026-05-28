@@ -18,19 +18,17 @@ public class Step {
             return InteractionType.USE;
         }
     }
-    public string InteractionTarget { get; set; }
-    public string InteractionTargetSecondary { get; set; }
+
     public string Instruction { get; set; }
-    public double? Value { get; set; }
-    public double? Tolerance { get; set; }
     public string OnSuccessMessage { get; set; }
     public string OnFailureMessage { get; set; }
     public OnStepFinished ActionOnFailure { get; set; }
     public int OnFailureReturnToStep { get; set; }
     public OnStepFinished ActionOnSuccess { get; set; }
-    public string OnSuccessStartBackgroundWorkId { get; set; }
 
-    public List<When> Goals { get; set; }
+    public List<Condition> Goals { get; set; }
+
+    public List<Condition> FailureConditions { get; set; }
 
     public bool IsValid(int numSteps) {
         if (string.IsNullOrEmpty(Description)) {
@@ -41,10 +39,7 @@ public class Step {
             Debug.LogError("Step interaction is null or empty.");
             return false;
         }
-        if (string.IsNullOrEmpty(InteractionTarget)) {
-            Debug.LogError("Step interaction target is null or empty.");
-            return false;
-        }
+        
         if (string.IsNullOrEmpty(Instruction)) {
             Debug.LogError("Step instruction is null or empty.");
             return false;

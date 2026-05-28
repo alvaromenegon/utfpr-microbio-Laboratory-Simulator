@@ -48,7 +48,7 @@ public static class ExperimentMapper {
             Id = dto.Id,
             ActionType= dto.ActionType,
             Subject = ToModel(dto.Subject),
-            Conditions = dto.Conditions?.Select(ToModel).ToList() ?? new List<When>(),
+            Conditions = dto.Conditions?.Select(ToModel).ToList() ?? new List<Condition>(),
              Value = dto.Value,
              Slot = dto.Slot,
              Priority = dto.Priority,
@@ -91,18 +91,14 @@ public static class ExperimentMapper {
             Description = dto.Description,
             Score = dto.Score,
             interaction = dto.Interaction,
-            InteractionTarget = dto.InteractionTarget,
-            InteractionTargetSecondary = dto.InteractionTargetSecondary,
             Instruction = dto.Instruction,
-            Value = dto.Value,
-            Tolerance = dto.Tolerance,
             OnSuccessMessage = dto.OnSuccessMessage,
             OnFailureMessage = dto.OnFailureMessage,
             ActionOnFailure = dto.ActionOnFailure,
             OnFailureReturnToStep = dto.OnFailureReturnToStep,
             ActionOnSuccess = dto.ActionOnSuccess,
-            OnSuccessStartBackgroundWorkId = dto.OnSuccessStartBackgroundWorkId,
-            Goals = dto.Goals?.Select(ToModel).ToList() ?? new List<When>()
+            Goals = dto.Goals?.Select(ToModel).ToList() ?? new List<Condition>(),
+            FailureConditions = dto.FailureConditions?.Select(ToModel).ToList() ?? new List<Condition>(),
         };
     }
 
@@ -119,9 +115,9 @@ public static class ExperimentMapper {
             OnSuccessMessage = dto.OnSuccessMessage,
             OnFailureMessage = dto.OnFailureMessage,
             ActionOnFailure = dto.ActionOnFailure,
-            StartConditions = dto.StartConditions?.Select(ToModel).ToList() ?? new List<When>(),
-            CancelConditions = dto.CancelConditions?.Select(ToModel).ToList() ?? new List<When>(),
-            SuccessConditions = dto.SuccessConditions?.Select(ToModel).ToList() ?? new List<When>(),
+            StartConditions = dto.StartConditions?.Select(ToModel).ToList() ?? new List<Condition>(),
+            CancelConditions = dto.CancelConditions?.Select(ToModel).ToList() ?? new List<Condition>(),
+            SuccessConditions = dto.SuccessConditions?.Select(ToModel).ToList() ?? new List<Condition>(),
             OnStartEffectIds = dto.OnStartEffectIds?.Select(id => id).ToList() ?? new List<string>(),
             OnSuccessEffectIds = dto.OnSuccessEffectIds?.Select(id => id).ToList() ?? new List<string>(),
             OnFailureEffectIds = dto.OnFailureEffectIds?.Select(id => id).ToList() ?? new List<string>(),
@@ -129,11 +125,11 @@ public static class ExperimentMapper {
         };
     }
 
-    public static When ToModel(WhenDto dto) {
+    public static Condition ToModel(WhenDto dto) {
         if (dto == null) {
             return null;
         }
-        return new When {
+        return new Condition {
             Target = ToModel(dto.Target),
             Property = dto.Property,
             Value = dto.Value,
@@ -190,7 +186,7 @@ public static class ExperimentMapper {
         }
         return new ReactiveEffect {
             Id = dto.Id,
-            Conditions = dto.Conditions?.Select(ToModel).ToList() ?? new List<When>(),
+            Conditions = dto.Conditions?.Select(ToModel).ToList() ?? new List<Condition>(),
             Operations = dto.Operations?.Select(ToModel).ToList() ?? new List<EffectOperation>(),
             ExecuteOncePerSubject = dto.ExecuteOncePerSubject,
             Subject = ToModel(dto.Subject)
@@ -222,7 +218,7 @@ public static class ExperimentMapper {
             Rate = dto.Rate,
             Operations = dto.Operations?.Select(ToModel).ToList() ?? new List<EffectOperation>(),
             Roles = dto.Roles?.ToDictionary(kv => ResolveRoleType(kv.Key), kv => kv.Value) ?? new Dictionary<RoleType, string>(),
-            Conditions = dto.Conditions?.Select(ToModel).ToList() ?? new List<When>()
+            Conditions = dto.Conditions?.Select(ToModel).ToList() ?? new List<Condition>()
         };
     }
 

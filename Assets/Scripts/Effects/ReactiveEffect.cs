@@ -3,7 +3,7 @@ using System.Collections.Generic;
 public class ReactiveEffect {
     public string Id;
 
-    public List<When> Conditions;
+    public List<Condition> Conditions;
 
     public List<EffectOperation> Operations;
     public ObjectReference Subject;

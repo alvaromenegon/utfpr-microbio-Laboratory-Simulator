@@ -23,7 +23,7 @@ public class ExperimentData {
         string result = $"Experiment: {Description}\nTime Limit: {(HasTimeLimit() ? Time.ToString() + " seconds" : "None")}\nObjects: {string.Join(", ", Objects)}\nSteps:\n";
         for (int i = 0; i < Steps.Count; i++) {
             var step = Steps[i];
-            result += $"  Step {i + 1}: {step.Description}, Interaction: {step.Interaction}, Target: {step.InteractionTarget}, Instruction: {step.Instruction}, Value: {step.Value}, OnSuccess: {step.OnSuccessMessage}, OnFailure: {step.OnFailureMessage}, ActionOnSuccess: {step.ActionOnSuccess}, ActionOnFailure: {step.ActionOnFailure}, OnFailureReturnToStep: {step.OnFailureReturnToStep}\n";
+            result += $"  Step {i + 1}: {step.Description}, Interaction: {step.Interaction}, Instruction: {step.Instruction}\n";
         }
         return result;
     }
