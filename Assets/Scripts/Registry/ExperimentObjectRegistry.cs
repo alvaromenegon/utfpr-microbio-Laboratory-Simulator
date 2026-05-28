@@ -1,14 +1,12 @@
 using Assets.Scripts;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using UnityEngine;
 
 public class ExperimentObjectRegistry : MonoBehaviour {
     private readonly Dictionary<string, LaboratoryObject> objectsById = new(StringComparer.Ordinal);
     private readonly Dictionary<string, List<LaboratoryObject>> objectsByIdentifier = new(StringComparer.Ordinal);
     private readonly Dictionary<string, LaboratoryObject> objectsByInstanceId = new(StringComparer.Ordinal);
-    private PrefabRegistry prefabRegistry;
     public event Action WillRebuildIndex;
     public event Action OnRegistryUpdated;
 
@@ -32,10 +30,6 @@ public class ExperimentObjectRegistry : MonoBehaviour {
             return;
         }
         _instance = this;
-    }
-
-    private void Start() {
-        prefabRegistry = PrefabRegistry.GetInstance();
     }
 
     public List<LaboratoryObject> GetAllObjects() {
@@ -68,40 +62,6 @@ public class ExperimentObjectRegistry : MonoBehaviour {
         if (objectsByIdentifier.TryGetValue(obj.Identifier, out var list))
             list.Remove(obj);
     }
-
-
-    //public void RebuildIndex() {
-    //    WillRebuildIndex?.Invoke();
-    //    objectsById.Clear();
-    //    objectsByIdentifier.Clear();
-    //    objectsByInstanceId.Clear();
-    //    LaboratoryObject[] interactables = FindObjectsByType<LaboratoryObject>(FindObjectsSortMode.None);
-
-    //    foreach (var interactable in interactables) {
-    //        string identifier = interactable.Identifier;
-    //        if (string.IsNullOrWhiteSpace(identifier)) {
-    //            Debug.LogError($"LaboratoryObject '{interactable.gameObject.name}' has no canonical identifier configured.");
-    //            continue;
-    //        }
-
-    //        if (objectsById.TryGetValue(identifier, out var existing)) {
-    //            Debug.LogWarning($"Multiple LaboratoryObject instances with identifier '{identifier}'. Objects: '{existing.gameObject.name}' and '{interactable.gameObject.name}'. This is allowed when using InstanceIds.");
-    //        }
-
-    //        objectsById[identifier] = interactable;
-
-    //        if (!objectsByIdentifier.ContainsKey(identifier)) {
-    //            objectsByIdentifier[identifier] = new List<LaboratoryObject>();
-    //        }
-    //        objectsByIdentifier[identifier].Add(interactable);
-
-    //        if (!string.IsNullOrWhiteSpace(interactable.InstanceId)) {
-    //            objectsByInstanceId[interactable.InstanceId] = interactable;
-    //        }
-    //        prefabRegistry.RegisterPrefab(identifier,interactable.gameObject);
-    //    }
-    //    OnRegistryUpdated?.Invoke();
-    //}
 
     private bool IsNull(string identifier) {
         return string.IsNullOrWhiteSpace(identifier) || !objectsById.ContainsKey(identifier);
@@ -136,20 +96,15 @@ public class ExperimentObjectRegistry : MonoBehaviour {
         objectsByInstanceId[instanceId] = interactable;
     }
 
-    public List<LaboratoryObject> GetAllByIdentifier(string identifier) {
-        if (IsNull(identifier)) {
-            return new List<LaboratoryObject>();
-        }
-        return objectsByIdentifier.TryGetValue(identifier, out var list) ? list : new List<LaboratoryObject>(); 
-    }
-
     public List<LaboratoryObject> Query(string canonicalIdentifier = null, List<string> requiredTags = null) {
         var result = new List<LaboratoryObject>();
         if (!string.IsNullOrWhiteSpace(canonicalIdentifier)) {
             if (objectsByIdentifier.TryGetValue(canonicalIdentifier, out var candidates)) {
                 result.AddRange(candidates);
+            } else {
+                Debug.LogWarning($"No LaboratoryObject found with canonicalIdentifier '{canonicalIdentifier}'.");
             }
-        } else {
+        } else {            
             // If no identifier is provided, consider all objects as candidates
             foreach (var kvp in objectsByIdentifier) {
                 result.AddRange(kvp.Value);
@@ -160,31 +115,5 @@ public class ExperimentObjectRegistry : MonoBehaviour {
         }
         return result;
     }
-
-    //public void SetupRegistry(List<ExperimentInstanceObject> experimentObjects) {
-    //    if (experimentObjects == null || experimentObjects.Count == 0) {
-    //        Debug.Log("[ExperimentObjectRegistry] No objects defined in ExperimentData.");
-    //        return;
-    //    }
-
-    //    RebuildIndex();
-
-    //    foreach (var experimentObject in experimentObjects) {
-
-    //            if (string.IsNullOrWhiteSpace(experimentObject.InstanceId)) {
-    //                Debug.LogWarning($"[ExperimentObjectRegistry] Instance of object '{experimentObject.CanonicalIdentifier}' has no instanceId.");
-    //                continue;
-    //            }
-
-    //            if (!TryGetObject(experimentObject.CanonicalIdentifier, out var laboratoryObject)) {
-    //                Debug.LogWarning($"[ExperimentObjectRegistry] No LaboratoryObject found with identifier '{experimentObject.CanonicalIdentifier}' for instance '{experimentObject.InstanceId}'.");
-    //                continue;
-    //            }
-
-    //            laboratoryObject.InstanceId = experimentObject.InstanceId;
-    //            RegisterInstance(experimentObject.InstanceId, laboratoryObject);
-    //            Debug.Log($"[ExperimentObjectRegistry] Registered instance '{experimentObject.InstanceId}' for object '{experimentObject.CanonicalIdentifier}'.");
-    //        }
-    //}
 
 }

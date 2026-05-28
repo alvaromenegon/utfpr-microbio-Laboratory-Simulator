@@ -1,28 +1,52 @@
+using Assets.Scripts;
 using System.Collections.Generic;
+using System.Data;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class VisualStateSystem {
     private VisualStateRegistry visualStateRegistry;
     private VisualSlotRegistry visualSlotRegistry;
-    private List<string> appliedVisualStates;
-    public VisualStateSystem(VisualStateRegistry visualStateRegistry, VisualSlotRegistry visualSlotRegistry) {
-        this.visualStateRegistry = visualStateRegistry;
+    private readonly Dictionary<string, bool> appliedActiveStateBySlot = new();
+    private readonly Dictionary<string, string> appliedMaterialBySlot = new();
+    private readonly Dictionary<string, string> appliedImageBySlot = new();
+    private VisualAssetRegistry visualAssetRegistry;
+    public VisualStateSystem(VisualSlotRegistry visualSlotRegistry) {
+        visualStateRegistry = VisualStateRegistry.Instance;
         this.visualSlotRegistry = visualSlotRegistry;
-        appliedVisualStates = new List<string>();
+        visualAssetRegistry = VisualAssetRegistry.GetInstance();
+    }
+
+    private string GetSlotKey(LaboratoryObject obj, string slotId) {
+        return $"{obj.InstanceId}:{slotId}";
     }
     public void HandleVisualState(VisualStateRule state) {
-        var slot = visualSlotRegistry.GetObjectSlot(state.Slot);
-        if (slot == null) {
-            UnityEngine.Debug.LogWarning($"VisualStateSystem: Slot {state.Slot} not found for visual state {state.Id}");
-            return;
+        var resolved = new ObjectResolver(state.Subject).Resolve();
+        foreach (var subject in resolved) {
+            var context = new InteractionContext();
+            context.Roles[RoleType.SUBJECT] = subject;
+
+            if (!ConditionEvaluator.Check(state.Conditions, context)) {
+                //Debug.Log($"Conditions not met for visual state {state.Id} on subject {subject.InstanceId} and context {context}, skipping.");
+                continue;
+            }
+
+            if (!visualSlotRegistry.TryGetSlot(subject.InstanceId, state.Slot, out var slot)) {
+                Debug.LogWarning($"VisualStateSystem: Slot {state.Slot} not found for subject {subject.InstanceId} in visual state {state.Id}");
+                continue;
+            }
+
+            ApplyVisualAction(state, slot, subject);
         }
-        
+    }
+
+    public void ApplyVisualAction(VisualStateRule state, VisualSlot slot, LaboratoryObject subject) {
         switch (state.ActionType) {      
             case VisualActionType.SET_ACTIVE:
-                HandleActivateObject(state, slot);
+                HandleActivateObject(slot, (bool)state.Value, subject);
                 break;
             case VisualActionType.SET_MATERIAL:
-                HandleMaterialOverride(state, slot);
+                HandleMaterialOverride(state, slot, subject);
                 break;
             case VisualActionType.PLAY_ANIMATION:
                 HandleAnimation(state, slot);
@@ -33,43 +57,75 @@ public class VisualStateSystem {
             case VisualActionType.SHOW_UI_IMAGE:
                 HandleUIPanel(state, slot);
                 break;
+            case VisualActionType.SET_IMAGE:
+                HandleSetImage(state, slot);
+                break;
             default:
                 Debug.LogWarning($"VisualStateSystem: Unsupported action type {state.ActionType} for visual state {state.Id}");
                 break;
         }
-        appliedVisualStates.Add(state.Id);
 
     }
 
     // todo: implementar cada tipo de visual target
     // métodos específicos para cada tipo de visual target
-    private void HandleActivateObject(VisualStateRule state, VisualSlot slot) {
-        var targetSlot = visualSlotRegistry.GetObjectSlot(state.Slot);
-        if (targetSlot != null) {
-            targetSlot.gameObject.SetActive(true);
-        } else {
-            Debug.LogWarning($"VisualStateSystem: Target slot {state.Slot} not found for visual state {state.Id}");
-        }
-    }
-
-    private void HandleMaterialOverride(VisualStateRule state, VisualSlot slot) {
-        var targetSlot = visualSlotRegistry.GetObjectSlot(state.Slot);
-        if (targetSlot == null) {
-            Debug.LogWarning($"VisualStateSystem: Target slot {state.Slot} not found for visual state {state.Id}");
+    private void HandleActivateObject(VisualSlot slot, bool value, LaboratoryObject subject) {
+        var key = GetSlotKey(subject, slot.SlotId);
+        if (appliedActiveStateBySlot.TryGetValue(key, out var currentValue) && currentValue == value) {
             return;
         }
-        if (targetSlot.gameObject.TryGetComponent<Renderer>(out var renderer)) {
-            var material = Resources.Load<Material>(state.VisualAssetId);
-            if (material != null) {
-                renderer.material = material;
-            }
-            else {
-                Debug.LogWarning($"VisualStateSystem: Material {state.VisualAssetId} not found for visual state {state.Id}");
-            }
+        Debug.Log($"Applying visual action SET_ACTIVE on slot {slot} for subject {slot.gameObject.name}");
+        slot.gameObject.SetActive(value);
+        appliedActiveStateBySlot[key] = value;
+    }
+
+    private void HandleSetImage(VisualStateRule state, VisualSlot slot) {
+        var key = GetSlotKey(slot.Owner, slot.SlotId);
+        if (appliedImageBySlot.TryGetValue(key, out var currentAssetId) && currentAssetId == state.VisualAssetId) {
+            return;
         }
-        else {
-            Debug.LogWarning($"VisualStateSystem: Renderer not found on slot {state.Slot} for visual state {state.Id}");
+        if (!visualAssetRegistry.TryGetSprite(state.VisualAssetId, out var sprite)) {
+            Debug.LogWarning($"Sprite asset {state.VisualAssetId} not found for visual state {state.Id}");
+            return;
         }
+        if (slot.TargetImage == null) {
+            Debug.LogWarning($"Slot {slot.SlotId} has no image component.");
+            return;
+        }
+        slot.TargetImage.sprite = sprite;
+    }
+
+    private void HandleMaterialOverride(VisualStateRule state, VisualSlot slot, LaboratoryObject subject) {
+        var key = GetSlotKey(subject, state.Slot);
+        if (appliedMaterialBySlot.TryGetValue(key, out var currentAssetId) && currentAssetId == state.VisualAssetId) {
+            return;
+        }
+
+        if (!visualAssetRegistry.TryGetMaterial(state.VisualAssetId, out var material)) {
+            Debug.LogWarning($"Material asset {state.VisualAssetId} not found for visual state {state.Id}");
+            return;
+        }
+
+        if (slot.TargetRenderer == null) {
+            Debug.LogWarning($"Slot {slot.SlotId} has no renderer.");
+            return;
+        }
+        Debug.Log($"Applying visual action SET_MATERIAL for state {state.Id} on slot {slot} for subject {subject.InstanceId}");
+
+
+        var materials = slot.TargetRenderer.materials;
+
+        if (slot.MaterialIndex < 0 || slot.MaterialIndex >= materials.Length) {
+            Debug.LogWarning(
+                $"Invalid material index {slot.MaterialIndex} for slot {slot.SlotId}.");
+            return;
+        }
+
+        materials[slot.MaterialIndex] = material;
+        slot.TargetRenderer.materials = materials;
+        Debug.Log($"Material {state.VisualAssetId} applied to slot {slot.SlotId} on subject {subject.InstanceId}");
+
+        appliedMaterialBySlot[key] = state.VisualAssetId;
     }
 
     private void HandleAnimation(VisualStateRule state, VisualSlot slot) {
@@ -81,16 +137,12 @@ public class VisualStateSystem {
     }
 
     private void HandleUIPanel(VisualStateRule state, VisualSlot slot) {
-        // Implementar lógica para aplicar UI panel
+        
     }
 
     public void Update() {
         foreach (var state in visualStateRegistry.GetAllVisualStates()) {
-            if (ConditionEvaluator.Check(state.Conditions)) {
-                if (!appliedVisualStates.Contains(state.Id)) {
-                    HandleVisualState(state);
-                }
-            }            
+            HandleVisualState(state);
         }
     }
 }

@@ -34,7 +34,27 @@ public static class ExperimentMapper {
             Effects = dto.Effects?.Select(ToModel).ToList() ?? new List<EffectDefinition>(),
             ReactiveEffects = dto.ReactiveEffects?.Select(ToModel).ToList() ?? new List<ReactiveEffect>(),
             ActionEffects = dto.ActionEffects?.Select(ToModel).ToList() ?? new List<ActionEffect>(),
-            DerivedProperties = dto.DerivedProperties?.Select(ToModel).ToList() ?? new List<DerivedProperty>()
+            DerivedProperties = dto.DerivedProperties?.Select(ToModel).ToList() ?? new List<DerivedProperty>(),
+            VisualAssets = dto.VisualAssets?.Select(ToModel).ToList() ?? new List<VisualAsset>(),
+            VisualStateRules = dto.VisualStateRules?.Select(ToModel).ToList() ?? new List<VisualStateRule>()
+        };
+    }
+
+    public static VisualStateRule ToModel(VisualStateRuleDto dto) {
+        if (dto == null) {
+            return null;
+        }
+        return new VisualStateRule {
+            Id = dto.Id,
+            ActionType= dto.ActionType,
+            Subject = ToModel(dto.Subject),
+            Conditions = dto.Conditions?.Select(ToModel).ToList() ?? new List<When>(),
+             Value = dto.Value,
+             Slot = dto.Slot,
+             Priority = dto.Priority,
+             VisualAssetId = dto.VisualAssetId,
+             AnimatorParameter = dto.AnimatorParameter,
+             AnimatorValue = dto.AnimatorValue,
         };
     }
 
@@ -42,7 +62,6 @@ public static class ExperimentMapper {
         if (dto == null) {
             return null;
         }
-        Debug.Log($"Mapping ExperimentObjectDto to ExperimentInstanceObject: {dto.CanonicalIdentifier}, {dto.InstanceId}, {dto.Binding}, Tags=[{string.Join(", ", dto.Tags ?? new string[0])}], InitialProperties=[{string.Join(", ", dto.InitialProperties ?? new Dictionary<string, object>())}]");
         return new ExperimentInstanceObject {
             CanonicalIdentifier = dto.CanonicalIdentifier,
             InstanceId = dto.InstanceId,
@@ -204,6 +223,19 @@ public static class ExperimentMapper {
             Operations = dto.Operations?.Select(ToModel).ToList() ?? new List<EffectOperation>(),
             Roles = dto.Roles?.ToDictionary(kv => ResolveRoleType(kv.Key), kv => kv.Value) ?? new Dictionary<RoleType, string>(),
             Conditions = dto.Conditions?.Select(ToModel).ToList() ?? new List<When>()
+        };
+    }
+
+    public static VisualAsset ToModel( VisualAssetDto dto) {
+        if (dto == null) {
+            return null;
+        }
+        return new VisualAsset {
+            Id = dto.Id,
+            Type = dto.Type,
+            AssetPath = dto.AssetPath,
+            HideWhenInactive = dto.HideWhenInactive,
+            ShaderTemplate = dto.ShaderTemplate           
         };
     }
 

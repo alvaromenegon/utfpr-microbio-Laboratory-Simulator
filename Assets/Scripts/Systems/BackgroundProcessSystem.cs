@@ -13,7 +13,7 @@ class BackgroundProcessInstance {
 public class BackgroundProcessSystem  {
     BackgroundProcessRegistry registry;
     private List<BackgroundProcessInstance> activeProcesses = new List<BackgroundProcessInstance>();
-    private LoggerService logger = new LoggerService("BackgroundProcessSystem");
+    private LoggerService logger = new ("BackgroundProcessSystem");
     private EffectSystem effectSystem;
     private EffectRegistry effectRegistry;
 
@@ -109,31 +109,32 @@ public class BackgroundProcessSystem  {
         if (boundObjects.Count == 0)
             return false;
 
-        var boundObject = boundObjects[0];
+        // Se houver mais de um objeto vinculado, inicia uma instância para cada um deles
+        foreach (var boundObject in boundObjects) {
+            if (IsAlreadyRunning(processId, boundObject.InstanceId))
+                return false;
+            StartBackgroundProcessInstance(definition, context, boundObject);
+        }
+        
+        //Debug.Log($"Original TOOL: {context.Roles.GetValueOrDefault(RoleType.TOOL)?.InstanceId}");
+        //Debug.Log($"Original TARGET: {context.Roles.GetValueOrDefault(RoleType.TARGET)?.InstanceId}");        
 
-        if (IsAlreadyRunning(processId, boundObject.InstanceId))
-            return false;
-        Debug.Log($"Original TOOL: {context.Roles.GetValueOrDefault(RoleType.TOOL)?.InstanceId}");
-        Debug.Log($"Original TARGET: {context.Roles.GetValueOrDefault(RoleType.TARGET)?.InstanceId}");
+        return true;
+    }
+
+    private void StartBackgroundProcessInstance(BackgroundProcess definition, InteractionContext context, LaboratoryObject boundObject) {
         var instance = new BackgroundProcessInstance {
-            ProcessId = processId,
+            ProcessId = definition.Id,
             BoundObject = boundObject,
             Context = CreateProcessContext(definition, context, boundObject),
             ElapsedTime = 0f,
             IsActive = true
         };
-        foreach (var role in instance.Context.Roles) {
-            Debug.Log($"ProcessContext role {role.Key}: {role.Value.InstanceId}");
-        }
-
         activeProcesses.Add(instance);
-
         foreach (var effectId in definition.OnStartEffectIds) {
             var effect = effectRegistry.GetActionEffectById(effectId);
             effectSystem.ApplyActionEffect(effect, instance.Context);
         }
-
-        return true;
     }
 
     public void Update() {

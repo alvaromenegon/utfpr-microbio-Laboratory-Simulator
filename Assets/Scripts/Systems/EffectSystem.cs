@@ -87,11 +87,9 @@ public class EffectSystem {
                 logger.Error($"Failed to resolve target for operation: {operation}");
                 continue;
             }
-            logger.Log($"Applying continuous effect operation: {operation} on targets: {string.Join(", ", targets.Select(t => t.InstanceId))}");
             foreach (var obj in targets) {
                 var currentValue = obj.GetProperty<float>(operation.Property);
                 obj.SetProperty(operation.Property, currentValue + effect.Rate.Value * deltatime);
-                logger.Log($"Applied {obj.InstanceId}.{operation.Property}= {currentValue + effect.Rate * deltatime}");
                 ExperimentHudPresenter.Instance.HandleFeedback($"Aplicado {currentValue + effect.Rate * deltatime}% na propriedade {operation.Property} do objeto {obj.DisplayName} ({obj.InstanceId})");
             }
         }//logger.Log($"EffectSystem: Applied effect from {effect.SourceObject} to {effect.TargetObject} on property {effect.Property} with rate {effect.Rate * deltatime}");
@@ -122,7 +120,6 @@ public class EffectSystem {
                 logger.Log($"Applied {obj.Identifier}.{operation.Property}= {operation.Value}");
                 ExperimentHudPresenter.Instance.HandleFeedback($"Aplicado {operation.Value} na propriedade {operation.Property} do objeto {obj.InstanceId}");
             }
-
         }
     }
 

@@ -12,6 +12,8 @@ public class ExperimentData {
     public List<ReactiveEffect> ReactiveEffects { get; set; }
     public List<ActionEffect> ActionEffects { get; set; }
     public List<DerivedProperty> DerivedProperties { get; set; }
+    public List<VisualStateRule> VisualStateRules { get; set; }
+    public List<VisualAsset> VisualAssets { get; set; } = new List<VisualAsset>();
 
     public bool HasTimeLimit() {
         return Time > 0;

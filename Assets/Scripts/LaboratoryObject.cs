@@ -68,7 +68,7 @@ namespace Assets.Scripts {
             properties[key] = value;
         }
 
-        public override string ToString() => $"LaboratoryObject(ID: {InstanceId}, Name: {DisplayName}, CanonicalIdentifier: {canonicalIdentifier})";
+        public override string ToString() => $"LaboratoryObject(InstanceId: {InstanceId}, Name: {DisplayName}, CanonicalIdentifier: {canonicalIdentifier})";
 
         public bool HasProperty(string key) {
             return properties.ContainsKey(key);
@@ -88,7 +88,7 @@ namespace Assets.Scripts {
         }
 
         public virtual void OnHover() {
-            Debug.Log($"Hovering over {DisplayName} (ID: {InstanceId}) - Properties: [{string.Join(", ", properties.Keys)}] - Tags: [{string.Join(", ", Tags)}]");
+            Debug.Log($"Hovering over {DisplayName} (InstanceId: {InstanceId}), Properties: [{string.Join(", ", properties.Keys)}], Tags: [{string.Join(", ", Tags)}], ZoneIDs: [{string.Join(", ", CurrentZoneIds)}], ZoneTags: [{string.Join(", ", CurrentZoneTags)}]");
         }
 
         public virtual void OnExitHover() {

@@ -22,7 +22,6 @@ public class ExperimentRuntime {
         backgroundProcesses.Clear();
         StartTime = DateTime.Now;
         IsRunning = true;
-
     }
 
     public void Tick(DateTime now) {

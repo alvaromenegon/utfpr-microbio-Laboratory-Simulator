@@ -1,5 +1,4 @@
 ﻿using Assets.Scripts;
-using Assets.Scripts.Registry;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -26,15 +25,16 @@ public class ExperimentManager : MonoBehaviour {
     private ExperimentHudPresenter hudPresenter;
     private ExperimentState currentState = ExperimentState.NotStarted;
     public bool IsExperimentRunning => runtime != null && runtime.IsRunning;
-    private ExperimentObjectRegistry experimentObjectRegistry;
     public InteractionSystem InteractionSystem;
     private EffectSystem EffectSystem;
     private EffectRegistry effectRegistry;
     private BackgroundProcessRegistry BackgroundProcessRegistry;
-    private DerivedPropertyRegistry DerivedPropertyRegistry;
-    private DerivedPropertySystem DerivedPropertySystem;
     private BackgroundProcessSystem BackgroundProcessSystem;
     private StepManager StepManager;
+    private VisualSlotRegistry visualSlotRegistry;
+    private VisualAssetRegistry visualAssetRegistry;
+    private VisualAssetLoader visualAssetLoader;
+    private VisualStateSystem visualStateSystem;
 
     private void OnDestroy() {
         if (Instance == this) {
@@ -58,22 +58,22 @@ public class ExperimentManager : MonoBehaviour {
             apiClient = gameObject.AddComponent<ExperimentApiClient>();
         }
         runtime = new ExperimentRuntime();
-        experimentObjectRegistry = ExperimentObjectRegistry.GetInstance();
         PropertyCatalog.Initialize();
         BackgroundProcessRegistry = new BackgroundProcessRegistry();
-        DerivedPropertyRegistry = new DerivedPropertyRegistry();
-        DerivedPropertySystem = new DerivedPropertySystem(DerivedPropertyRegistry);
         effectRegistry = new EffectRegistry();
         EffectSystem = new EffectSystem(effectRegistry);
         InteractionSystem = new InteractionSystem(effectRegistry, EffectSystem);
         InteractionSystem.OnValueRequired += request => InputPanelController.Instance.Show(request);
-        
+        visualSlotRegistry = VisualSlotRegistry.GetInstance();
+        visualAssetRegistry = VisualAssetRegistry.GetInstance();
+        visualStateSystem = new VisualStateSystem(visualSlotRegistry);
+
         BackgroundProcessSystem = new BackgroundProcessSystem(BackgroundProcessRegistry, EffectSystem, effectRegistry);
         EffectSystem.BindBackgroundProcessSystem(BackgroundProcessSystem);
+        visualAssetLoader = new VisualAssetLoader(visualAssetRegistry, new TextureLoader(), new MaterialFactory());        
 
         StepManager = new StepManager(runtime);
         runtime.OnExperimentFinished += OnRuntimeFinished;
-        //experimentObjectRegistry.WillRebuildIndex += () => PrefabRegistry.GetInstance().ClearRegistry(); // limpar o PrefabRegistry antes de reconstruir o índice para evitar referências a objetos antigos que podem não existir mais
     }
 
     public EffectRegistry GetEffectRegistry() { // Interaction Resolver precisa acessar o EffectRegistry
@@ -90,13 +90,13 @@ public class ExperimentManager : MonoBehaviour {
     }
 
     private void Update() {
-        if (IsExperimentRunning && currentState == ExperimentState.Running) {
+        if (IsExperimentRunning && currentState == ExperimentState.Running && visualAssetLoader.IsReady) {
             runtime?.Tick(DateTime.Now);
             InteractionSystem?.Update();
             EffectSystem?.Update(InteractionSystem.GetActiveInteractions());
-            DerivedPropertySystem?.Update();
             StepManager?.Update();
             BackgroundProcessSystem?.Update();
+            visualStateSystem?.Update();
         }       
     }
 
@@ -105,12 +105,20 @@ public class ExperimentManager : MonoBehaviour {
         //experimentObjectRegistry.SetupRegistry(experimentDefinition.experimentData.Objects);
         effectRegistry.SetupRegistry(experimentDefinition.experimentData);
         BackgroundProcessRegistry.SetupRegistry(experimentDefinition.experimentData.BackgroundProcesses);
-        DerivedPropertyRegistry.SetupRegistry(experimentDefinition.experimentData.DerivedProperties);
-        SetupScene(experimentDefinition.experimentData.Objects);
+        SetupVisualSystem(experimentDefinition.experimentData);
+        SetupScene(experimentDefinition.experimentData.Objects);        
 
         runtime.Start(experimentDefinition);
         StepManager.Start();
         currentState = ExperimentState.Running;
+        Debug.Log($"Experiment '{experimentDefinition.title}' is running");
+    }
+
+    private void SetupVisualSystem(ExperimentData data) {
+        VisualStateRegistry.Instance.SetupRegistry(data.VisualStateRules);
+        StartCoroutine(visualAssetLoader.LoadAssets(data.VisualAssets));
+        Debug.Log($"Visual system configured with {data.VisualStateRules.Count} state rules and {data.VisualAssets.Count} assets.");
+
     }
 
     private void SetupScene(List<ExperimentInstanceObject> objectsDefinition) {
@@ -167,7 +175,6 @@ public class ExperimentManager : MonoBehaviour {
         obj.InstanceId = def.InstanceId;
         obj.canonicalIdentifier = def.CanonicalIdentifier;
         Debug.Log($"Configuring object {obj}");
-        Debug.Log($"Definition:{def}");
 
         if (def.Tags != null) {
             // apenas adiciona as tags definidas, sem sobrescrever
@@ -185,9 +192,10 @@ public class ExperimentManager : MonoBehaviour {
         if (def.InitialProperties != null) {
             foreach (var pair in def.InitialProperties) {
                 obj.SetProperty(pair.Key, pair.Value);
-                Debug.Log($"Set initial property {pair.Key} to {pair.Value} on object {obj.InstanceId}");
             }
         }
+
+        visualSlotRegistry.RegisterSlotsByObject(obj);
     }
 
     private IEnumerator BootstrapAndStart() {

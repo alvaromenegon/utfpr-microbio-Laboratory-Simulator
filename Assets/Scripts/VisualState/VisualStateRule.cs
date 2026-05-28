@@ -8,15 +8,25 @@ public class VisualStateRule {
 
     public string VisualAssetId;
 
-    public VisualTargetType TargetType;
+    public VisualActionType ActionType;
     public string Slot;
-
     public int Priority;
+    public object Value;
+    public string AnimatorParameter;
+
+    public object AnimatorValue;
+
+    public override string ToString() {
+        return $"VisualStateRule(Id={Id}, Subject={Subject}, ActionType={ActionType}, Slot={Slot}, Value={Value}, VisualAsset={VisualAssetId}, Conditions={string.Join(", ", Conditions)})";
+    }
 }
 
-public enum VisualTargetType {
-    WORLD_OBJECT,
-    MICROSCOPE_VIEW,
-    UI_PANEL,
-    MATERIAL_OVERRIDE
+public enum VisualActionType {
+    SET_ACTIVE,
+    SET_MATERIAL,
+    SET_IMAGE,
+    SPAWN_PREFAB,
+    PLAY_ANIMATION,
+    SHOW_UI_IMAGE,
+    PLAY_PARTICLE
 }

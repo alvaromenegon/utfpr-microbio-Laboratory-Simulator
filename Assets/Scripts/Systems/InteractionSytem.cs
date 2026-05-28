@@ -49,7 +49,6 @@ public class InteractionSystem {
 
     private void StartActiveInteraction(ActiveInteraction interaction) {
         logger.Log($"Starting interaction: {interaction}");
-        logger.Log("Resolving effects for interaction...");
         interaction.Effects = EffectRegistry.GetEffects(interaction.Context);
         logger.Log($"Found {interaction.Effects.Count} effects for interaction.");
         activeInteractions.Add(interaction);
@@ -61,7 +60,6 @@ public class InteractionSystem {
     }
 
     private void ExecuteInstantInteraction(InteractionRequest request) {
-        logger.Log($"Executing instant interaction: {request}");
         effectSystem.HandleInstantEffect(request);
     }
 

@@ -5,9 +5,9 @@ public class VisualAsset {
 
     public string AssetPath;
 
-    public string Slot;
-
     public bool HideWhenInactive;
+
+    public MaterialTemplateType ShaderTemplate;
 }
 
 public enum VisualAssetType {
@@ -16,4 +16,11 @@ public enum VisualAssetType {
     MATERIAL,
     PREFAB,
     UI_IMAGE
+}
+
+public enum MaterialTemplateType {
+    Opaque,
+    TransparentOverlay,
+    Emissive,
+    UnlitImage
 }
