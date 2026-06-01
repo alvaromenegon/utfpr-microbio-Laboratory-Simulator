@@ -1,8 +1,7 @@
 using System;
 
 [Serializable]
-public class ReactiveEffectDto {
-    public string Id { get; set; }
+public class ReactiveEffectDto : IEffectDto{
     public WhenDto[] Conditions { get; set; }
     public EffectOperationDto[] Operations { get; set; }
     public ObjectReferenceDto Subject { get; set; } = new ObjectReferenceDto();

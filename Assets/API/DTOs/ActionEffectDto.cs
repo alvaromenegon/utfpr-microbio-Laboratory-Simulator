@@ -1,6 +1,3 @@
-﻿using System.Collections.Generic;
-
-public class ActionEffectDto {
-    public string Id { get; set; }
+﻿public class ActionEffectDto : IEffectDto {
     public EffectOperationDto[] Operations { get; set; }
 }

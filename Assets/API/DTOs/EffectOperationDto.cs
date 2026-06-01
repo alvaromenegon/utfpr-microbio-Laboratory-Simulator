@@ -7,4 +7,5 @@ public class EffectOperationDto {
     public string Property { get; set; }
     public object Value { get; set; }
     public string ProcessId { get; set; } = string.Empty;
+    public string DisplayMessageTemplate { get; set; } = string.Empty;
 }

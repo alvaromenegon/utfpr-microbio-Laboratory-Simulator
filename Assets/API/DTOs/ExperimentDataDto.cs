@@ -10,7 +10,6 @@ public class ExperimentDataDto {
     public EffectDefinitionDto[] Effects { get; set; }
     public ReactiveEffectDto[] ReactiveEffects { get; set; }
     public ActionEffectDto[] ActionEffects { get; set; }
-    public DerivedPropertyDto[] DerivedProperties { get; set; }
     public VisualStateRuleDto[] VisualStateRules { get; set; }
     public VisualAssetDto[] VisualAssets { get; set; } = new VisualAssetDto[0];
 }
