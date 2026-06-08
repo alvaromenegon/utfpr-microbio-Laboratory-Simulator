@@ -1,0 +1,19 @@
+{
+    "Properties": [
+        {
+            "Id": "temperature",
+            "Label": "Temperatura",
+            "DataType": "FLOAT",
+            "Unit": "°C"
+        }
+    ],
+    "Bindings": [
+        {
+            "InteractionType": "SET_TEMPERATURE",
+            "PropertyId": "temperature",
+            "RequiredTags": [
+                "temperature_control"
+            ]
+        }
+    ]
+}

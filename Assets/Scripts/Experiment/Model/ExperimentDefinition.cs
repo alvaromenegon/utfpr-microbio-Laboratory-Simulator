@@ -27,12 +27,12 @@ public class ExperimentDefinition {
             Debug.LogError("ExperimentDefinition experimentData is null.");
             return false;
         }
-        if (experimentData.Steps == null || experimentData.Steps.Length == 0) {
+        if (experimentData.Steps == null || experimentData.Steps.Count == 0) {
             Debug.LogError("ExperimentDefinition experimentData has no steps defined.");
             return false;
         }
 
-        int stepCount = experimentData.Steps.Length;
+        int stepCount = experimentData.Steps.Count;
         foreach (var step in experimentData.Steps) {
             if (!step.IsValid(stepCount)) {
                 Debug.LogError($"ExperimentDefinition step {step} is invalid.");

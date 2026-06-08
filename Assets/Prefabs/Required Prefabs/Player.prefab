@@ -136,9 +136,12 @@ MonoBehaviour:
   playerCamera: {fileID: 224546710225088528}
   cursorChanger: {fileID: 0}
   interactionRange: 0.5
-  interactableLayer:
+  interactionLayer:
     serializedVersion: 2
     m_Bits: 256
+  movableLayer:
+    serializedVersion: 2
+    m_Bits: 512
 --- !u!1 &1437551132123908
 GameObject:
   m_ObjectHideFlags: 0

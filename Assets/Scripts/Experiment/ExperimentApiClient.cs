@@ -34,7 +34,7 @@ public class ExperimentApiClient : MonoBehaviour {
         onSuccess?.Invoke(practiceData);
     }
 
-    public IEnumerator SendDataToServer(SessionData session, int score, double timeTakenSeconds) {
+    public IEnumerator SendDataToServer(SessionData session, int score, double timeTakenSeconds, Action onSuccess, Action<string> onError) {
         string url = $"{baseUrl}/unity/results";
         var resultData = new {
             practiceId = session.PracticeId,
@@ -55,6 +55,7 @@ public class ExperimentApiClient : MonoBehaviour {
 
         if (webRequest.result == UnityWebRequest.Result.ConnectionError || webRequest.result == UnityWebRequest.Result.ProtocolError) {
             Debug.LogError($"Error sending result data: {webRequest.error}");
+            onError?.Invoke($"Error sending result data: {webRequest.error}");
         }
     }
 
@@ -68,6 +69,7 @@ public class ExperimentApiClient : MonoBehaviour {
         }
         catch (Exception e) {
             Debug.LogError($"Failed to parse experiment data: {e.Message}");
+            Debug.LogError($"Response content: {json}");
         }
 
         return null;

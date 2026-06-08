@@ -1,40 +1,98 @@
 using Assets.Scripts;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class InputFacade : MonoBehaviour {
     [Header("References")]
     public Transform playerCamera;
     public CursorChanger cursorChanger;
+    public InteractionHint interactionHint;
 
     [Header("Interaction Settings")]
     public float interactionRange = 1.3f;
-    public LayerMask interactableLayer;
+    public LayerMask interactionLayer;
+    public LayerMask movableLayer;
 
     private GameControls _controls;
     private IMovable _currentMovable;
-    private IInteractable _currentHoveredInteractable;
-    private LaboratoryObject _currentLaboratoryObject;
+    private LaboratoryObject _currentHoveredInteractable;
 
-    public event Action<IInteractable> InteractionPerformed;
-    public event Action<IInteractable> HoverEntered;
-    public event Action<IInteractable> HoverExited;
+    private InteractionSystem interactionSystem;
+
+    private List<InteractionCandidate> _currentCandidates = new();
+    private InteractionCandidate _selectedCandidate;
+    private InteractionRequest _activeRequest;
+
+    public event Action<LaboratoryObject> HoverEntered;
+    public event Action<LaboratoryObject> HoverExited;
+
+    void Start() {
+        interactionSystem = ExperimentManager.Instance.InteractionSystem;
+    }
 
     void Awake()
     {
         _controls = new GameControls();
         _controls.Player.Click.performed += _ => HandleClick();
         _controls.Player.Click.canceled += _ => HandleClickRelease();
-        _controls.Player.Interact.performed += _ => HandleInteract();
+        _controls.Player.Interact.performed += _ => HandleInteractStart();
+        _controls.Player.Interact.canceled += _ => HandleInteractEnd();
+
     }
 
-    private void HandleInteract()
-    {
-        if (_currentHoveredInteractable != null)
-        {
-            _currentHoveredInteractable.Interact();
-            InteractionPerformed?.Invoke(_currentHoveredInteractable);
+    private void UpdateInteractionCandidates() {
+        _currentCandidates.Clear();
+        _selectedCandidate = null;
+
+        if (_currentHoveredInteractable == null && _currentMovable == null) {
+            interactionHint.Hide();
+            return;
         }
+
+        var resolver = new InteractionResolver(_currentHoveredInteractable, _currentMovable );
+        //Debug.Log($"Resolving interactions for hovered: {_currentHoveredInteractable?.DisplayName}, held: {_currentMovable != null}");
+
+        _currentCandidates = resolver.ResolveCandidates();
+
+        if (_currentCandidates.Count == 0) {
+            interactionHint.Hide();
+            //interactionHint.Show("Nenhuma interação disponível para " + _currentHoveredInteractable?.DisplayName + " agora.");
+            return;
+        }
+        if (_currentCandidates.Count > 1) {
+            //Debug.LogWarning("Múltiplas interações disponíveis. Usando a de maior prioridade.");
+            //Debug.Log($"Candidatos: {string.Join(", ", _currentCandidates.Select(c => c.DisplayName))}");
+            _selectedCandidate = _currentCandidates.OrderByDescending(c => c.Priority).First();
+            //Debug.Log($"Selecionado: {_selectedCandidate.DisplayName} com prioridade {_selectedCandidate.Priority}");
+        }
+        else {
+            _selectedCandidate = _currentCandidates[0];
+        }
+
+        interactionHint.Show($"Pressione E para {_selectedCandidate.DisplayName ?? "interagir com " + _currentHoveredInteractable?.DisplayName}");
+    }
+
+    private void HandleInteractStart(){
+        Debug.Log("Tentando iniciar interação...");
+        if (_selectedCandidate == null) {
+            Debug.Log("Nenhuma interação selecionada para iniciar.");
+            return;
+        }
+
+        _activeRequest = _selectedCandidate.Request;
+        Debug.Log($"Iniciando interação: {_activeRequest}");
+
+        interactionSystem.HandleInteractionRequestStart(_selectedCandidate);
+    }
+
+    private void HandleInteractEnd(){
+        if (_activeRequest == null)
+            return;
+
+        interactionSystem.HandleInteractionRequestEnd(_activeRequest);
+        _activeRequest = null;
     }
 
     void OnEnable() => _controls.Player.Enable();
@@ -43,116 +101,88 @@ public class InputFacade : MonoBehaviour {
     void Update()
     {
         UpdateHoverState();
+        UpdateInteractionCandidates();
+        UpdateCursor();
     }
 
     public Vector2 GetMoveInput() => _controls.Player.Move.ReadValue<Vector2>();
     public Vector2 GetLookInput() => _controls.Player.Look.ReadValue<Vector2>();
 
+    private void UpdateCursor() {
+        var cursor = CursorChanger.CursorType.Pointer;
+        if (_currentMovable != null) {
+            cursor = CursorChanger.CursorType.Selector;
+        } else if (_currentHoveredInteractable != null) {
+            cursor = CursorChanger.CursorType.Interact;
+        }
+        cursorChanger.ChangeTo(cursor);
+    }
+
     private void HandleClick()
     {
-        if (_currentMovable != null && !_currentMovable.IsMoving)
-        {
-            _currentMovable.PickUp();
-        }
+        if (_currentMovable == null) {
+            if (TryGetMovable(out var movable)) {
+                _currentMovable = movable;
+                movable.PickUp();
+            }           
+        } 
     }
 
     private void HandleClickRelease()
     {
         if (_currentMovable != null && _currentMovable.IsMoving){
             _currentMovable.Drop();
-            
+            _currentMovable = null;
         }
     }
 
-
-
-    // Legacy compatibility API migrated from PlayerInteraction.
-    public bool TryGetInteractableInSight(out IInteractable interactable)
-    {
-        interactable = null;
-        if (!TryGetObjectInSight(out RaycastHit hit))
-        {
-            return false;
-        }
-
-        interactable = hit.collider.GetComponentInParent<IInteractable>();
-        return interactable != null;
-    }
-
-    // Legacy compatibility API migrated from PlayerInteraction.
-    public void TryInteract() => HandleInteract();
-    public bool TryGetObjectInSight(out RaycastHit hit)
-    {
-        hit = default;
-
-        if (playerCamera == null)
-        {
-            return false;
-        }
+    private bool TryGetMovable(out IMovable movable) {       
+        movable = null;
 
         Ray ray = new(playerCamera.position, playerCamera.forward);
-        return Physics.Raycast(ray, out hit, interactionRange, interactableLayer);
+
+        if (Physics.Raycast(ray, out var hit, interactionRange, movableLayer)) {
+            movable = hit.collider.GetComponentInParent<IMovable>();
+            return movable != null;
+        }
+        return false;
     }
 
-    private void UpdateHoverState()
-    {
-        IMovable nextMovable = null;
-        IInteractable nextInteractable = null;
-        LaboratoryObject nextLaboratoryObject = null;
-        CursorChanger.CursorType cursorType = CursorChanger.CursorType.Pointer;
+    private bool TryGetInteractionTarget(out RaycastHit hit) {
+        hit = default;
 
-        if (TryGetObjectInSight(out RaycastHit hit))
-        {
-            nextMovable = hit.collider.GetComponentInParent<IMovable>();
-            nextInteractable = hit.collider.GetComponentInParent<IInteractable>();
-            nextLaboratoryObject = hit.collider.GetComponentInParent<LaboratoryObject>();         
+        Ray ray = new(playerCamera.position, playerCamera.forward);
 
-            if (nextMovable != null) {
-                cursorType = CursorChanger.CursorType.Selector;
-            }
-            else if (nextInteractable != null) {
-                cursorType = CursorChanger.CursorType.Interact;
-            }
-        }
+        return Physics.Raycast(ray, out hit, interactionRange, interactionLayer);
+    }
 
-        if (!ReferenceEquals(_currentLaboratoryObject, nextLaboratoryObject))
-        {
-            if (_currentLaboratoryObject != null)
-            {
-                _currentLaboratoryObject.OnExitHover();
-            }
-            _currentLaboratoryObject = nextLaboratoryObject;
-            if (_currentLaboratoryObject != null)
-            {
-                _currentLaboratoryObject.OnHover();
-            }
-        } else {
-            _currentLaboratoryObject = nextLaboratoryObject;
-        }
-
-        if (!ReferenceEquals(_currentMovable, nextMovable)) {
-            _currentMovable = nextMovable;
-        }
-
-        if (!ReferenceEquals(_currentHoveredInteractable, nextInteractable))
-        {
-            if (_currentHoveredInteractable != null)
-            {
+    private void UpdateHoveredObject(LaboratoryObject nextObject) {         
+        if (_currentHoveredInteractable != nextObject) {
+            HoverEntered += (obj) => obj.OnHover();
+            HoverExited += (obj) => obj.OnExitHover();
+            if (_currentHoveredInteractable != null) {
                 HoverExited?.Invoke(_currentHoveredInteractable);
             }
-
-            _currentHoveredInteractable = nextInteractable;
-
-            if (_currentHoveredInteractable != null)
-            {
+            _currentHoveredInteractable = nextObject;
+            if (_currentHoveredInteractable != null) {
                 HoverEntered?.Invoke(_currentHoveredInteractable);
             }
-        }
-
-        if (cursorChanger != null)
-        {
-            cursorChanger.ChangeTo(cursorType);
+            HoverEntered = null;
+            HoverExited = null;
         }
     }
 
+    private void UpdateHoverState(){
+        LaboratoryObject nextObject = null;
+        if (playerCamera == null) {
+            Debug.LogError("Player camera reference is missing.");
+            return ;
+        }
+
+        if (TryGetInteractionTarget(out RaycastHit hit))
+        {
+            nextObject = hit.collider.GetComponentInParent<LaboratoryObject>();           
+        }
+        UpdateHoveredObject(nextObject);
+    }
 }

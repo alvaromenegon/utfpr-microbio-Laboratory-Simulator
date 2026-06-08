@@ -1,9 +1,16 @@
-﻿using System;
+﻿using Assets.Scripts;
+using System;
 using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
-using static Interaction;
+
+enum ExperimentState {
+    NotStarted,
+    Running,
+    Finished,
+    InternalError
+}
 
 public class ExperimentManager : MonoBehaviour {
     [SerializeField] private GameObject label;
@@ -11,15 +18,29 @@ public class ExperimentManager : MonoBehaviour {
     [SerializeField] private TMP_Text inputLabel;
     [SerializeField] private ExperimentApiClient apiClient;
 
-    [SerializeField] private ExperimentObjectRegistry objectRegistry;
     public static ExperimentManager Instance { get; private set; }
     public ExperimentDefinition CurrentExperiment { get; private set; }
 
     private ExperimentRuntime runtime;
     private ExperimentHudPresenter hudPresenter;
-
+    private ExperimentState currentState = ExperimentState.NotStarted;
     public bool IsExperimentRunning => runtime != null && runtime.IsRunning;
-    private Step CurrentStep => runtime.CurrentStep;
+    public InteractionSystem InteractionSystem;
+    private EffectSystem EffectSystem;
+    private EffectRegistry effectRegistry;
+    private BackgroundProcessRegistry BackgroundProcessRegistry;
+    private BackgroundProcessSystem BackgroundProcessSystem;
+    private StepManager StepManager;
+    private VisualSlotRegistry visualSlotRegistry;
+    private VisualAssetRegistry visualAssetRegistry;
+    private VisualAssetLoader visualAssetLoader;
+    private VisualStateSystem visualStateSystem;
+
+    private void OnDestroy() {
+        if (Instance == this) {
+            Instance = null;
+        }
+    }
 
     private void Awake() {
         Instance = this;
@@ -28,95 +49,163 @@ public class ExperimentManager : MonoBehaviour {
             Debug.LogError("[ExperimentManager] Sessão indisponível. Manager interrompido.");
             return;
         }
-       if (apiClient == null) {
+                
+        if (apiClient == null) {
             apiClient = GetComponent<ExperimentApiClient>();
         }
 
         if (apiClient == null) {
             apiClient = gameObject.AddComponent<ExperimentApiClient>();
         }
-       runtime = new ExperimentRuntime();
-        runtime.OnStepChanged += OnRuntimeStepChanged;
+        runtime = new ExperimentRuntime();
+        BackgroundProcessRegistry = new BackgroundProcessRegistry();
+        effectRegistry = new EffectRegistry();
+        EffectSystem = new EffectSystem(effectRegistry);
+        InteractionSystem = new InteractionSystem(effectRegistry, EffectSystem);
+        InteractionSystem.OnValueRequired += request => InputPanelController.Instance.Show(request);
+        visualSlotRegistry = VisualSlotRegistry.GetInstance();
+        visualAssetRegistry = VisualAssetRegistry.GetInstance();
+        visualStateSystem = new VisualStateSystem(visualSlotRegistry);
+
+        BackgroundProcessSystem = new BackgroundProcessSystem(BackgroundProcessRegistry, EffectSystem, effectRegistry);
+        EffectSystem.BindBackgroundProcessSystem(BackgroundProcessSystem);
+        visualAssetLoader = new VisualAssetLoader(visualAssetRegistry, new TextureLoader(), new MaterialFactory());        
+
+        StepManager = new StepManager(runtime);
         runtime.OnExperimentFinished += OnRuntimeFinished;
     }
 
+    public EffectRegistry GetEffectRegistry() { // Interaction Resolver precisa acessar o EffectRegistry
+        return effectRegistry;
+    }
+
     private void Start() {
-        hudPresenter = new ExperimentHudPresenter(HUDController.Instance);
-        hudPresenter.Bind(runtime);
+        ExperimentHudPresenter.New(HUDController.Instance);
+        hudPresenter = ExperimentHudPresenter.Instance;
+        hudPresenter.Bind(runtime, StepManager, EffectSystem);
+        var inputPanelController = InputPanelController.Instance;
+        inputPanelController.Bind(EffectSystem);
         StartCoroutine(BootstrapAndStart());
     }
 
     private void Update() {
-        runtime?.Tick(DateTime.Now);
+        if (IsExperimentRunning && currentState == ExperimentState.Running && visualAssetLoader.IsReady) {
+            runtime?.Tick(DateTime.Now);
+            InteractionSystem?.Update();
+            EffectSystem?.Update(InteractionSystem.GetActiveInteractions());
+            StepManager?.Update();
+            BackgroundProcessSystem?.Update();
+            visualStateSystem?.Update();
+        }       
     }
 
     public void StartExperiment(ExperimentDefinition experimentDefinition) {
         CurrentExperiment = experimentDefinition;
-        SetupExperimentObjects(experimentDefinition);
+        //experimentObjectRegistry.SetupRegistry(experimentDefinition.experimentData.Objects);
+        effectRegistry.SetupRegistry(experimentDefinition.experimentData);
+        BackgroundProcessRegistry.SetupRegistry(experimentDefinition.experimentData.BackgroundProcesses);
+        SetupVisualSystem(experimentDefinition.experimentData);
+        SetupScene(experimentDefinition.experimentData.Objects);        
+
         runtime.Start(experimentDefinition);
+        StepManager.Start();
+        currentState = ExperimentState.Running;
+        Debug.Log($"Experiment '{experimentDefinition.title}' is running");
     }
 
-    public void NextStep() {
-        if (!IsExperimentRunning) {
-           runtime.NextStep();
-        }
-    } 
+    private void SetupVisualSystem(ExperimentData data) {
+        VisualStateRegistry.Instance.SetupRegistry(data.VisualStateRules);
+        StartCoroutine(visualAssetLoader.LoadAssets(data.VisualAssets));
+        Debug.Log($"Visual system configured with {data.VisualStateRules.Count} state rules and {data.VisualAssets.Count} assets.");
 
-    public void End(int? finishScore = null) {
-        if (!IsExperimentRunning) {
-            return;
-        }
-
-        runtime.End(finishScore);
     }
 
-    public void ProcessInteraction(PlayerAction interaction, double? value = null) {
-        if (!IsExperimentRunning) {
-            return;
-        }
+    private void SetupScene(List<ExperimentInstanceObject> objectsDefinition) {
+        foreach (var def in objectsDefinition) {
+            LaboratoryObject obj = def.Binding.Type switch {
+                ObjectBindingType.SCENE => BindSceneObject(def),
+                ObjectBindingType.SPAWN => SpawnRuntimeObject(def),
+                _ => null
+            };
 
-        runtime.ProcessInteraction(interaction);
+            if (obj == null) {
+                Debug.LogError($"Failed to load object {def.InstanceId}");
+                continue;
+            }
+
+            ConfigureObject(obj, def);
+            ExperimentObjectRegistry.GetInstance().Register(obj);
+        }
     }
 
-    public void ValidateValue(double? value) {
-        if (!IsExperimentRunning) {
-            return;
+    private LaboratoryObject BindSceneObject(ExperimentInstanceObject def) {
+        if (!SceneObjectRegistry.GetInstance().TryGet(def.Binding.SceneObjectId, out var obj)) {
+            Debug.LogError($"Scene object not found: {def.Binding.SceneObjectId}");
+            return null;
         }
-        runtime.ValidateValue(value);
+
+        return obj;
     }
 
-        
-    public void HandlePlayerAction(PlayerAction interaction) {
-		if (!IsExperimentRunning) return;
-        runtime.ProcessInteraction(interaction);
+    private LaboratoryObject SpawnRuntimeObject(ExperimentInstanceObject def) {
+        var prefab = PrefabRegistry.GetInstance().GetPrefab(def.CanonicalIdentifier);
+
+
+        if (!SpawnLocationRegistry.GetInstance().TryResolve(def.Binding.SpawnLocation, out var spawn)) {
+            Debug.LogError($"Spawn point not found: {def.Binding.SpawnLocation}");
+            return null;
+        }
+
+        var instance = Instantiate(prefab, spawn.position, prefab.transform.rotation); // mantém a rotação original do prefab para evitar problemas de orientação, especialmente para objetos como frascos que podem ter uma direção específica
+
+        var labObject = instance.GetComponent<LaboratoryObject>();
+
+        if (labObject == null) {
+            Debug.LogError($"Prefab {def.CanonicalIdentifier} has no LaboratoryObject.");
+            return null;
+        }
+
+        return labObject;
     }
 
-    public void ProcessBackgroundWork(BackgroundProcess work, float timeUsed) {
-        if (!IsExperimentRunning) {
-            return;
+    private void ConfigureObject(
+    LaboratoryObject obj,
+    ExperimentInstanceObject def) {
+        obj.InstanceId = def.InstanceId;
+        obj.canonicalIdentifier = def.CanonicalIdentifier;
+        Debug.Log($"Configuring object {obj}");
+        if (def.DisplayName != null) {
+            obj.DisplayName = def.DisplayName; // útil para definir nome de recipientes, como "Frasco de Ácido" em vez de usar apenas "Frasco" do prefab
+        }             
+
+        if (def.Tags != null) {
+            // apenas adiciona as tags definidas, sem sobrescrever
+            if (obj.Tags == null) {
+                obj.Tags = new List<string>(def.Tags);
+            } else {
+                foreach (var tag in def.Tags) {
+                    if (!obj.Tags.Contains(tag)) {
+                        obj.Tags.Add(tag);
+                    }
+                }
+            }
         }
 
-        runtime.ProcessBackgroundWork(work, timeUsed);
-    }
+        if (def.InitialProperties != null) {
+            foreach (var pair in def.InitialProperties) {
+                if (float.TryParse(pair.Value.ToString(), out var numericValue)) {
+                    Debug.Log($"Setting numeric property {pair.Key} to {numericValue} on object {obj.InstanceId}");
+                    // tenta converter para número, se possível
+                    obj.SetProperty(pair.Key, numericValue); 
+                }
+                else {
+                    obj.SetProperty(pair.Key, pair.Value);
+                }
 
-    public void OnSecondaryTargetInteraction(GameObject gameObjectPrimary) {
-        if (!IsExperimentRunning || runtime.CurrentStep == null) {
-            return;
+            }
         }
 
-        var currentStep = runtime.CurrentStep;
-        var gameObjectSecondary = GameObject.Find(currentStep.InteractionTargetSecondary);
-        if (gameObjectSecondary == null) {
-            Debug.LogError($"Secondary target '{currentStep.InteractionTargetSecondary}' not found in the scene.");
-            return;
-        }
-
-        var equipment = gameObjectSecondary.GetComponent<EquipmentInteractable>();
-        if (equipment == null || currentStep.Interaction != InteractionType.MOVE) {
-            return;
-        }
-
-        equipment.MoveObjectToEquipment(gameObjectPrimary);
+        visualSlotRegistry.RegisterSlotsByObject(obj);
     }
 
     private IEnumerator BootstrapAndStart() {
@@ -133,55 +222,17 @@ public class ExperimentManager : MonoBehaviour {
             onError: error => Debug.LogError(error)
         ));
     }
-
-    private void SetupExperimentObjects(ExperimentDefinition experimentDefinition) {
-        var stepsDescription = "";
-        foreach (var step in experimentDefinition.experimentData.Steps) {
-            stepsDescription += $"- {step.Description}\n";
-        }
-
-        label.GetComponent<Text>().text = $"{experimentDefinition.experimentData.Description}\n{stepsDescription}";
-
-        foreach (var objName in experimentDefinition.experimentData.Objects) {
-            GameObject obj = GameObject.Find(objName);
-            if (obj == null) {
-                Debug.LogError($"Object '{objName}' not found in the scene.");
-                continue;
-            }
-
-            var interactable = obj.GetComponent<StepInteractable>();
-            if (interactable == null) {
-                obj.AddComponent<StepInteractable>();
-            }
-        }
-    }
-
-    private void OnRuntimeStepChanged(Step step, int index, int total) {
-        secondaryTargetBeam.SetActive(false);
-        inputLabel.text = "";
-
-        if (step == null) {
-            return;
-        }
-
-        var gameObject = GameObject.Find(step.InteractionTarget);
-        if (gameObject == null) {
-            Debug.LogError($"Target '{step.InteractionTarget}' not found in the scene.");
-            return;
-        }
-
-        var interactable = gameObject.GetComponent<StepInteractable>();
-        if (interactable == null) {
-            interactable = gameObject.AddComponent<StepInteractable>();
-        }
-
-        interactable.stepType = step.Interaction;
-
-    }   
+   
 
     private void OnRuntimeFinished(int score, double timeTakenSeconds) {
         CurrentExperiment = null;
         Debug.Log($"Experiment ended. Final score: {score}");
-        StartCoroutine(apiClient.SendDataToServer(SessionData.Current, score, timeTakenSeconds));
+        currentState = ExperimentState.Finished;
+        StartCoroutine(apiClient.SendDataToServer(SessionData.Current, score, timeTakenSeconds, onSuccess: () => {
+            Debug.Log("Result data sent successfully.");
+        }, onError: error => {
+            Debug.LogError($"Error sending result data: {error}");
+            currentState = ExperimentState.InternalError;
+        }));
     }
 }

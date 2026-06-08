@@ -1,7 +1,11 @@
-using UnityEngine;
+using Assets.Scripts;
 
 public class PlayerAction {
     public Interaction.InteractionType InteractionType { get; set; }
-    public GameObject Target { get; set; }
-    public double? Value { get; set; } = default;
+    public InteractionContext Context;
+    public object Value { get; set; } = default;
+    public string Property { get; set; } = default;
+
+    public PlayerAction() { }
+
 }

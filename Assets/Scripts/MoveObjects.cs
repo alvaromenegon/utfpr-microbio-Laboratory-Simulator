@@ -1,11 +1,14 @@
-﻿using UnityEngine;
+﻿using Assets.Scripts;
+using UnityEngine;
 
 public class MoveObjects : MonoBehaviour, IMovable {
 	[Header("References")]
 	[SerializeField] private Transform guide;
+	[SerializeField] private LaboratoryObject laboratoryObject;
+    Vector3 originalPos;
 
-	[Header("Settings")]
-    [SerializeField] private bool applyMovableLayer = true;
+    private LayerMask originalLayer;
+
     GameObject _tempParent;
 	Rigidbody _rigidbody;
     private bool _isMoving;
@@ -15,10 +18,26 @@ public class MoveObjects : MonoBehaviour, IMovable {
 		_canMove = canMove;
     }
 
+	private void Awake() {
+		originalLayer = gameObject.layer;
+	}
+
     public bool IsMoving => _isMoving;
 
-	void Start () {		
-		_rigidbody = gameObject.GetComponent<Rigidbody>();
+	public LaboratoryObject GetLaboratoryObject() {
+		if (laboratoryObject == null) {
+			Debug.LogWarning("LaboratoryObject reference is not assigned, trying to find it in the game object...");
+			laboratoryObject = gameObject.GetComponent<LaboratoryObject>();
+			if (laboratoryObject == null) {
+				Debug.LogError("LaboratoryObject is null!");
+			}
+        }
+        return laboratoryObject;
+    }
+
+    void Start () {
+        originalPos = gameObject.transform.position;
+        _rigidbody = gameObject.GetComponent<Rigidbody>();
 		_rigidbody.useGravity = true;
 		_isMoving = false;
 	}
@@ -41,7 +60,19 @@ public class MoveObjects : MonoBehaviour, IMovable {
 		_tempParent = null;
     }
 
-	public void PickUp()
+   
+
+
+
+    private void OnCollisionEnter(Collision collision) {
+
+        if (collision.gameObject.tag == "Border") {
+            gameObject.transform.position = originalPos;
+        }
+
+    }
+
+    public void PickUp()
 	{
         if (!_canMove) {
             return;
@@ -52,9 +83,10 @@ public class MoveObjects : MonoBehaviour, IMovable {
 		transform.position = _tempParent.transform.position;
         transform.parent = _tempParent.transform;
 		_isMoving = true;
-	}
+        gameObject.layer = LayerMask.NameToLayer("Ignore Raycast");
+    }
 
-	public void Drop(){
+    public void Drop(){
         if (!_isMoving) {
 			return;
 		}
@@ -65,16 +97,8 @@ public class MoveObjects : MonoBehaviour, IMovable {
 
         ResetTempParent();
 		_isMoving = false;
+		gameObject.layer = originalLayer;
+
     }
 
-    private void OnValidate() {
-        if (!applyMovableLayer) {
-            return;
-        }
-
-        int movableLayer = LayerMask.NameToLayer("Movable");
-        if (movableLayer >= 0) {
-            gameObject.layer = movableLayer;
-        }
-    }
 }

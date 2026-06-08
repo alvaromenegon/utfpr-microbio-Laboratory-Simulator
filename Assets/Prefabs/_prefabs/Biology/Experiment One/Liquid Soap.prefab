@@ -197,7 +197,6 @@ GameObject:
   - component: {fileID: 65093944276169382}
   - component: {fileID: 114355994786890458}
   - component: {fileID: 114930109124837692}
-  - component: {fileID: 7710694069641583030}
   m_Layer: 9
   m_Name: Liquid Soap
   m_TagString: Step 3
@@ -339,7 +338,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 41fe31fca966b474cae945697488e8cc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  applyMovableLayer: 1
+  guide: {fileID: 0}
+  laboratoryObject: {fileID: 0}
 --- !u!114 &114930109124837692
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -385,24 +385,6 @@ MonoBehaviour:
             m_StringArgument: 
             m_BoolArgument: 0
           m_CallState: 2
---- !u!114 &7710694069641583030
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1761749309894652}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5d28ac8a7d3ccfa438df033aae349a02, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::InputFacade
-  playerCamera: {fileID: 0}
-  cursorChanger: {fileID: 0}
-  interactionRange: 1.3
-  interactableLayer:
-    serializedVersion: 2
-    m_Bits: 0
 --- !u!1 &1962470991269364
 GameObject:
   m_ObjectHideFlags: 0
