@@ -1,11 +1,14 @@
 using Assets.Scripts;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 class InputFacade : MonoBehaviour {
     [Header("References")]
     public Transform playerCamera;
     public CursorChanger cursorChanger;
+    public InteractionHint interactionHint;
 
     [Header("Interaction Settings")]
     public float interactionRange = 1.3f;
@@ -17,6 +20,9 @@ class InputFacade : MonoBehaviour {
     private LaboratoryObject _currentHoveredInteractable;
 
     private InteractionSystem interactionSystem;
+
+    private List<InteractionCandidate> _currentCandidates = new();
+    private InteractionCandidate _selectedCandidate;
     private InteractionRequest _activeRequest;
 
     public event Action<LaboratoryObject> HoverEntered;
@@ -36,21 +42,54 @@ class InputFacade : MonoBehaviour {
 
     }
 
-    private void HandleInteractStart(){
-        Debug.Log("Interact started.");
-        if (_currentMovable == null && _currentHoveredInteractable == null) {
-            Debug.Log("No interactable in sight.");
+    private void UpdateInteractionCandidates() {
+        _currentCandidates.Clear();
+        _selectedCandidate = null;
+
+        if (_currentHoveredInteractable == null && _currentMovable == null) {
+            interactionHint.Hide();
             return;
         }
 
-        _activeRequest = new InteractionResolver(_currentHoveredInteractable, _currentMovable).BuildRequest();
+        var resolver = new InteractionResolver(_currentHoveredInteractable, _currentMovable );
+        //Debug.Log($"Resolving interactions for hovered: {_currentHoveredInteractable?.DisplayName}, held: {_currentMovable != null}");
 
-        interactionSystem.HandleInteractionRequestStart(_activeRequest);
+        _currentCandidates = resolver.ResolveCandidates();
+
+        if (_currentCandidates.Count == 0) {
+            interactionHint.Hide();
+            //interactionHint.Show("Nenhuma interação disponível para " + _currentHoveredInteractable?.DisplayName + " agora.");
+            return;
+        }
+        if (_currentCandidates.Count > 1) {
+            //Debug.LogWarning("Múltiplas interações disponíveis. Usando a de maior prioridade.");
+            //Debug.Log($"Candidatos: {string.Join(", ", _currentCandidates.Select(c => c.DisplayName))}");
+            _selectedCandidate = _currentCandidates.OrderByDescending(c => c.Priority).First();
+            //Debug.Log($"Selecionado: {_selectedCandidate.DisplayName} com prioridade {_selectedCandidate.Priority}");
+        }
+        else {
+            _selectedCandidate = _currentCandidates[0];
+        }
+
+        interactionHint.Show($"Pressione E para {_selectedCandidate.DisplayName ?? "interagir com " + _currentHoveredInteractable?.DisplayName}");
+    }
+
+    private void HandleInteractStart(){
+        Debug.Log("Tentando iniciar interação...");
+        if (_selectedCandidate == null) {
+            Debug.Log("Nenhuma interação selecionada para iniciar.");
+            return;
+        }
+
+        _activeRequest = _selectedCandidate.Request;
+        Debug.Log($"Iniciando interação: {_activeRequest}");
+
+        interactionSystem.HandleInteractionRequestStart(_selectedCandidate);
     }
 
     private void HandleInteractEnd(){
-        Debug.Log("Interact ended.");
-        if (_activeRequest == null) return;
+        if (_activeRequest == null)
+            return;
 
         interactionSystem.HandleInteractionRequestEnd(_activeRequest);
         _activeRequest = null;
@@ -62,6 +101,7 @@ class InputFacade : MonoBehaviour {
     void Update()
     {
         UpdateHoverState();
+        UpdateInteractionCandidates();
         UpdateCursor();
     }
 
@@ -142,7 +182,7 @@ class InputFacade : MonoBehaviour {
         if (TryGetInteractionTarget(out RaycastHit hit))
         {
             nextObject = hit.collider.GetComponentInParent<LaboratoryObject>();           
-        }        
+        }
         UpdateHoveredObject(nextObject);
     }
 }

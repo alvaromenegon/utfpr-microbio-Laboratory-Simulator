@@ -4,7 +4,6 @@ using System;
 public class StepDto {
     public string Description { get; set; }
     public int Score { get; set; }
-    public string Interaction { get; set; }
     public string Instruction { get; set; }
     public string OnSuccessMessage { get; set; }
     public string OnFailureMessage { get; set; }

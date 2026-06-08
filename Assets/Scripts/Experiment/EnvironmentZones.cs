@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Assets.Scripts;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class EnvironmentZone : MonoBehaviour {
@@ -13,5 +14,10 @@ public class EnvironmentZone : MonoBehaviour {
 
     public void SetProperty(string property, object value) {
         properties[property] = value;
+    }
+
+    public List<LaboratoryObject> GetObjectsInside() {
+        var objects = ExperimentObjectRegistry.GetInstance().Query(requiredZoneTags: Tags);
+        return objects;
     }
 }

@@ -100,8 +100,10 @@ public class BackgroundProcessSystem  {
         }
         logger.Log($"Attempting to start background process: {definition} with context: {context}");
 
-        if (!ConditionEvaluator.Check(definition.StartConditions, context))
+        if (!ConditionEvaluator.Check(definition.StartConditions, context)) {
+            logger.Log($"Background process {processId} with BoundObject {definition.BoundObject} start conditions not met.");
             return false;
+        }
         logger.Log($"Background process {processId} with BoundObject {definition.BoundObject} start conditions met.");
         var objectResolver = new ObjectResolver(definition.BoundObject, context);
         var boundObjects = objectResolver.Resolve();

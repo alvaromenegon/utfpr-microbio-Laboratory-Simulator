@@ -19,6 +19,9 @@ public class PrefabRegistry : MonoBehaviour {
 
     public GameObject GetPrefab(string identifier) {
         var prefab = prefabs.Find(entry => entry.CanonicalIdentifier == identifier);
+        if (prefab == null) {
+            Debug.LogError($"Prefab with identifier '{identifier}' not found in PrefabRegistry.");
+        }
         return prefab?.Prefab;
     }
  

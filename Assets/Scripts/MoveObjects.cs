@@ -5,8 +5,9 @@ public class MoveObjects : MonoBehaviour, IMovable {
 	[Header("References")]
 	[SerializeField] private Transform guide;
 	[SerializeField] private LaboratoryObject laboratoryObject;
+    Vector3 originalPos;
 
-	private LayerMask originalLayer;
+    private LayerMask originalLayer;
 
     GameObject _tempParent;
 	Rigidbody _rigidbody;
@@ -34,8 +35,9 @@ public class MoveObjects : MonoBehaviour, IMovable {
         return laboratoryObject;
     }
 
-    void Start () {		
-		_rigidbody = gameObject.GetComponent<Rigidbody>();
+    void Start () {
+        originalPos = gameObject.transform.position;
+        _rigidbody = gameObject.GetComponent<Rigidbody>();
 		_rigidbody.useGravity = true;
 		_isMoving = false;
 	}
@@ -58,7 +60,19 @@ public class MoveObjects : MonoBehaviour, IMovable {
 		_tempParent = null;
     }
 
-	public void PickUp()
+   
+
+
+
+    private void OnCollisionEnter(Collision collision) {
+
+        if (collision.gameObject.tag == "Border") {
+            gameObject.transform.position = originalPos;
+        }
+
+    }
+
+    public void PickUp()
 	{
         if (!_canMove) {
             return;

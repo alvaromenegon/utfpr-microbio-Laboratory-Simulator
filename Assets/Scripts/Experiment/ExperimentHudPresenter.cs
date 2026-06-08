@@ -1,3 +1,4 @@
+using Assets.Scripts;
 using UnityEngine;
 
 public class ExperimentHudPresenter {
@@ -9,6 +10,13 @@ public class ExperimentHudPresenter {
         Instance = this;
     }
 
+    public static ExperimentHudPresenter GetInstance() {
+        if (Instance == null) {
+            Debug.LogError("ExperimentHudPresenter instance has not been created yet. Call New() first.");
+        }
+        return Instance;
+    }
+
     public static void New(HUDController hudController) {
         if (Instance == null) {
             new ExperimentHudPresenter(hudController);
@@ -18,7 +26,7 @@ public class ExperimentHudPresenter {
         }
     }
 
-    public void Bind(ExperimentRuntime runtime, Assets.Scripts.StepManager stepManager) {
+    public void Bind(ExperimentRuntime runtime, StepManager stepManager, EffectSystem effectSystem) {
         runtime.OnTimerUpdated += HandleTimerUpdated;
         stepManager.OnScoreUpdated += score => hud.UpdateScore(score);
         runtime.OnExperimentFinished += (finalScore, elapsedSeconds) => {
@@ -26,9 +34,10 @@ public class ExperimentHudPresenter {
         };
         stepManager.OnStepChanged += HandleStepChanged;
         stepManager.OnFeedback += HandleFeedback;
+        effectSystem.OnEffectApplied += HandleFeedback; // exibe o feedback de efeitos aplicados
     }
 
-    public void Unbind(ExperimentRuntime runtime, Assets.Scripts.StepManager stepManager) {
+    public void Unbind(ExperimentRuntime runtime, StepManager stepManager, EffectSystem effectSystem) {
         runtime.OnTimerUpdated -= HandleTimerUpdated;
         stepManager.OnFeedback -= HandleFeedback;
         stepManager.OnStepChanged -= HandleStepChanged;
@@ -36,6 +45,7 @@ public class ExperimentHudPresenter {
             runtime.OnExperimentFinished -= (finalScore, elapsedSeconds) => {
                 hud.UpdateInfo($"Experimento finalizado! Pontuação: {finalScore}, Tempo: {elapsedSeconds:F0} s");
             };
+        effectSystem.OnEffectApplied -= HandleFeedback;
     }
 
     public void UpdateUserInfo(string username, string userPhotoUrl) {
@@ -55,9 +65,11 @@ public class ExperimentHudPresenter {
         hud.UpdateDescription(step.Description);
     }
 
+    // exibe uma mensagem de feedback por alguns segundos (pode ser chamada por efeitos ou interações para dar retorno ao usuário)
     public void HandleFeedback(string message) {
-        if (!string.IsNullOrEmpty(message)) {
-            hud.UpdateInfo(message);
+       if (string.IsNullOrEmpty(message)) {
+            return;
         }
+        hud.ShowFeedback(message);
     }
 }

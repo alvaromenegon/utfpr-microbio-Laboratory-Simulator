@@ -11,7 +11,6 @@ public class ExperimentData {
     public List<EffectDefinition> Effects { get; set; }
     public List<ReactiveEffect> ReactiveEffects { get; set; }
     public List<ActionEffect> ActionEffects { get; set; }
-    public List<DerivedProperty> DerivedProperties { get; set; }
     public List<VisualStateRule> VisualStateRules { get; set; }
     public List<VisualAsset> VisualAssets { get; set; } = new List<VisualAsset>();
 
@@ -23,7 +22,7 @@ public class ExperimentData {
         string result = $"Experiment: {Description}\nTime Limit: {(HasTimeLimit() ? Time.ToString() + " seconds" : "None")}\nObjects: {string.Join(", ", Objects)}\nSteps:\n";
         for (int i = 0; i < Steps.Count; i++) {
             var step = Steps[i];
-            result += $"  Step {i + 1}: {step.Description}, Interaction: {step.Interaction}, Instruction: {step.Instruction}\n";
+            result += $"  Step {i + 1}: {step.Description}, Instruction: {step.Instruction}\n";
         }
         return result;
     }

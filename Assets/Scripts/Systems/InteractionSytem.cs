@@ -1,6 +1,7 @@
 using Assets.Scripts;
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 using static Interaction;
 
 public class InteractionSystem {
@@ -15,7 +16,8 @@ public class InteractionSystem {
         this.effectSystem = effectSystem;
     }
 
-    public void HandleInteractionRequestStart(InteractionRequest request) {
+    public void HandleInteractionRequestStart(InteractionCandidate selectedInteraction) {
+        var request = selectedInteraction?.Request;
         if (request == null) {
             logger.Log("Received null interaction request.");
             return;
@@ -35,7 +37,7 @@ public class InteractionSystem {
             var interaction = new ActiveInteraction(request.Context);
             StartActiveInteraction(interaction);
         } else {
-            ExecuteInstantInteraction(request);
+            ExecuteInstantInteraction(selectedInteraction);
         }
     }
 
@@ -59,8 +61,9 @@ public class InteractionSystem {
         activeInteractions.Remove(interaction);
     }
 
-    private void ExecuteInstantInteraction(InteractionRequest request) {
-        effectSystem.HandleInstantEffect(request);
+    private void ExecuteInstantInteraction(InteractionCandidate selectedInteraction) {
+        Debug.Log($"Executing instant interaction: {selectedInteraction}");
+        effectSystem.HandleCandidate(selectedInteraction);
     }
 
     private bool IsAlreadyActive(InteractionRequest request) {

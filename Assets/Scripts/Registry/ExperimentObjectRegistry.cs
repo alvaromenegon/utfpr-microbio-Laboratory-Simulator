@@ -1,6 +1,7 @@
 using Assets.Scripts;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class ExperimentObjectRegistry : MonoBehaviour {
@@ -96,7 +97,7 @@ public class ExperimentObjectRegistry : MonoBehaviour {
         objectsByInstanceId[instanceId] = interactable;
     }
 
-    public List<LaboratoryObject> Query(string canonicalIdentifier = null, List<string> requiredTags = null) {
+    public List<LaboratoryObject> Query(string canonicalIdentifier = null, List<string> requiredTags = null, List<string> requiredZoneTags = null) {
         var result = new List<LaboratoryObject>();
         if (!string.IsNullOrWhiteSpace(canonicalIdentifier)) {
             if (objectsByIdentifier.TryGetValue(canonicalIdentifier, out var candidates)) {
@@ -113,6 +114,10 @@ public class ExperimentObjectRegistry : MonoBehaviour {
         if (requiredTags != null && requiredTags.Count > 0) {
             result.RemoveAll(obj => !obj.HasAnyTag(requiredTags));
         }
+        if (requiredZoneTags != null && requiredZoneTags.Count > 0) {
+            result.RemoveAll(obj => !obj.CurrentZoneTags.Any(tag => requiredZoneTags.Contains(tag)));
+        }
+
         return result;
     }
 

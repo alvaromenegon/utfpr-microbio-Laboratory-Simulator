@@ -103,8 +103,11 @@ namespace Assets.Scripts {
         public void Update() {
             if (currentStep == null) return;
             if (ConditionEvaluator.Check(currentStep.FailureConditions)) {
-                CompleteStepFailure();
-                return;
+                // só falha se tiver condições de falha definidas, para evitar falhas indesejadas
+                if (currentStep.FailureConditions.Count > 0) {
+                    CompleteStepFailure();
+                    return;
+                }                
             }
             if (ConditionEvaluator.Check(currentStep.Goals)) {
                 CompleteStepSuccess();

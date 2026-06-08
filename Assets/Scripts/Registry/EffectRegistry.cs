@@ -78,6 +78,19 @@ public class EffectRegistry {
         return false;
     }
 
+    // recebe uma lista de efeitos e retorna o de maior prioridade (ou null se a lista estiver vazia)
+    public EffectDefinition Prioritize(List<EffectDefinition> effects) {
+        if (effects == null || effects.Count == 0)
+            return null;
+        EffectDefinition highest = effects[0];
+        foreach (var effect in effects) {
+            if (effect.Priority > highest.Priority) {
+                highest = effect;
+            }
+        }
+        return highest;
+    }
+
     // retorna uma lista de efeitos válidos para o contexto
     public List<EffectDefinition> GetValidEffects(InteractionContext ctx) {
         var validEffects = new List<EffectDefinition>();

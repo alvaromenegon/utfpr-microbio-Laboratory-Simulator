@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Assets.Scripts;
-using UnityEngine;
 
 public static class ExperimentMapper {
     public static ExperimentDefinition ToModel(ExperimentDefinitionDto dto) {
@@ -34,7 +33,6 @@ public static class ExperimentMapper {
             Effects = dto.Effects?.Select(ToModel).ToList() ?? new List<EffectDefinition>(),
             ReactiveEffects = dto.ReactiveEffects?.Select(ToModel).ToList() ?? new List<ReactiveEffect>(),
             ActionEffects = dto.ActionEffects?.Select(ToModel).ToList() ?? new List<ActionEffect>(),
-            DerivedProperties = dto.DerivedProperties?.Select(ToModel).ToList() ?? new List<DerivedProperty>(),
             VisualAssets = dto.VisualAssets?.Select(ToModel).ToList() ?? new List<VisualAsset>(),
             VisualStateRules = dto.VisualStateRules?.Select(ToModel).ToList() ?? new List<VisualStateRule>()
         };
@@ -67,6 +65,7 @@ public static class ExperimentMapper {
             InstanceId = dto.InstanceId,
             Tags = dto.Tags?.ToList() ?? new List<string>(),
             Binding = ToModel(dto.Binding),
+            DisplayName = dto.DisplayName,
             InitialProperties = dto.InitialProperties ?? new Dictionary<string, object>()
         };
     }
@@ -90,7 +89,6 @@ public static class ExperimentMapper {
         return new Step {
             Description = dto.Description,
             Score = dto.Score,
-            interaction = dto.Interaction,
             Instruction = dto.Instruction,
             OnSuccessMessage = dto.OnSuccessMessage,
             OnFailureMessage = dto.OnFailureMessage,
@@ -142,7 +140,7 @@ public static class ExperimentMapper {
         if (dto == null) {
             return null;
         }
-        return new EffectOperation {
+        var op = new EffectOperation {
             Target = ToModel(dto.Target),
             Property = dto.Property,
             Value = dto.Value,
@@ -150,18 +148,10 @@ public static class ExperimentMapper {
             ProcessId = dto.ProcessId
 
         };
-    }
-
-    public static DerivedProperty ToModel(DerivedPropertyDto dto) {
-        if (dto == null) {
-            return null;
+        if (!string.IsNullOrEmpty(dto.DisplayMessageTemplate)) {
+            op.SetDisplayMessageTemplate(dto.DisplayMessageTemplate);
         }
-        return new DerivedProperty {
-            Identifier = dto.Identifier,
-            When = dto.When?.Select(ToModel).ToArray(),
-            SetProperty = dto.SetProperty,
-            Priority = dto.Priority
-        };
+        return op;
     }
 
     public static ObjectReference ToModel(ObjectReferenceDto dto) {
@@ -186,6 +176,8 @@ public static class ExperimentMapper {
         }
         return new ReactiveEffect {
             Id = dto.Id,
+            DisplayName = dto.DisplayName,
+            Priority = dto.Priority,
             Conditions = dto.Conditions?.Select(ToModel).ToList() ?? new List<Condition>(),
             Operations = dto.Operations?.Select(ToModel).ToList() ?? new List<EffectOperation>(),
             ExecuteOncePerSubject = dto.ExecuteOncePerSubject,
@@ -199,6 +191,8 @@ public static class ExperimentMapper {
         }
         return new ActionEffect {
             Id = dto.Id,
+            DisplayName = dto.DisplayName,
+            Priority = dto.Priority,
             Operations = dto.Operations?.Select(ToModel).ToList() ?? new List<EffectOperation>()
         };
     }
@@ -212,6 +206,9 @@ public static class ExperimentMapper {
         }
 
         return new EffectDefinition {
+            Id = dto.Id,
+            DisplayName = dto.DisplayName,
+            Priority = dto.Priority,
             Type = Enum.TryParse(dto.Type, out Interaction.InteractionType result) ? result : Interaction.InteractionType.USE,
             ExecutionType = executionType,
             Property = dto.Property,

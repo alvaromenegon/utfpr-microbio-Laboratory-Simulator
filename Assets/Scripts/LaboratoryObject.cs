@@ -6,13 +6,12 @@ using UnityEngine;
 namespace Assets.Scripts {
     public class LaboratoryObject : MonoBehaviour, IInteractable {
         public string InstanceId;
-        [SerializeField] private string objectName;
+        public string DisplayName;
         public string canonicalIdentifier;
 
         private Dictionary<string, object> properties = new();
         public List<string> Tags;
         public string Identifier => canonicalIdentifier;
-        public string DisplayName => objectName;
 
         public HashSet<string> CurrentZoneIds { get; private set; } = new();
         public HashSet<string> CurrentZoneTags { get; private set; } = new();
@@ -87,11 +86,21 @@ namespace Assets.Scripts {
             return false;
         }
 
+        private string FormatProperties() {
+            var formatted = new List<string>();
+            foreach (var kvp in properties) {
+                formatted.Add($"{kvp.Key}: {kvp.Value}");
+            }
+            return string.Join(", ", formatted);
+        }
+
         public virtual void OnHover() {
-            Debug.Log($"Hovering over {DisplayName} (InstanceId: {InstanceId}), Properties: [{string.Join(", ", properties.Keys)}], Tags: [{string.Join(", ", Tags)}], ZoneIDs: [{string.Join(", ", CurrentZoneIds)}], ZoneTags: [{string.Join(", ", CurrentZoneTags)}]");
+           HUDController.Instance.UpdateObjectName(DisplayName);
+            Debug.Log($"Hovering over {DisplayName} (InstanceId: {InstanceId}), Properties: [{FormatProperties()}], Tags: [{string.Join(", ", Tags)}], ZoneIDs: [{string.Join(", ", CurrentZoneIds)}], ZoneTags: [{string.Join(", ", CurrentZoneTags)}]");
         }
 
         public virtual void OnExitHover() {
+            HUDController.Instance.HideObjectName();
             Debug.Log($"Stopped hovering over {DisplayName} (ID: {InstanceId})");
         }
 

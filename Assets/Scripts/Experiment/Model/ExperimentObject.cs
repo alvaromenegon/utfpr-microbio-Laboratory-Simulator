@@ -4,6 +4,7 @@ using System.Collections.Generic;
 public class ExperimentInstanceObject {
     public string CanonicalIdentifier { get; set; }
     public string InstanceId { get; set; }
+    public string DisplayName { get; set; }
     public ObjectBinding Binding { get; set; }
     public List<string> Tags { get; set; }
     public Dictionary<string, object> InitialProperties { get; set; } = new Dictionary<string, object>();

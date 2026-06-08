@@ -58,7 +58,6 @@ public class ExperimentManager : MonoBehaviour {
             apiClient = gameObject.AddComponent<ExperimentApiClient>();
         }
         runtime = new ExperimentRuntime();
-        PropertyCatalog.Initialize();
         BackgroundProcessRegistry = new BackgroundProcessRegistry();
         effectRegistry = new EffectRegistry();
         EffectSystem = new EffectSystem(effectRegistry);
@@ -83,7 +82,7 @@ public class ExperimentManager : MonoBehaviour {
     private void Start() {
         ExperimentHudPresenter.New(HUDController.Instance);
         hudPresenter = ExperimentHudPresenter.Instance;
-        hudPresenter.Bind(runtime, StepManager);
+        hudPresenter.Bind(runtime, StepManager, EffectSystem);
         var inputPanelController = InputPanelController.Instance;
         inputPanelController.Bind(EffectSystem);
         StartCoroutine(BootstrapAndStart());
@@ -157,7 +156,7 @@ public class ExperimentManager : MonoBehaviour {
             return null;
         }
 
-        var instance = Instantiate(prefab, spawn.position, spawn.rotation);
+        var instance = Instantiate(prefab, spawn.position, prefab.transform.rotation); // mantém a rotação original do prefab para evitar problemas de orientação, especialmente para objetos como frascos que podem ter uma direção específica
 
         var labObject = instance.GetComponent<LaboratoryObject>();
 
@@ -175,6 +174,9 @@ public class ExperimentManager : MonoBehaviour {
         obj.InstanceId = def.InstanceId;
         obj.canonicalIdentifier = def.CanonicalIdentifier;
         Debug.Log($"Configuring object {obj}");
+        if (def.DisplayName != null) {
+            obj.DisplayName = def.DisplayName; // útil para definir nome de recipientes, como "Frasco de Ácido" em vez de usar apenas "Frasco" do prefab
+        }             
 
         if (def.Tags != null) {
             // apenas adiciona as tags definidas, sem sobrescrever
@@ -191,7 +193,15 @@ public class ExperimentManager : MonoBehaviour {
 
         if (def.InitialProperties != null) {
             foreach (var pair in def.InitialProperties) {
-                obj.SetProperty(pair.Key, pair.Value);
+                if (float.TryParse(pair.Value.ToString(), out var numericValue)) {
+                    Debug.Log($"Setting numeric property {pair.Key} to {numericValue} on object {obj.InstanceId}");
+                    // tenta converter para número, se possível
+                    obj.SetProperty(pair.Key, numericValue); 
+                }
+                else {
+                    obj.SetProperty(pair.Key, pair.Value);
+                }
+
             }
         }
 

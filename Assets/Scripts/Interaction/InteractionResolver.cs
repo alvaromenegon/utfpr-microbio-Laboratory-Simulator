@@ -1,5 +1,6 @@
 using Assets.Scripts;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using static Interaction;
 
@@ -14,18 +15,48 @@ class InteractionResolver {
         _effectRegistry = ExperimentManager.Instance.GetEffectRegistry();
     }
 
-    private InteractionType ResolveInteractionType(InteractionContext baseContext) {
+    public List<InteractionCandidate> ResolveCandidates() {
+        var baseContext = BuildContext();
+
+        var candidates = new List<InteractionCandidate>();
+
         foreach (var type in GetCandidateTypes(baseContext)) {
             baseContext.Type = type;
-            Debug.Log($"Trying interaction type: {type}");
+
+            var effects = _effectRegistry.GetEffects(baseContext);
+
+            foreach (var effect in effects) {
+                if (!ConditionEvaluator.Check(effect.Conditions, baseContext))
+                    continue;
+                var candidateContext = baseContext.CloneAndCast();
+                candidateContext.Type = type;
+
+                candidates.Add(new InteractionCandidate {
+                    Type = type,                    
+                    Effect = effect,
+                    Context = candidateContext,
+                    DisplayName = effect.DisplayName,
+                    Priority = effect.Priority,
+                    Request = BuildRequest()
+                });
+            }
+        }
+
+        return candidates
+            .OrderByDescending(c => c.Priority)
+            .ToList();
+    }
+
+    private InteractionType ResolveInteractionType(InteractionContext baseContext) {
+        foreach (var type in GetCandidateTypes(baseContext)) {
+            //Debug.Log($"Evaluating candidate type: {type}");
+            baseContext.Type = type;
             var effects = _effectRegistry.GetValidEffects(baseContext);
             foreach (var effect in effects) {
-                Debug.Log($"Checking effect: {effect.Type} - Conditions: [{string.Join(", ", effect.Conditions)}]");
+                //Debug.Log($"Checking effect: {effect.Type} - Conditions: [{string.Join(", ", effect.Conditions)}]");
                 if (!ConditionEvaluator.Check(effect.Conditions, baseContext)) {
-                    Debug.Log($"Effect {effect.Type} conditions ({string.Join(", ", effect.Conditions)}) not met");
                     continue;
                 }
-                Debug.Log($"Effect {effect.Type} is valid");
                 return effect.Type;
             }
         }
@@ -38,9 +69,9 @@ class InteractionResolver {
             return null;
 
         var ctx = new InteractionContext();
-        Debug.Log($"Building context with hovered: {_hovered?.Identifier}, held: {_held?.GetLaboratoryObject()?.Identifier}");
-        Debug.Log($"Hovered properties = [{string.Join(", ", _hovered?.GetAllProperties() ?? new Dictionary<string, object>())}]");
-        Debug.Log($"Held properties = [{string.Join(", ", _held?.GetLaboratoryObject()?.GetAllProperties() ?? new Dictionary<string, object>())}]");
+        //Debug.Log($"Building context with hovered: {_hovered?.Identifier}, held: {_held?.GetLaboratoryObject()?.Identifier}");
+        //Debug.Log($"Hovered properties = [{string.Join(", ", _hovered?.GetAllProperties() ?? new Dictionary<string, object>())}]");
+        //Debug.Log($"Held properties = [{string.Join(", ", _held?.GetLaboratoryObject()?.GetAllProperties() ?? new Dictionary<string, object>())}]");
 
         var heldObj = _held?.GetLaboratoryObject();
 
@@ -91,17 +122,14 @@ class InteractionResolver {
 
     private IEnumerable<InteractionType> GetCandidateTypes(InteractionContext ctx) {
         var actor = ctx.Roles.GetValueOrDefault(RoleType.ACTOR);
-        Debug.Log($"Resolving interaction for actor: {actor?.Identifier}, roles: [{string.Join(", ", ctx.Roles)}]");
-        Debug.Log($"Contains TOOL: {ctx.Roles.ContainsKey(RoleType.TOOL)}");
-        Debug.Log($"Contains TARGET: {ctx.Roles.ContainsKey(RoleType.TARGET)}");
 
         if (ctx.Roles.ContainsKey(RoleType.TOOL) && ctx.Roles.ContainsKey(RoleType.TARGET)) {
-            Debug.Log("Actor has both TOOL and TARGET roles, yielding USE");
+            //Debug.Log("Actor has both TOOL and TARGET roles, yielding USE");
             yield return InteractionType.USE;
         }
-        Debug.Log($"{actor.Identifier} ({actor.InstanceId}) tags = [{string.Join(", ", actor.Tags)}]");
+        //Debug.Log($"{actor.Identifier} ({actor.InstanceId}) tags = [{string.Join(", ", actor.Tags)}]");
 
-        if (actor.HasTag("toggleable")) {
+        if (actor.HasAnyTag(new List<string> { "toggleable", "openable", "coverable" })) { // todo: criar o tipo de interação "TOGGLE" e usar ele aqui
             yield return InteractionType.ACTIVATE;
             yield return InteractionType.DEACTIVATE;
         }

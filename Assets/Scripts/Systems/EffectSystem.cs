@@ -10,6 +10,7 @@ public class EffectSystem {
     private BackgroundProcessSystem backgroundProcessSystem;
     private readonly LoggerService logger = new ("EffectSystem");
     private readonly HashSet<string> executedReactiveEffects = new();
+    public Action<string> OnEffectApplied;
 
     public EffectSystem(EffectRegistry effectRegistry) {
         this.effectRegistry = effectRegistry;
@@ -29,6 +30,12 @@ public class EffectSystem {
                 ApplyInstantEffect(effect, request.Context);
             }           
         }
+    }
+
+    // queremos garantir que o efeito aplicado seja o mesmo resolvido no candidato pelo InputFacade
+    public void HandleCandidate(InteractionCandidate candidate) { 
+        Debug.Log($"HandleCandidate called with candidate: {candidate.DisplayName}, Effect: {candidate.Effect}, Context: {candidate.Context}");
+        ApplyInstantEffect(candidate.Effect, candidate.Context);
     }
 
     private void EvaluateReactiveEffects() {
@@ -88,9 +95,16 @@ public class EffectSystem {
                 continue;
             }
             foreach (var obj in targets) {
-                var currentValue = obj.GetProperty<float>(operation.Property);
-                obj.SetProperty(operation.Property, currentValue + effect.Rate.Value * deltatime);
-                ExperimentHudPresenter.Instance.HandleFeedback($"Aplicado {currentValue + effect.Rate * deltatime}% na propriedade {operation.Property} do objeto {obj.DisplayName} ({obj.InstanceId})");
+                try {
+                    var currentValue = obj.GetProperty<float>(operation.Property);
+                    var newValue = currentValue + effect.Rate.Value * deltatime;
+                    obj.SetProperty(operation.Property, newValue);
+                    OnEffectApplied?.Invoke(operation.GetDisplayMessageForTarget(obj.DisplayName, newValue, effect.IsContinuous));
+                } catch (InvalidCastException e) {
+                    logger.Error(e.ToString());
+                    logger.Error($"Property {operation.Property} is of type {operation.Property.GetType()} with value {obj.GetProperty<object>(operation.Property)} and cannot be cast to float.");
+                    throw e;
+                }
             }
         }//logger.Log($"EffectSystem: Applied effect from {effect.SourceObject} to {effect.TargetObject} on property {effect.Property} with rate {effect.Rate * deltatime}");
 
@@ -118,7 +132,7 @@ public class EffectSystem {
             foreach (var obj in targets) {
                 obj.SetProperty(operation.Property, operation.Value);
                 logger.Log($"Applied {obj.Identifier}.{operation.Property}= {operation.Value}");
-                ExperimentHudPresenter.Instance.HandleFeedback($"Aplicado {operation.Value} na propriedade {operation.Property} do objeto {obj.InstanceId}");
+                OnEffectApplied?.Invoke(operation.GetDisplayMessageForTarget(obj.DisplayName, operation.Value, effect.IsContinuous));
             }
         }
     }
@@ -143,7 +157,7 @@ public class EffectSystem {
                 logger.Log($"Applying reactive effect operation: {operation} on targets: {string.Join(", ", targets.Select(t => t.InstanceId))}");
                 foreach (var targetObj in targets) {
                     targetObj.SetProperty(operation.Property, operation.Value);
-                    ExperimentHudPresenter.Instance.HandleFeedback($"Aplicado {operation.Value} na propriedade {operation.Property} do objeto {targetObj.InstanceId}");
+                   OnEffectApplied?.Invoke(operation.GetDisplayMessageForTarget(targetObj.DisplayName, operation.Value, false));
 
                     logger.Log("[ApplyReactiveEffect] Applied operation on target: " + operation.Target + " for property: " + operation.Property + " with value: " + operation.Value);
                 }
@@ -167,7 +181,7 @@ public class EffectSystem {
             } 
             foreach (var targetObj in targets) {
                 targetObj.SetProperty(operation.Property, operation.Value);
-                ExperimentHudPresenter.Instance.HandleFeedback($"Aplicado {operation.Value} na propriedade {operation.Property} do objeto {targetObj.DisplayName} ({targetObj.InstanceId})");
+                OnEffectApplied?.Invoke(operation.GetDisplayMessageForTarget(targetObj.DisplayName, operation.Value, false));
                 logger.Log($"Applied ActionEffect on target: {targetObj.DisplayName} ({targetObj.InstanceId}) for property: {operation.Property} with value: {operation.Value}");
                 logger.Log($"Current properties of {targetObj.DisplayName} ({targetObj.InstanceId}): {string.Join(", ", targetObj.GetAllProperties().Select(kv => $"{kv.Key}: {kv.Value}"))}");
             }

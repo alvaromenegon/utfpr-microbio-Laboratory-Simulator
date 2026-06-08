@@ -41,8 +41,7 @@ public class InputPanelController : MonoBehaviour {
                 System.Globalization.NumberStyles.Any,
                 System.Globalization.CultureInfo.InvariantCulture, // evita bug de vírgula/ponto
                 out double value)) {
-            pendingAction.Property = PropertyCatalog.Instance.Resolve(pendingAction.InteractionType, pendingAction.Context);
-            Debug.Log($"Resolved property: {pendingAction.Property}");
+            pendingAction.Property = PropertyCatalog.GetInstance().Resolve(pendingAction.InteractionType, pendingAction.Context);
             pendingAction.Value = value;
             effectSystem.ApplyValueAction(pendingAction);
             Hide();

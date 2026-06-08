@@ -1,23 +1,12 @@
 
-using Assets.Scripts;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using static Interaction;
 
 [Serializable]
 public class Step {
     public string Description { get; set; }
     public int Score { get; set; }
-    public string interaction;
-    public InteractionType Interaction {
-        get {
-            if (Enum.TryParse(interaction, out InteractionType result)) {
-                return result;
-            }
-            return InteractionType.USE;
-        }
-    }
 
     public string Instruction { get; set; }
     public string OnSuccessMessage { get; set; }
@@ -33,10 +22,6 @@ public class Step {
     public bool IsValid(int numSteps) {
         if (string.IsNullOrEmpty(Description)) {
             Debug.LogError("Step description is null or empty.");
-            return false;
-        }
-        if (string.IsNullOrEmpty(interaction)) {
-            Debug.LogError("Step interaction is null or empty.");
             return false;
         }
         

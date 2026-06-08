@@ -22,6 +22,7 @@ public class VisualStateSystem {
     }
     public void HandleVisualState(VisualStateRule state) {
         var resolved = new ObjectResolver(state.Subject).Resolve();
+
         foreach (var subject in resolved) {
             var context = new InteractionContext();
             context.Roles[RoleType.SUBJECT] = subject;
@@ -74,7 +75,7 @@ public class VisualStateSystem {
         if (appliedActiveStateBySlot.TryGetValue(key, out var currentValue) && currentValue == value) {
             return;
         }
-        Debug.Log($"Applying visual action SET_ACTIVE on slot {slot} for subject {slot.gameObject.name}");
+        Debug.Log($"Applying visual action SET_ACTIVE={value} on slot {slot} for subject {slot.gameObject.name}");
         slot.gameObject.SetActive(value);
         appliedActiveStateBySlot[key] = value;
     }

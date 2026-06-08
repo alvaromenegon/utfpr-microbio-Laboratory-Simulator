@@ -5,7 +5,7 @@ using UnityEngine;
 using static Interaction;
 
 public class PropertyCatalog {
-    public static PropertyCatalog Instance { get; private set; }
+    private static PropertyCatalog _instance;
 
     public List<PropertyDefinition> Properties { get; private set; } = new List<PropertyDefinition>();
     public List<PropertyBinding> Bindings { get; private set; } = new List<PropertyBinding>();
@@ -15,7 +15,7 @@ public class PropertyCatalog {
     }
 
     private void LoadProperties() {
-        string json = File.ReadAllText("Assets/Resources/property_catalog.json");
+        string json = File.ReadAllText("property_catalog.json");
         var catalogData = JsonConvert.DeserializeObject<PropertyCatalogData>(json);
 
         Properties = catalogData.Properties;
@@ -49,11 +49,16 @@ public class PropertyCatalog {
         return null; // ou uma propriedade padrão
     }
 
-
-
-    public static void Initialize() {
-        Instance ??= new PropertyCatalog();
+    public static PropertyCatalog GetInstance() {
+        _instance ??= new PropertyCatalog();
+        return _instance;
     }
+
+    public bool TryGetPropertyDefinition(string propertyId, out PropertyDefinition definition) {
+        definition = Properties.Find(p => p.Id == propertyId);
+        return definition != null;
+    }
+
 }
 
 public class PropertyCatalogData {

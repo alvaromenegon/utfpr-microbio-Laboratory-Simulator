@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using static UnityEditor.Timeline.TimelinePlaybackControls;
 
 // ObjectResolver é responsável por resolver referências a objetos em diferentes contextos, como condições e efeitos.
 // Ele suporta resolução baseada em papéis, IDs de instância e consultas semânticas.
