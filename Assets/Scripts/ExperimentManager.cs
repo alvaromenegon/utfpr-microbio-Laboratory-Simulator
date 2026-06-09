@@ -221,8 +221,7 @@ public class ExperimentManager : MonoBehaviour {
             },
             onError: error => Debug.LogError(error)
         ));
-    }
-   
+    }   
 
     private void OnRuntimeFinished(int score, double timeTakenSeconds) {
         CurrentExperiment = null;
@@ -234,5 +233,23 @@ public class ExperimentManager : MonoBehaviour {
             Debug.LogError($"Error sending result data: {error}");
             currentState = ExperimentState.InternalError;
         }));
+        HUDController.Instance.ShowGameOverPanel();
+    }
+
+    public void HandleQuit() {
+        Debug.Log("Quit action triggered.");
+        if (currentState == ExperimentState.Running) {
+            // se está executando e o usuário escolhe encerrar, salva o resultado como falha (score 0) e fecha
+            StartCoroutine(apiClient.SendDataToServer(SessionData.Current, 0, 0, onSuccess: () => {
+                Debug.Log("Result data sent successfully on quit.");
+                Application.Quit();
+            }, onError: error => {
+                Debug.LogError($"Error sending result data on quit: {error}");
+                Application.Quit();
+            }));
+        } else {
+            Application.Quit();
+        }
+
     }
 }

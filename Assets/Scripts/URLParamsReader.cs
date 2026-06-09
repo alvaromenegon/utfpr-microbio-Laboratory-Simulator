@@ -11,11 +11,11 @@ public static class UrlParamsReader {
 
     public static NameValueCollection GetParams() {
 #if UNITY_WEBGL && !UNITY_EDITOR
-        string qs = GetQueryString(); // ex: "?practiceId=1&userId=2&courseId=3"
+        string qs = GetQueryString(); // ex: "?practiceId=2&userId=3&courseId=2"
 #else
         // Valor de fallback para testar dentro do Editor
         Debug.Log("[UrlParamsReader] Usando parâmetros de teste no Editor.");
-        string qs = "?practiceId=10&userId=1&courseId=1";
+        string qs = "?practiceId=2&userId=3&courseId=2";
         Debug.Log($"[UrlParamsReader] Parâmetros de teste: {qs}");
 #endif
         return HttpUtility.ParseQueryString(qs);

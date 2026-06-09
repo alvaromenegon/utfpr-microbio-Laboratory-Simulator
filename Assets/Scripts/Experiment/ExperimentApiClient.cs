@@ -5,8 +5,8 @@ using UnityEngine;
 using UnityEngine.Networking;
 
 public class ExperimentApiClient : MonoBehaviour {
-    [SerializeField] private string baseUrl = "http://localhost:8000";
-    [SerializeField] private string unityAuthToken = "your_unity_auth_token";
+    [SerializeField] private string baseUrl = "https://microbio-lab-server.onrender.com";
+    private string unityAuthToken = "your_unity_auth_token";
 
     public IEnumerator FetchAndStartExperiment(
         SessionData session,

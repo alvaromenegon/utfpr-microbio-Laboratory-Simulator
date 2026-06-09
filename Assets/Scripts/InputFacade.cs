@@ -9,6 +9,7 @@ public class InputFacade : MonoBehaviour {
     public Transform playerCamera;
     public CursorChanger cursorChanger;
     public InteractionHint interactionHint;
+    public GameObject quitConfirmationPanel;
 
     [Header("Interaction Settings")]
     public float interactionRange = 1.3f;
@@ -32,6 +33,7 @@ public class InputFacade : MonoBehaviour {
         interactionSystem = ExperimentManager.Instance.InteractionSystem;
     }
 
+
     void Awake()
     {
         _controls = new GameControls();
@@ -39,7 +41,24 @@ public class InputFacade : MonoBehaviour {
         _controls.Player.Click.canceled += _ => HandleClickRelease();
         _controls.Player.Interact.performed += _ => HandleInteractStart();
         _controls.Player.Interact.canceled += _ => HandleInteractEnd();
+        _controls.Player.Quit.performed += _ => HandleQuitAction();
+        _controls.Player.Cancel.performed += _ => HandleQuitAction(true);
 
+    }
+
+    private void HandleQuitAction(bool cancelAction = false) {
+        if (quitConfirmationPanel == null) {
+            Debug.LogWarning("Quit confirmation panel reference is missing.");
+            return;
+        }
+        if (quitConfirmationPanel.activeSelf && cancelAction) {
+            quitConfirmationPanel.SetActive(false);
+        }
+        else if (!quitConfirmationPanel.activeSelf && !cancelAction) {
+            quitConfirmationPanel.SetActive(true);
+        } else {
+            ExperimentManager.Instance.HandleQuit();
+        }
     }
 
     private void UpdateInteractionCandidates() {

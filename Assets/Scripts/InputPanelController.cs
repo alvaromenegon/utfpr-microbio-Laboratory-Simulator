@@ -5,6 +5,7 @@ using UnityEngine;
 public class InputPanelController : MonoBehaviour {
     public static InputPanelController Instance;
 
+    [SerializeField] private TMP_Text titleText;
     [SerializeField] private GameObject panel;
     [SerializeField] private TMP_InputField inputField;
     private PlayerAction pendingAction;
@@ -15,6 +16,28 @@ public class InputPanelController : MonoBehaviour {
     public void Show(InteractionRequest request) {
         Debug.Log($"Showing input panel for request: {request}");
         pendingAction = new PlayerAction { InteractionType = request.Type, Context = request.Context, Value = null, Property = null};
+        string targetName = request.Context.Roles.ContainsKey(RoleType.TARGET) ? request.Context.Roles[RoleType.TARGET].DisplayName : "objeto";
+        switch (request.Type) {
+            case Interaction.InteractionType.SET_TEMPERATURE:
+                titleText.text = $"Defina a Temperatura do {targetName}";
+                inputField.placeholder.GetComponent<TMP_Text>().text = "Digite a temperatura em °C";
+                break;
+            case Interaction.InteractionType.SET_QUANTITY:
+                titleText.text = $"Defina o Volume do {targetName}";
+                inputField.placeholder.GetComponent<TMP_Text>().text = "Digite o volume em mL";
+                break;
+            case Interaction.InteractionType.SET_TIMER:
+                titleText.text = $"Defina o Tempo do {targetName}";
+                inputField.placeholder.GetComponent<TMP_Text>().text = "Digite o tempo em segundos";
+                break;
+            case Interaction.InteractionType.SET_PROPERTY:
+                titleText.text = $"Defina a Propriedade do {targetName}";
+                inputField.placeholder.GetComponent<TMP_Text>().text = "Digite o valor da propriedade";
+                break;
+            default:
+                Debug.LogWarning($"Tipo de interação {request.Type} não suportado para input.");
+                break;
+        }
         panel.SetActive(true);
         inputField.text = string.Empty;
         StartCoroutine(ActivateInputNextFrame());
