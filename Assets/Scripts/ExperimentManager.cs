@@ -17,6 +17,7 @@ public class ExperimentManager : MonoBehaviour {
     [SerializeField] private GameObject secondaryTargetBeam;
     [SerializeField] private TMP_Text inputLabel;
     [SerializeField] private ExperimentApiClient apiClient;
+    [SerializeField] private BlackboardController blackboardController;
 
     public static ExperimentManager Instance { get; private set; }
     public ExperimentDefinition CurrentExperiment { get; private set; }
@@ -110,6 +111,10 @@ public class ExperimentManager : MonoBehaviour {
         runtime.Start(experimentDefinition);
         StepManager.Start();
         currentState = ExperimentState.Running;
+        if (blackboardController != null) {
+            blackboardController.SetTitle(experimentDefinition.title);
+            blackboardController.SetBlackboardText(experimentDefinition.experimentData.Description);
+        }
         Debug.Log($"Experiment '{experimentDefinition.title}' is running");
     }
 
@@ -236,19 +241,25 @@ public class ExperimentManager : MonoBehaviour {
         HUDController.Instance.ShowGameOverPanel();
     }
 
+    // caso seja necessário alguma outra ação após enviar os dados ao servidor, pode ser adicionada aqui.
+    private void Quit() {
+        currentState = ExperimentState.Finished;
+        CloseApplicationHandler.CloseApplication();
+    }
+
     public void HandleQuit() {
         Debug.Log("Quit action triggered.");
         if (currentState == ExperimentState.Running) {
             // se está executando e o usuário escolhe encerrar, salva o resultado como falha (score 0) e fecha
             StartCoroutine(apiClient.SendDataToServer(SessionData.Current, 0, 0, onSuccess: () => {
                 Debug.Log("Result data sent successfully on quit.");
-                Application.Quit();
+                Quit();
             }, onError: error => {
                 Debug.LogError($"Error sending result data on quit: {error}");
-                Application.Quit();
+                Quit();
             }));
         } else {
-            Application.Quit();
+            Quit();
         }
 
     }

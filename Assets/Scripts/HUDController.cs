@@ -42,8 +42,6 @@ public class HUDController : MonoBehaviour{
     }
     public void UpdateUserInfo ( string name, string photoURL){
         UpdateUserName(name);
-        ImageLoader imageLoader = new (photoURL);
-        imageLoader.AssignToImageComponent(_userPhoto);
     }
 
     public void UpdateDescription(string description) {
