@@ -15,7 +15,7 @@ public static class UrlParamsReader {
 #else
         // Valor de fallback para testar dentro do Editor
         Debug.Log("[UrlParamsReader] Usando parâmetros de teste no Editor.");
-        string qs = "?practiceId=2&userId=3&courseId=2";
+        string qs = "?practiceId=1&userId=3&courseId=2";
         Debug.Log($"[UrlParamsReader] Parâmetros de teste: {qs}");
 #endif
         return HttpUtility.ParseQueryString(qs);
