@@ -121,7 +121,7 @@ public class InputFacade : MonoBehaviour {
         }
 
         _activeRequest = _selectedCandidate.Request;
-        Debug.Log($"Iniciando interação: {_activeRequest}");
+        //Debug.Log($"Iniciando interação: {_activeRequest}");
 
         interactionSystem.HandleInteractionRequestStart(_selectedCandidate);
     }

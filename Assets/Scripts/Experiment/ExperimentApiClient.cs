@@ -71,8 +71,11 @@ public class ExperimentApiClient : MonoBehaviour {
             onError?.Invoke($"Error loading experiment from API: {webRequest.error}");
             yield break;
         }
-
+        Debug.Log("Catalog data received from API.");
+        Debug.Log($"Response content: {webRequest.downloadHandler.text}");
         PropertyCatalogDataDto catalogData = ParseCatalogResponse(webRequest.downloadHandler.text);
+        Debug.Log("Catalog data parsed and mapped to model.");
+        Debug.Log($"Parsed catalog data: {catalogData?.Properties?.Length} properties, {catalogData?.Bindings?.Length} bindings.");
         if (catalogData == null) {
             onError?.Invoke("API returned an error or empty data.");
             yield break;

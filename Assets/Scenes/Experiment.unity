@@ -5274,12 +5274,12 @@ PrefabInstance:
     - target: {fileID: -8679921383154817045, guid: f11efbd4336a1cf48b642e4e7d6a9540,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.1867
+      value: 1.491
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: f11efbd4336a1cf48b642e4e7d6a9540,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.161
+      value: 0.133
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: f11efbd4336a1cf48b642e4e7d6a9540,
         type: 3}
@@ -11763,11 +11763,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4960160865462314, guid: 5c8bfb055b1ce564c8976a02249e7b3f, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.2039
+      value: 1.491
       objectReference: {fileID: 0}
     - target: {fileID: 4960160865462314, guid: 5c8bfb055b1ce564c8976a02249e7b3f, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.14899233
+      value: 0.149
       objectReference: {fileID: 0}
     - target: {fileID: 4960160865462314, guid: 5c8bfb055b1ce564c8976a02249e7b3f, type: 3}
       propertyPath: m_LocalRotation.w
@@ -11796,6 +11796,11 @@ PrefabInstance:
     - target: {fileID: 4960160865462314, guid: 5c8bfb055b1ce564c8976a02249e7b3f, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2221107754826229423, guid: 5c8bfb055b1ce564c8976a02249e7b3f,
+        type: 3}
+      propertyPath: InstanceId
+      value: watch_glass_scene
       objectReference: {fileID: 0}
     - target: {fileID: 2221107754826229423, guid: 5c8bfb055b1ce564c8976a02249e7b3f,
         type: 3}
