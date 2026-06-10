@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Assets.Scripts {
@@ -9,8 +10,12 @@ namespace Assets.Scripts {
         public event Action<int> OnScoreUpdated;
         public event Action<string> OnFeedback;
 
-        public StepManager(ExperimentRuntime experimentRuntime) {
+        public StepManager(ExperimentRuntime experimentRuntime, Action<List<Step>, int> onStepChanged) {
             this.experimentRuntime = experimentRuntime;
+                OnStepChanged += (step, _, stepIndex) => {
+                    Debug.Log($"Step changed to: {step.Description} (Score: {experimentRuntime.Score})");
+                    onStepChanged(experimentRuntime.Definition.experimentData.Steps, stepIndex);
+                };
         }
 
         private void AddScore(int score) {
@@ -24,7 +29,6 @@ namespace Assets.Scripts {
             Debug.Log(currentStep.OnSuccessMessage);
             OnFeedback?.Invoke(currentStep.OnSuccessMessage);
             HandleStepAction(currentStep.ActionOnSuccess, true);
-
         }
 
         private void CompleteStepFailure() {
@@ -91,6 +95,7 @@ namespace Assets.Scripts {
                 } else {
                     // No more steps, experiment finished
                     currentStep = null;
+                    CompleteExperiment(true);
                 }
             }
         }

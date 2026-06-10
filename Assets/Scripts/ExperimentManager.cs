@@ -72,7 +72,7 @@ public class ExperimentManager : MonoBehaviour {
         EffectSystem.BindBackgroundProcessSystem(BackgroundProcessSystem);
         visualAssetLoader = new VisualAssetLoader(visualAssetRegistry, new TextureLoader(), new MaterialFactory());        
 
-        StepManager = new StepManager(runtime);
+        StepManager = new StepManager(runtime, blackboardController.SetSteps);
         runtime.OnExperimentFinished += OnRuntimeFinished;
     }
 

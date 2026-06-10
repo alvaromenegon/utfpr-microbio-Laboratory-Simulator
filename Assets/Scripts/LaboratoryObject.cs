@@ -86,7 +86,7 @@ namespace Assets.Scripts {
             return false;
         }
 
-        private string FormatProperties() {
+        public string FormatProperties() {
             var formatted = new List<string>();
             foreach (var kvp in properties) {
                 formatted.Add($"{kvp.Key}: {kvp.Value}");

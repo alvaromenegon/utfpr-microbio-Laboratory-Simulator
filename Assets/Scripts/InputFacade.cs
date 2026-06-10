@@ -16,6 +16,10 @@ public class InputFacade : MonoBehaviour {
     public LayerMask interactionLayer;
     public LayerMask movableLayer;
 
+    [Header("Panels")]
+    public GameObject microscopeViewPanel;
+    public GameObject inputPanel;
+
     private GameControls _controls;
     private IMovable _currentMovable;
     private LaboratoryObject _currentHoveredInteractable;
@@ -42,8 +46,24 @@ public class InputFacade : MonoBehaviour {
         _controls.Player.Interact.performed += _ => HandleInteractStart();
         _controls.Player.Interact.canceled += _ => HandleInteractEnd();
         _controls.Player.Quit.performed += _ => HandleQuitAction();
-        _controls.Player.Cancel.performed += _ => HandleQuitAction(true);
+        _controls.Player.Cancel.performed += _ => HandleCancel();
 
+    }
+
+    private void ClosePanels() {
+        if (microscopeViewPanel != null && microscopeViewPanel.activeSelf) {
+            microscopeViewPanel.SetActive(false);
+        }
+        if (inputPanel != null && inputPanel.activeSelf) {
+            inputPanel.SetActive(false);
+        }
+    }
+
+    private void HandleCancel() {
+        if (quitConfirmationPanel != null && quitConfirmationPanel.activeSelf) {
+            HandleQuitAction(cancelAction: true);
+        }
+        ClosePanels();
     }
 
     private void HandleQuitAction(bool cancelAction = false) {

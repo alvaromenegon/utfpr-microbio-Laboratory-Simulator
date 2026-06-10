@@ -49,11 +49,11 @@ class InteractionResolver {
 
     private InteractionType ResolveInteractionType(InteractionContext baseContext) {
         foreach (var type in GetCandidateTypes(baseContext)) {
-            //Debug.Log($"Evaluating candidate type: {type}");
+            Debug.Log($"Evaluating candidate type: {type}");
             baseContext.Type = type;
             var effects = _effectRegistry.GetValidEffects(baseContext);
             foreach (var effect in effects) {
-                //Debug.Log($"Checking effect: {effect.Type} - Conditions: [{string.Join(", ", effect.Conditions)}]");
+                Debug.Log($"Checking effect: {effect.Type} - Conditions: [{string.Join(", ", effect.Conditions)}]");
                 if (!ConditionEvaluator.Check(effect.Conditions, baseContext)) {
                     continue;
                 }
@@ -69,9 +69,11 @@ class InteractionResolver {
             return null;
 
         var ctx = new InteractionContext();
-        //Debug.Log($"Building context with hovered: {_hovered?.Identifier}, held: {_held?.GetLaboratoryObject()?.Identifier}");
-        //Debug.Log($"Hovered properties = [{string.Join(", ", _hovered?.GetAllProperties() ?? new Dictionary<string, object>())}]");
-        //Debug.Log($"Held properties = [{string.Join(", ", _held?.GetLaboratoryObject()?.GetAllProperties() ?? new Dictionary<string, object>())}]");
+        Debug.Log($"Building context with hovered: {_hovered?.InstanceId}, held: {_held?.GetLaboratoryObject()?.InstanceId}");
+        if (_hovered != null)
+            Debug.Log($"Hovered properties = [{_hovered.FormatProperties()}], zones=[{string.Join(", ",_hovered.CurrentZoneTags)}]");
+        if (_held != null) 
+            Debug.Log($"Held properties = [{_held?.GetLaboratoryObject().FormatProperties()}],  zones=[{string.Join(", ", _held?.GetLaboratoryObject().CurrentZoneTags)}");
 
         var heldObj = _held?.GetLaboratoryObject();
 
@@ -86,7 +88,7 @@ class InteractionResolver {
                 ctx.Roles[RoleType.DEVICE] = _hovered;
         }
         //  CASO 2: interação simples
-        else if (_hovered != null) {
+        else if (_hovered != null && _held == null) { // verificar se o held é nulo
             ctx.Roles[RoleType.TARGET] = _hovered;
             ctx.Roles[RoleType.ACTOR] = _hovered;
 
@@ -124,10 +126,10 @@ class InteractionResolver {
         var actor = ctx.Roles.GetValueOrDefault(RoleType.ACTOR);
 
         if (ctx.Roles.ContainsKey(RoleType.TOOL) && ctx.Roles.ContainsKey(RoleType.TARGET)) {
-            //Debug.Log("Actor has both TOOL and TARGET roles, yielding USE");
+            Debug.Log("Actor has both TOOL and TARGET roles, yielding USE");
             yield return InteractionType.USE;
         }
-        //Debug.Log($"{actor.Identifier} ({actor.InstanceId}) tags = [{string.Join(", ", actor.Tags)}]");
+        Debug.Log($"{actor.DisplayName} ({actor.InstanceId}) tags = [{string.Join(", ", actor.Tags)}]");
 
         if (actor.HasAnyTag(new List<string> { "toggleable", "openable", "coverable" })) { // todo: criar o tipo de interação "TOGGLE" e usar ele aqui
             yield return InteractionType.ACTIVATE;
