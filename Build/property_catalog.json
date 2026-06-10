@@ -1,0 +1,25 @@
+{
+    "Properties": [
+        {
+            "Id": "temperature",
+            "Label": "Temperatura",
+            "DataType": "FLOAT",
+            "Unit": "°C"
+        },
+        {
+            "Id": "sterilization",
+            "Label": "Esterilização",
+            "DataType": "BOOLEAN",
+            "Unit": ""
+        }
+    ],
+    "Bindings": [
+        {
+            "InteractionType": "SET_TEMPERATURE",
+            "PropertyId": "temperature",
+            "RequiredTags": [
+                "temperature_control"
+            ]
+        }
+    ]
+}
