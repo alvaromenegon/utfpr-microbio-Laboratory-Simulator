@@ -19,6 +19,30 @@ public static class ExperimentMapper {
         };
     }
 
+    public static PropertyCatalogData ToModel(PropertyCatalogDataDto dto) {
+        if (dto == null) {
+            return null;
+        }
+        return new PropertyCatalogData {
+            Properties = dto.Properties?.Select(p => new PropertyDefinition {
+                Id = p.Id,
+                Label = p.Label,
+                DefaultValue = p.DefaultValue,
+                Unit = p.Unit,
+                Description = p.Description,
+                DataType = p.DataType
+            }).ToList() ?? new List<PropertyDefinition>(),
+            Bindings = dto.Bindings?.Select(b => new PropertyBinding {
+                InteractionType = Enum.TryParse(b.InteractionType, out Interaction.InteractionType result) ? result : Interaction.InteractionType.USE,
+                RequiredTags = b.RequiredTags?.ToList() ?? new List<string>(),
+                AllowedIdentifiers = b.AllowedIdentifiers?.ToList() ?? new List<string>(),
+                RequiredRole = b.RequiredRole,              
+
+                PropertyId = b.PropertyId
+            }).ToList() ?? new List<PropertyBinding>(),
+        };
+    }
+
     public static ExperimentData ToModel(ExperimentDataDto dto) {
         if (dto == null) {
             return null;

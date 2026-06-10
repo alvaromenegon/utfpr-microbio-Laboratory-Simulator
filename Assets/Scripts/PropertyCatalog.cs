@@ -10,14 +10,10 @@ public class PropertyCatalog {
     public List<PropertyDefinition> Properties { get; private set; } = new List<PropertyDefinition>();
     public List<PropertyBinding> Bindings { get; private set; } = new List<PropertyBinding>();
 
-    private PropertyCatalog() {
-        LoadProperties();
-    }
+    private PropertyCatalog() { }
 
-    private void LoadProperties() {
-        string json = File.ReadAllText("property_catalog.json");
-        var catalogData = JsonConvert.DeserializeObject<PropertyCatalogData>(json);
-
+    
+    public void SetCatalogData(PropertyCatalogData catalogData) {
         Properties = catalogData.Properties;
         Bindings = catalogData.Bindings;
         Debug.Log($"Loaded {Properties.Count} properties and {Bindings.Count} bindings.");

@@ -101,6 +101,7 @@ public class ExperimentManager : MonoBehaviour {
     }
 
     public void StartExperiment(ExperimentDefinition experimentDefinition) {
+        StartCoroutine(LoadProperties());
         CurrentExperiment = experimentDefinition;
         //experimentObjectRegistry.SetupRegistry(experimentDefinition.experimentData.Objects);
         effectRegistry.SetupRegistry(experimentDefinition.experimentData);
@@ -213,8 +214,24 @@ public class ExperimentManager : MonoBehaviour {
         visualSlotRegistry.RegisterSlotsByObject(obj);
     }
 
+    private IEnumerator LoadProperties() {
+        string errorMessage = null;
+        yield return StartCoroutine(apiClient.FetchCatalog(
+            onSuccess: () => {
+                Debug.Log("Property catalog loaded successfully.");
+            },
+            onError: error => {
+                Debug.LogError($"Error fetching property catalog: {error}");
+                errorMessage = error;
+            }
+        ));
+        if (errorMessage != null) {
+            currentState = ExperimentState.InternalError;
+        }
+    }
+
     private IEnumerator BootstrapAndStart() {
-        Debug.Log($"Fetching experiment data for practice ID: {SessionData.Current.PracticeId}");
+        Debug.Log($"Fetching experiment data for practice ID: {SessionData.Current.PracticeId}");        
 
         yield return StartCoroutine(apiClient.FetchAndStartExperiment(
             SessionData.Current,
@@ -226,6 +243,7 @@ public class ExperimentManager : MonoBehaviour {
             },
             onError: error => Debug.LogError(error)
         ));
+        
     }   
 
     private void OnRuntimeFinished(int score, double timeTakenSeconds) {

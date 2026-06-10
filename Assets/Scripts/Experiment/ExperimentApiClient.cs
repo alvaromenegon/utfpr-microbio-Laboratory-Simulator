@@ -1,6 +1,6 @@
+using Newtonsoft.Json;
 using System;
 using System.Collections;
-using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -57,6 +57,43 @@ public class ExperimentApiClient : MonoBehaviour {
             Debug.LogError($"Error sending result data: {webRequest.error}");
             onError?.Invoke($"Error sending result data: {webRequest.error}");
         }
+    }
+
+    public IEnumerator FetchCatalog(Action onSuccess, Action<string> onError) {
+        string url = $"{baseUrl}/unity/property-catalogue";
+        using UnityWebRequest webRequest = UnityWebRequest.Get(url);
+        webRequest.SetRequestHeader("x-unity-token", unityAuthToken);
+
+        Debug.Log($"Sending request to API... ({url})");
+        yield return webRequest.SendWebRequest();
+
+        if (webRequest.result == UnityWebRequest.Result.ConnectionError || webRequest.result == UnityWebRequest.Result.ProtocolError) {
+            onError?.Invoke($"Error loading experiment from API: {webRequest.error}");
+            yield break;
+        }
+
+        PropertyCatalogDataDto catalogData = ParseCatalogResponse(webRequest.downloadHandler.text);
+        if (catalogData == null) {
+            onError?.Invoke("API returned an error or empty data.");
+            yield break;
+        }
+        onSuccess?.Invoke();
+        PropertyCatalog.GetInstance().SetCatalogData(ExperimentMapper.ToModel(catalogData));
+    }
+
+    private static PropertyCatalogDataDto ParseCatalogResponse(string json) {
+        try {
+            var data = JsonConvert.DeserializeObject<APIResult<PropertyCatalogDataDto>>(json);
+            if (data != null && data.Ok() && data.Data != null) {
+                Debug.Log("Catalog data parsed successfully.");
+                return data.Data;
+            }
+        }
+        catch (Exception e) {
+            Debug.LogError($"Failed to parse catalog data: {e.Message}");
+            Debug.LogError($"Response content: {json}");
+        }
+        return null;
     }
 
     private static PracticeDataDTO ParsePracticeResponse(string json) {
