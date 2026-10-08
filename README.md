@@ -1,3 +1,27 @@
+### Projeto baseado no repositório original chamx2/Laboratory-Simulator - veja o README original ao final
+
+# MicroBio Lab - Simulador de Laboratório Virtual de Microbiologia
+Projeto desenvolvido como Trabalho de Conclusão de Curso de Alvaro Rosario no curso de Engenharia de Software pela UTFPR. O objetivo foi de criar um simulador que pudesse ser utilizado como complemento as aulas práticas em laboratórios de biologia e áreas afins no câmpus da Universidade.
+
+Diferentemente do projeto original, que consistia de 9 aulas práticas fixadas no código, essa nova versão alterou completamente a dinâmica dos experimentos práticos, tornando-os totalmente dinâmicos, carregados através de dados recebidos por uma API Rest (disponibilizada em [alvaromenegon/microbio-lab](https://github.com/alvaromenegon/microbio-lab)). 
+
+Para isso, foi implementando um sistema baseando-se nos conceitos de ECS (entity-component-system) para evitar manter qualquer dado *hardcoded*, deixando o código apenas como interpretador desses dados.
+
+# Requisitos técnicos
+Game Engine:
+  - Unity 3D Version 6000.3.2f1
+  
+Sotfware de Modelagem 3D:
+  - Blender
+  
+Linguagem dos Scripts Unity:
+  - C#
+  
+Plataformas disponibilizadas:
+  - Web (via WebGL)*
+*Unity é multi-plataforma, mas toda a UI e scripts de movimentação foram desenvolvidos para utilização em navegadores 
+
+Créditos ao autor original: [John Hay Supetran](https://github.com/chamx2/)
 
 ### Original README from chamx2/Laboratory-Simulator (en)
 ### README original de chamx2/Laboratory-Simulator (pt)
